@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F70A490A2EFEFD0000CBD639 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = F70A49092EFEFD0000CBD639 /* ComposableArchitecture */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		F70A48F62EFEFCC800CBD639 /* WhisperPad.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhisperPad.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F70A490A2EFEFD0000CBD639 /* ComposableArchitecture in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -55,6 +60,7 @@
 				F70A48F22EFEFCC800CBD639 /* Sources */,
 				F70A48F32EFEFCC800CBD639 /* Frameworks */,
 				F70A48F42EFEFCC800CBD639 /* Resources */,
+				F70A490B2EFEFD0100CBD639 /* SwiftLint */,
 			);
 			buildRules = (
 			);
@@ -65,6 +71,7 @@
 			);
 			name = WhisperPad;
 			packageProductDependencies = (
+				F70A49092EFEFD0000CBD639 /* ComposableArchitecture */,
 			);
 			productName = WhisperPad;
 			productReference = F70A48F62EFEFCC800CBD639 /* WhisperPad.app */;
@@ -94,6 +101,9 @@
 			);
 			mainGroup = F70A48ED2EFEFCC800CBD639;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F70A49082EFEFD0000CBD639 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F70A48F72EFEFCC800CBD639 /* Products */;
 			projectDirPath = "";
@@ -113,6 +123,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		F70A490B2EFEFD0100CBD639 /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which mise > /dev/null; then\n  mise exec -- swiftlint\nelse\n  echo \"warning: mise not installed, download from https://mise.jdx.dev\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		F70A48F22EFEFCC800CBD639 /* Sources */ = {
@@ -351,6 +383,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F70A49082EFEFD0000CBD639 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.23.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F70A49092EFEFD0000CBD639 /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F70A49082EFEFD0000CBD639 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F70A48EE2EFEFCC800CBD639 /* Project object */;
 }

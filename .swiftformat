@@ -1,0 +1,51 @@
+# .swiftformat
+
+# Swift バージョン
+--swiftversion 5.10
+
+# インデント
+--indent 4
+--tabwidth 4
+--smarttabs enabled
+
+# 行の長さ
+--maxwidth 120
+
+# 波括弧のスタイル（K&R style）
+--allman false
+
+# 引数の折り返し
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--wrapreturntype preserve
+--wrapconditions after-first
+
+# クロージャ
+--closingparen balanced
+--wrapternary default
+
+# self の扱い
+--self remove
+--selfrequired
+
+# インポート
+--importgrouping testable-last
+
+# 空行
+--trimwhitespace always
+--emptybraces no-space
+
+# その他
+--semicolons never
+--commas always
+--stripunusedargs closure-only
+--ifdef no-indent
+
+# 無効化するルール
+--disable redundantSelf
+--disable trailingCommas
+--disable wrapMultilineStatementBraces
+
+# 除外するディレクトリ
+--exclude .build,.swiftpm,Pods,Carthage,DerivedData

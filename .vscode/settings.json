@@ -1,0 +1,12 @@
+{
+    "[swift]": {
+      "editor.defaultFormatter": "vknabel.vscode-swiftformat",
+      "editor.formatOnSave": true
+    },
+    "swiftformat.path": "swiftformat",
+    "swiftformat.configSearchPaths": [".swiftformat"],
+    "swiftlint.path": "swiftlint",
+    "swiftlint.configSearchPaths": [".swiftlint.yml"],
+    "swiftlint.onlyEnableOnSwiftPMProjects": false,
+    "swiftlint.autoLintWorkspace": true
+  }
