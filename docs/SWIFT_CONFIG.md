@@ -14,6 +14,7 @@
   - [SwiftLint](#swiftlint)
 - [Formatter](#formatter)
   - [SwiftFormat](#swiftformat)
+  - [Prettier](#prettier)
 - [開発フロー](#開発フロー)
 - [セットアップ手順](#セットアップ手順)
 - [CI/CD統合](#cicd統合)
@@ -352,6 +353,76 @@ swiftformat Sources/
 
 ---
 
+### Prettier
+
+JSON、YAML、Markdown ファイルのフォーマットには **Prettier** を使用します。
+
+| 項目 | 内容 |
+|------|------|
+| リポジトリ | [prettier/prettier](https://github.com/prettier/prettier) |
+| バージョン | 3.7.3+ |
+| 対象ファイル | `.json`, `.yml`, `.yaml`, `.md` |
+
+#### インストール
+
+```bash
+# mise経由でインストール（.mise.tomlに基づく）
+mise install
+```
+
+#### 設定ファイル
+
+プロジェクトルートに `.prettierrc` を配置します。
+
+```json
+{
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": false,
+  "singleQuote": true,
+  "quoteProps": "as-needed",
+  "trailingComma": "es5",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "avoid",
+  "proseWrap": "preserve",
+  "htmlWhitespaceSensitivity": "css",
+  "endOfLine": "lf",
+  "overrides": [
+    {
+      "files": ["*.yml", "*.yaml"],
+      "options": {
+        "tabWidth": 2,
+        "printWidth": 80
+      }
+    },
+    {
+      "files": ["*.md"],
+      "options": {
+        "tabWidth": 2,
+        "printWidth": 80,
+        "proseWrap": "preserve"
+      }
+    }
+  ]
+}
+```
+
+#### コマンドライン実行
+
+```bash
+# フォーマット実行
+prettier --write "**/*.{json,yml,yaml,md}"
+
+# チェックのみ（CI用）
+prettier --check "**/*.{json,yml,yaml,md}"
+
+# 特定のファイルのみ
+prettier --write docs/
+```
+
+---
+
 ## 開発フロー
 
 以下のフローでコード品質を維持します。
@@ -516,10 +587,11 @@ jobs:
 
 ### Linter / Formatter
 
-| ツール | 目的 | 自動修正 | ルール数 | Xcode統合 |
-|--------|------|:------:|:------:|:--------:|
-| SwiftLint | Linter | △ | 200+ | ◎ |
-| SwiftFormat | Formatter | ◎ | 100+ | ○ |
+| ツール | 目的 | 対象 | 自動修正 | ルール数 |
+|--------|------|------|:------:|:------:|
+| SwiftLint | Linter | Swift | △ | 200+ |
+| SwiftFormat | Formatter | Swift | ◎ | 100+ |
+| Prettier | Formatter | JSON/YAML/MD | ◎ | - |
 
 ---
 
@@ -533,6 +605,8 @@ jobs:
 ### Linter / Formatter
 - [SwiftLint GitHub](https://github.com/realm/SwiftLint)
 - [SwiftFormat GitHub](https://github.com/nicklockwood/SwiftFormat)
+- [Prettier GitHub](https://github.com/prettier/prettier)
+- [Prettier ドキュメント](https://prettier.io/docs/en/)
 - [mise GitHub](https://github.com/jdx/mise)
 - [mise ドキュメント](https://mise.jdx.dev/)
 

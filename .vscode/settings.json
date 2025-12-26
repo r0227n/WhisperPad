@@ -1,12 +1,29 @@
 {
-    "[swift]": {
-      "editor.defaultFormatter": "vknabel.vscode-swiftformat",
-      "editor.formatOnSave": true
-    },
-    "swiftformat.path": "swiftformat",
-    "swiftformat.configSearchPaths": [".swiftformat"],
-    "swiftlint.path": "swiftlint",
-    "swiftlint.configSearchPaths": [".swiftlint.yml"],
-    "swiftlint.onlyEnableOnSwiftPMProjects": false,
-    "swiftlint.autoLintWorkspace": true
-  }
+  "[swift]": {
+    "editor.defaultFormatter": "vknabel.vscode-swiftformat",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[yml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "swiftformat.path": "swiftformat",
+  "swiftformat.configSearchPaths": [".swiftformat"],
+  "swiftlint.path": "swiftlint",
+  "swiftlint.configSearchPaths": [".swiftlint.yml"],
+  "swiftlint.onlyEnableOnSwiftPMProjects": false,
+  "swiftlint.autoLintWorkspace": true,
+  "prettier.configPath": ".prettierrc"
+}

@@ -1,0 +1,88 @@
+name: 'Check File Changes'
+description: 'Check for specific file type changes in PR'
+author: 'r0227n'
+
+inputs:
+  base_sha:
+    description: 'Base commit SHA for comparison'
+    required: true
+  head_sha:
+    description: 'Head commit SHA for comparison'
+    required: true
+
+outputs:
+  swift_changed:
+    description: 'Whether Swift-related files changed (true/false)'
+    value: ${{ steps.check_changes.outputs.swift_changed }}
+  prettier_changed:
+    description: 'Whether Prettier-related files changed (true/false)'
+    value: ${{ steps.check_changes.outputs.prettier_changed }}
+  swift_count:
+    description: 'Number of .swift files changed'
+    value: ${{ steps.check_changes.outputs.swift_count }}
+  json_count:
+    description: 'Number of .json files changed'
+    value: ${{ steps.check_changes.outputs.json_count }}
+  yml_count:
+    description: 'Number of .yml/.yaml files changed'
+    value: ${{ steps.check_changes.outputs.yml_count }}
+  md_count:
+    description: 'Number of .md files changed'
+    value: ${{ steps.check_changes.outputs.md_count }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Check for file changes
+      id: check_changes
+      shell: bash
+      run: |
+        # Get changed files in PR
+        CHANGED_FILES=$(git diff --name-only ${{ inputs.base_sha }}..${{ inputs.head_sha }})
+
+        # Count specific file types
+        SWIFT_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.swift$' | wc -l | xargs)
+        JSON_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.json$' | wc -l | xargs)
+        YML_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.(yml|yaml)$' | wc -l | xargs)
+        MD_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.md$' | wc -l | xargs)
+
+        # Check for Swift-related config files
+        SWIFTLINT_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^\.swiftlint\.yml$' | wc -l | xargs)
+        SWIFTFORMAT_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^\.swiftformat$' | wc -l | xargs)
+
+        # Check for Prettier config
+        PRETTIERRC_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^\.prettierrc$' | wc -l | xargs)
+
+        # Determine if Swift-related files changed
+        if [ "$SWIFT_COUNT" -gt 0 ] || [ "$SWIFTLINT_CHANGED" -gt 0 ] || [ "$SWIFTFORMAT_CHANGED" -gt 0 ]; then
+          SWIFT_CHANGED="true"
+        else
+          SWIFT_CHANGED="false"
+        fi
+
+        # Determine if Prettier-related files changed
+        if [ "$JSON_COUNT" -gt 0 ] || [ "$YML_COUNT" -gt 0 ] || [ "$MD_COUNT" -gt 0 ] || [ "$PRETTIERRC_CHANGED" -gt 0 ]; then
+          PRETTIER_CHANGED="true"
+        else
+          PRETTIER_CHANGED="false"
+        fi
+
+        # Output results
+        echo "swift_changed=$SWIFT_CHANGED" >> $GITHUB_OUTPUT
+        echo "prettier_changed=$PRETTIER_CHANGED" >> $GITHUB_OUTPUT
+        echo "swift_count=$SWIFT_COUNT" >> $GITHUB_OUTPUT
+        echo "json_count=$JSON_COUNT" >> $GITHUB_OUTPUT
+        echo "yml_count=$YML_COUNT" >> $GITHUB_OUTPUT
+        echo "md_count=$MD_COUNT" >> $GITHUB_OUTPUT
+
+        # Debug output
+        echo "=== Changed Files ==="
+        echo "$CHANGED_FILES"
+        echo ""
+        echo "=== Summary ==="
+        echo "Swift files: $SWIFT_COUNT"
+        echo "JSON files: $JSON_COUNT"
+        echo "YML/YAML files: $YML_COUNT"
+        echo "Markdown files: $MD_COUNT"
+        echo "Swift-related changed: $SWIFT_CHANGED"
+        echo "Prettier-related changed: $PRETTIER_CHANGED"
