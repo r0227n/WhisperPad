@@ -853,15 +853,15 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/argmaxinc/WhisperKit.git",
-            from: "0.9.0"
+            from: "0.15.0"
         ),
         .package(
             url: "https://github.com/pointfreeco/swift-composable-architecture",
-            from: "1.23.0"
+            from: "1.23.1"
         ),
         .package(
             url: "https://github.com/soffes/HotKey.git",
-            from: "0.2.0"
+            from: "0.2.1"
         ),
     ],
     targets: [

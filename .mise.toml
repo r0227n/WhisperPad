@@ -6,7 +6,6 @@ swiftformat = "0.58.7"
 [tasks.setup]
 description = "Initial project setup"
 run = """
-melos bootstrap
 git config gtr.defaultBranch develop
 claude mcp reset-project-choices
 """
