@@ -99,7 +99,7 @@ nesting:
 # カスタムルール
 custom_rules:
   no_print:
-    name: "No print statements"
+    name: 'No print statements'
     regex: "\\bprint\\s*\\("
-    message: "print() はデバッグ用途でのみ使用してください。本番コードでは Logger を使用してください。"
+    message: 'print() はデバッグ用途でのみ使用してください。本番コードでは Logger を使用してください。'
     severity: warning

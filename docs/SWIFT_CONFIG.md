@@ -27,12 +27,12 @@
 
 本プロジェクトでは、状態管理に **The Composable Architecture (TCA)** を採用しています。
 
-| 項目 | 内容 |
-|------|------|
-| リポジトリ | [pointfreeco/swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture) |
-| バージョン | 1.23.1+ |
-| ライセンス | MIT |
-| GitHub Stars | 14,000+ |
+| 項目         | 内容                                                                                                      |
+| ------------ | --------------------------------------------------------------------------------------------------------- |
+| リポジトリ   | [pointfreeco/swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture) |
+| バージョン   | 1.23.1+                                                                                                   |
+| ライセンス   | MIT                                                                                                       |
+| GitHub Stars | 14,000+                                                                                                   |
 
 #### 採用理由
 
@@ -65,12 +65,12 @@ struct Feature {
     struct State: Equatable {
         var count = 0
     }
-    
+
     enum Action {
         case incrementButtonTapped
         case decrementButtonTapped
     }
-    
+
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
@@ -100,11 +100,11 @@ struct Feature {
 
 コード品質の維持と一貫性のために **SwiftLint** を使用します。
 
-| 項目 | 内容 |
-|------|------|
+| 項目       | 内容                                                  |
+| ---------- | ----------------------------------------------------- |
 | リポジトリ | [realm/SwiftLint](https://github.com/realm/SwiftLint) |
-| バージョン | 0.62.2+ |
-| ルール数 | 200+ |
+| バージョン | 0.62.2+                                               |
+| ルール数   | 200+                                                  |
 
 #### インストール
 
@@ -219,9 +219,9 @@ nesting:
 # カスタムルール
 custom_rules:
   no_print:
-    name: "No print statements"
+    name: 'No print statements'
     regex: "\\bprint\\s*\\("
-    message: "print() はデバッグ用途でのみ使用してください。本番コードでは Logger を使用してください。"
+    message: 'print() はデバッグ用途でのみ使用してください。本番コードでは Logger を使用してください。'
     severity: warning
 ```
 
@@ -264,11 +264,11 @@ swiftlint lint --path Sources/
 
 コードフォーマットには **SwiftFormat** を使用します。
 
-| 項目 | 内容 |
-|------|------|
+| 項目       | 内容                                                                    |
+| ---------- | ----------------------------------------------------------------------- |
 | リポジトリ | [nicklockwood/SwiftFormat](https://github.com/nicklockwood/SwiftFormat) |
-| バージョン | 0.58.7+ |
-| ルール数 | 100+ |
+| バージョン | 0.58.7+                                                                 |
+| ルール数   | 100+                                                                    |
 
 #### インストール
 
@@ -311,7 +311,7 @@ mise install
 
 # self の扱い
 --self remove
---selfrequired 
+--selfrequired
 
 # インポート
 --importgrouping testable-last
@@ -357,11 +357,11 @@ swiftformat Sources/
 
 JSON、YAML、Markdown ファイルのフォーマットには **Prettier** を使用します。
 
-| 項目 | 内容 |
-|------|------|
-| リポジトリ | [prettier/prettier](https://github.com/prettier/prettier) |
-| バージョン | 3.7.3+ |
-| 対象ファイル | `.json`, `.yml`, `.yaml`, `.md` |
+| 項目         | 内容                                                      |
+| ------------ | --------------------------------------------------------- |
+| リポジトリ   | [prettier/prettier](https://github.com/prettier/prettier) |
+| バージョン   | 3.7.3+                                                    |
+| 対象ファイル | `.json`, `.yml`, `.yaml`, `.md`                           |
 
 #### インストール
 
@@ -558,16 +558,16 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install mise
         uses: jdx/mise-action@v2
-      
+
       - name: Install dependencies
         run: mise install
-      
+
       - name: Run SwiftLint
         run: mise exec -- swiftlint --strict --reporter github-actions-logging
-      
+
       - name: Run SwiftFormat
         run: mise exec -- swiftformat . --lint
 ```
@@ -578,31 +578,33 @@ jobs:
 
 ### 状態管理
 
-| ライブラリ | 学習コスト | テスト容易性 | パフォーマンス | コミュニティ |
-|-----------|:--------:|:----------:|:------------:|:----------:|
-| TCA | 高 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| Verge | 中 | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
-| OneWay | 低 | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ |
-| SwiftUI標準 | 低 | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| ライブラリ  | 学習コスト | テスト容易性 | パフォーマンス | コミュニティ |
+| ----------- | :--------: | :----------: | :------------: | :----------: |
+| TCA         |     高     |  ⭐⭐⭐⭐⭐  |    ⭐⭐⭐⭐    |  ⭐⭐⭐⭐⭐  |
+| Verge       |     中     |   ⭐⭐⭐⭐   |   ⭐⭐⭐⭐⭐   |    ⭐⭐⭐    |
+| OneWay      |     低     |   ⭐⭐⭐⭐   |   ⭐⭐⭐⭐⭐   |     ⭐⭐     |
+| SwiftUI標準 |     低     |    ⭐⭐⭐    |   ⭐⭐⭐⭐⭐   |  ⭐⭐⭐⭐⭐  |
 
 ### Linter / Formatter
 
-| ツール | 目的 | 対象 | 自動修正 | ルール数 |
-|--------|------|------|:------:|:------:|
-| SwiftLint | Linter | Swift | △ | 200+ |
-| SwiftFormat | Formatter | Swift | ◎ | 100+ |
-| Prettier | Formatter | JSON/YAML/MD | ◎ | - |
+| ツール      | 目的      | 対象         | 自動修正 | ルール数 |
+| ----------- | --------- | ------------ | :------: | :------: |
+| SwiftLint   | Linter    | Swift        |    △     |   200+   |
+| SwiftFormat | Formatter | Swift        |    ◎     |   100+   |
+| Prettier    | Formatter | JSON/YAML/MD |    ◎     |    -     |
 
 ---
 
 ## 参考リンク
 
 ### 状態管理
+
 - [TCA GitHub](https://github.com/pointfreeco/swift-composable-architecture)
 - [TCA ドキュメント](https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/)
 - [Point-Free](https://www.pointfree.co/)
 
 ### Linter / Formatter
+
 - [SwiftLint GitHub](https://github.com/realm/SwiftLint)
 - [SwiftFormat GitHub](https://github.com/nicklockwood/SwiftFormat)
 - [Prettier GitHub](https://github.com/prettier/prettier)
@@ -611,10 +613,11 @@ jobs:
 - [mise ドキュメント](https://mise.jdx.dev/)
 
 ### スタイルガイド
+
 - [Google Swift Style Guide](https://google.github.io/swift/)
 - [Kodeco Swift Style Guide](https://github.com/kodecocodes/swift-style-guide)
 - [Airbnb Swift Style Guide](https://github.com/airbnb/swift)
 
 ---
 
-*最終更新: 2025年12月*
+_最終更新: 2025年12月_
