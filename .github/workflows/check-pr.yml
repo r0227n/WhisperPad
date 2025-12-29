@@ -11,7 +11,7 @@ concurrency:
 jobs:
   changes:
     name: Detect Changes
-    runs-on: ubuntu-24.04
+    runs-on: macos-26
     outputs:
       swift: ${{ steps.check.outputs.swift_changed }}
       prettier: ${{ steps.check.outputs.prettier_changed }}
@@ -32,7 +32,7 @@ jobs:
     name: Swift Lint & Format
     needs: changes
     if: needs.changes.outputs.swift == 'true'
-    runs-on: macos-24.04
+    runs-on: macos-26
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -53,7 +53,7 @@ jobs:
     name: Prettier
     needs: changes
     if: needs.changes.outputs.prettier == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: macos-26
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
