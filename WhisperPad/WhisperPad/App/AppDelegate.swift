@@ -151,57 +151,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return menu
     }
 
-    #if DEBUG
-    /// デバッグメニューを追加
-    private func addDebugMenu(to menu: NSMenu) {
-        let debugMenu = NSMenu(title: "Debug")
-
-        let debugIdle = NSMenuItem(
-            title: "Set Idle",
-            action: #selector(debugSetIdle),
-            keyEquivalent: ""
-        )
-        debugIdle.target = self
-        debugMenu.addItem(debugIdle)
-
-        let debugRecording = NSMenuItem(
-            title: "Set Recording",
-            action: #selector(debugSetRecording),
-            keyEquivalent: ""
-        )
-        debugRecording.target = self
-        debugMenu.addItem(debugRecording)
-
-        let debugTranscribing = NSMenuItem(
-            title: "Set Transcribing",
-            action: #selector(debugSetTranscribing),
-            keyEquivalent: ""
-        )
-        debugTranscribing.target = self
-        debugMenu.addItem(debugTranscribing)
-
-        let debugCompleted = NSMenuItem(
-            title: "Set Completed",
-            action: #selector(debugSetCompleted),
-            keyEquivalent: ""
-        )
-        debugCompleted.target = self
-        debugMenu.addItem(debugCompleted)
-
-        let debugError = NSMenuItem(
-            title: "Set Error",
-            action: #selector(debugSetError),
-            keyEquivalent: ""
-        )
-        debugError.target = self
-        debugMenu.addItem(debugError)
-
-        let debugItem = NSMenuItem(title: "Debug", action: nil, keyEquivalent: "")
-        debugItem.submenu = debugMenu
-        menu.addItem(debugItem)
-    }
-    #endif
-
     // MARK: - State-based UI Updates
 
     /// 現在の状態に応じてメニューを更新
@@ -286,48 +235,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         button.image = image?.withSymbolConfiguration(config)
     }
 
-    // MARK: - Animation
-
-    /// ギアアニメーションを開始
-    private func startGearAnimation() {
-        guard animationTimer == nil else { return }
-
-        animationFrame = 0
-        setStatusIcon(symbolName: "gear", color: .systemBlue)
-
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            self?.updateGearAnimationFrame()
-        }
-    }
-
-    /// ギアアニメーションを停止
-    private func stopGearAnimation() {
-        animationTimer?.invalidate()
-        animationTimer = nil
-    }
-
-    /// ギアアニメーションのフレームを更新
-    private func updateGearAnimationFrame() {
-        guard let button = statusItem?.button else { return }
-
-        animationFrame = (animationFrame + 1) % 8
-
-        // 色を少し変化させてアニメーション効果を出す
-        let hue = CGFloat(animationFrame) / 8.0
-        let color = NSColor(
-            hue: 0.6 + hue * 0.1,
-            saturation: 0.8,
-            brightness: 0.9,
-            alpha: 1.0
-        )
-
-        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
-            .applying(NSImage.SymbolConfiguration(hierarchicalColor: color))
-
-        let image = NSImage(systemSymbolName: "gear", accessibilityDescription: "Processing")
-        button.image = image?.withSymbolConfiguration(config)
-    }
-
     // MARK: - Actions
 
     /// 録音を開始
@@ -347,33 +254,126 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         logger.info("Quit application requested")
         NSApp.terminate(nil)
     }
+}
 
-    // MARK: - Debug Actions
+// MARK: - Animation
+private extension AppDelegate {
+    /// ギアアニメーションを開始
+    func startGearAnimation() {
+        guard animationTimer == nil else { return }
 
-    #if DEBUG
-    @objc private func debugSetIdle() {
+        animationFrame = 0
+        setStatusIcon(symbolName: "gear", color: .systemBlue)
+
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.updateGearAnimationFrame()
+        }
+    }
+
+    /// ギアアニメーションを停止
+    func stopGearAnimation() {
+        animationTimer?.invalidate()
+        animationTimer = nil
+    }
+
+    /// ギアアニメーションのフレームを更新
+    func updateGearAnimationFrame() {
+        guard let button = statusItem?.button else { return }
+
+        animationFrame = (animationFrame + 1) % 8
+
+        // 色を少し変化させてアニメーション効果を出す
+        let hue = CGFloat(animationFrame) / 8.0
+        let color = NSColor(
+            hue: 0.6 + hue * 0.1,
+            saturation: 0.8,
+            brightness: 0.9,
+            alpha: 1.0
+        )
+
+        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
+            .applying(NSImage.SymbolConfiguration(hierarchicalColor: color))
+
+        let image = NSImage(systemSymbolName: "gear", accessibilityDescription: "Processing")
+        button.image = image?.withSymbolConfiguration(config)
+    }
+}
+
+// MARK: - Debug Menu and Actions
+#if DEBUG
+private extension AppDelegate {
+    /// デバッグメニューを追加
+    func addDebugMenu(to menu: NSMenu) {
+        let debugMenu = NSMenu(title: "Debug")
+
+        let debugIdle = NSMenuItem(
+            title: "Set Idle",
+            action: #selector(debugSetIdle),
+            keyEquivalent: ""
+        )
+        debugIdle.target = self
+        debugMenu.addItem(debugIdle)
+
+        let debugRecording = NSMenuItem(
+            title: "Set Recording",
+            action: #selector(debugSetRecording),
+            keyEquivalent: ""
+        )
+        debugRecording.target = self
+        debugMenu.addItem(debugRecording)
+
+        let debugTranscribing = NSMenuItem(
+            title: "Set Transcribing",
+            action: #selector(debugSetTranscribing),
+            keyEquivalent: ""
+        )
+        debugTranscribing.target = self
+        debugMenu.addItem(debugTranscribing)
+
+        let debugCompleted = NSMenuItem(
+            title: "Set Completed",
+            action: #selector(debugSetCompleted),
+            keyEquivalent: ""
+        )
+        debugCompleted.target = self
+        debugMenu.addItem(debugCompleted)
+
+        let debugError = NSMenuItem(
+            title: "Set Error",
+            action: #selector(debugSetError),
+            keyEquivalent: ""
+        )
+        debugError.target = self
+        debugMenu.addItem(debugError)
+
+        let debugItem = NSMenuItem(title: "Debug", action: nil, keyEquivalent: "")
+        debugItem.submenu = debugMenu
+        menu.addItem(debugItem)
+    }
+
+    @objc func debugSetIdle() {
         logger.debug("Debug: Set Idle")
         store.send(.resetToIdle)
     }
 
-    @objc private func debugSetRecording() {
+    @objc func debugSetRecording() {
         logger.debug("Debug: Set Recording")
         store.send(.startRecording)
     }
 
-    @objc private func debugSetTranscribing() {
+    @objc func debugSetTranscribing() {
         logger.debug("Debug: Set Transcribing")
         store.send(.stopRecording)
     }
 
-    @objc private func debugSetCompleted() {
+    @objc func debugSetCompleted() {
         logger.debug("Debug: Set Completed")
         store.send(.transcriptionCompleted("Debug transcription text"))
     }
 
-    @objc private func debugSetError() {
+    @objc func debugSetError() {
         logger.debug("Debug: Set Error")
         store.send(.errorOccurred("Debug error message"))
     }
-    #endif
 }
+#endif
