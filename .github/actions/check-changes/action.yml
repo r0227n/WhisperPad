@@ -41,17 +41,17 @@ runs:
         CHANGED_FILES=$(git diff --name-only ${{ inputs.base_sha }}..${{ inputs.head_sha }})
 
         # Count specific file types
-        SWIFT_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.swift$' | wc -l | xargs)
-        JSON_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.json$' | wc -l | xargs)
-        YML_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.(yml|yaml)$' | wc -l | xargs)
-        MD_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.md$' | wc -l | xargs)
+        SWIFT_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.swift$' || true | wc -l | xargs)
+        JSON_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.json$' || true | wc -l | xargs)
+        YML_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.(yml|yaml)$' || true | wc -l | xargs)
+        MD_COUNT=$(echo "$CHANGED_FILES" | grep -E '\.md$' || true | wc -l | xargs)
 
         # Check for Swift-related config files
-        SWIFTLINT_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^\.swiftlint\.yml$' | wc -l | xargs)
-        SWIFTFORMAT_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^\.swiftformat$' | wc -l | xargs)
+        SWIFTLINT_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^\.swiftlint\.yml$' || true | wc -l | xargs)
+        SWIFTFORMAT_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^\.swiftformat$' || true | wc -l | xargs)
 
         # Check for Prettier config
-        PRETTIERRC_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^\.prettierrc$' | wc -l | xargs)
+        PRETTIERRC_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^\.prettierrc$' || true | wc -l | xargs)
 
         # Determine if Swift-related files changed
         if [ "$SWIFT_COUNT" -gt 0 ] || [ "$SWIFTLINT_CHANGED" -gt 0 ] || [ "$SWIFTFORMAT_CHANGED" -gt 0 ]; then
