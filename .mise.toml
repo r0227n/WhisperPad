@@ -1,0 +1,60 @@
+[tools]
+swiftlint = "0.62.2"
+swiftformat = "0.58.7"
+"npm:prettier" = "3.7.3"
+
+# =============================================================================
+# Swift Tasks
+# =============================================================================
+
+[tasks."format:swift"]
+description = "Format Swift files with SwiftFormat"
+run = "swiftformat ."
+
+[tasks."format:swift:check"]
+description = "Verify Swift formatting without changes (CI mode)"
+run = "swiftformat . --lint"
+
+[tasks."lint:swift"]
+description = "Lint Swift files with SwiftLint"
+run = "swiftlint"
+
+[tasks."lint:swift:strict"]
+description = "Lint Swift files with SwiftLint (strict mode)"
+run = "swiftlint --strict"
+
+[tasks."lint:swift:fix"]
+description = "Auto-fix SwiftLint issues"
+run = "swiftlint --fix"
+
+# =============================================================================
+# Prettier Tasks (JSON, YAML, Markdown)
+# =============================================================================
+
+[tasks."format:prettier"]
+description = "Format all Prettier-supported files (JSON, YAML, Markdown)"
+run = "prettier --write \"**/*.{json,yml,yaml,md}\" --ignore-path .gitignore"
+
+[tasks."lint:prettier"]
+description = "Check all Prettier-supported files"
+run = "prettier --check \"**/*.{json,yml,yaml,md}\" --ignore-path .gitignore"
+
+# =============================================================================
+# Combined Tasks
+# =============================================================================
+
+[tasks.format]
+description = "Run all formatters (Swift + Prettier)"
+depends = ["format:swift", "format:prettier"]
+
+[tasks.lint]
+description = "Run all linters and checks"
+depends = ["lint:swift", "lint:prettier"]
+
+[tasks.check]
+description = "Run all checks for CI (no file modifications)"
+depends = ["lint:swift:strict", "format:swift:check", "lint:prettier"]
+
+[tasks.fix]
+description = "Auto-fix all formatting and linting issues"
+depends = ["format:swift", "format:prettier", "lint:swift:fix"]

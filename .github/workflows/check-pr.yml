@@ -1,0 +1,68 @@
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: check-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect Changes
+    runs-on: macos-26
+    outputs:
+      swift: ${{ steps.check.outputs.swift_changed }}
+      prettier: ${{ steps.check.outputs.prettier_changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for file changes
+        id: check
+        uses: ./.github/actions/check-changes
+        with:
+          base_sha: ${{ github.event.pull_request.base.sha }}
+          head_sha: ${{ github.event.pull_request.head.sha }}
+
+  swift:
+    name: Swift Lint & Format
+    needs: changes
+    if: needs.changes.outputs.swift == 'true'
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup mise
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+
+      - name: Install tools
+        run: mise install
+
+      - name: Run SwiftLint
+        run: mise exec -- swiftlint --strict --reporter github-actions-logging
+
+      - name: Check SwiftFormat
+        run: mise exec -- swiftformat . --lint
+
+  prettier:
+    name: Prettier
+    needs: changes
+    if: needs.changes.outputs.prettier == 'true'
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup mise
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+
+      - name: Install tools
+        run: mise install
+
+      - name: Check formatting
+        run: mise exec -- prettier --check "**/*.{json,yml,yaml,md}" --ignore-path .gitignore
