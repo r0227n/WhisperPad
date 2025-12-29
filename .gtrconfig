@@ -1,0 +1,22 @@
+[copy]
+    include = **/.env.example
+    include = .mise.toml
+    include = .swiftformat
+    include = .swiftlint.yml
+    include = .prettierrc
+    include = .vscode/**
+    include = CLAUDE.md
+    exclude = **/.env
+    exclude = **/.claude/**
+    excludeDirs = .build
+    excludeDirs = DerivedData
+    excludeDirs = .swiftpm
+    excludeDirs = Pods
+
+[hooks]
+    postCreate = mise install
+    postCreate = swift package resolve
+
+[defaults]
+    editor = cursor
+    ai = claude
