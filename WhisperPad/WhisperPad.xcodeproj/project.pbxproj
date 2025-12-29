@@ -142,7 +142,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which mise > /dev/null; then\n  mise exec -- swiftlint\nelse\n  echo \"warning: mise not installed, download from https://mise.jdx.dev\"\nfi\n";
+			shellScript = "export PATH=\"/opt/homebrew/bin:$PATH\"\nif which mise > /dev/null; then\n  mise exec -- swiftlint\nelse\n  echo \"warning: mise not installed, download from https://mise.jdx.dev\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
