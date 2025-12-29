@@ -257,6 +257,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 // MARK: - Animation
+
 private extension AppDelegate {
     /// ギアアニメーションを開始
     func startGearAnimation() {
@@ -300,6 +301,7 @@ private extension AppDelegate {
 }
 
 // MARK: - Debug Menu and Actions
+
 #if DEBUG
 private extension AppDelegate {
     /// デバッグメニューを追加
