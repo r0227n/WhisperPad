@@ -3,6 +3,14 @@ swiftlint = "0.62.2"
 swiftformat = "0.58.7"
 "npm:prettier" = "3.7.3"
 
+[tasks.setup]
+description = "Initial project setup"
+run = """
+git config gtr.defaultBranch develop
+claude mcp reset-project-choices
+"""
+dir = "{{cwd}}"
+
 # =============================================================================
 # Swift Tasks
 # =============================================================================
