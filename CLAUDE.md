@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-VoiceSnap (WhisperPad) is a macOS menu bar application for voice-to-text transcription using WhisperKit for on-device speech recognition. The app runs entirely locally without network requirements.
+WhisperPad (WhisperPad) is a macOS menu bar application for voice-to-text transcription using WhisperKit for on-device speech recognition. The app runs entirely locally without network requirements.
 
 **Requirements**: macOS 14.0+ (Sonoma), Apple Silicon (M1/M2/M3/M4)
 

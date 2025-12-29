@@ -1,4 +1,4 @@
-# VoiceSnap 仕様書
+# WhisperPad 仕様書
 
 **ドキュメントバージョン**: 1.0  
 **作成日**: 2024 年 12 月  
@@ -27,7 +27,7 @@
 
 ### 1.1 アプリケーション概要
 
-**VoiceSnap** は、macOS メニューバーに常駐する音声文字起こしアプリケーションです。グローバルホットキーで音声録音を開始し、WhisperKit によるオンデバイス音声認識でテキストに変換、クリップボードまたはファイルに出力します。
+**WhisperPad** は、macOS メニューバーに常駐する音声文字起こしアプリケーションです。グローバルホットキーで音声録音を開始し、WhisperKit によるオンデバイス音声認識でテキストに変換、クリップボードまたはファイルに出力します。
 
 ### 1.2 主要機能
 
@@ -84,7 +84,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         VoiceSnap                               │
+│                         WhisperPad                               │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
@@ -126,9 +126,9 @@
 ### 3.2 モジュール構成
 
 ```
-VoiceSnap/
+WhisperPad/
 ├── App/
-│   ├── VoiceSnapApp.swift              # アプリエントリーポイント
+│   ├── WhisperPadApp.swift              # アプリエントリーポイント
 │   ├── AppDelegate.swift               # AppKit連携・メニューバー管理
 │   └── AppReducer.swift                # ルートReducer
 │
@@ -184,7 +184,7 @@ VoiceSnap/
 
 ```
 ┌─────────────────────┐
-│   VoiceSnapApp      │
+│   WhisperPadApp      │
 └──────────┬──────────┘
            │
            ▼
@@ -233,7 +233,7 @@ VoiceSnap/
 
 ```
 ┌─────────────────────────────────────┐
-│ VoiceSnap                           │
+│ WhisperPad                           │
 ├─────────────────────────────────────┤
 │ ● 録音開始              ⌥ Space    │  ← 状態により「録音停止」に変化
 ├─────────────────────────────────────┤
@@ -389,15 +389,15 @@ struct FileOutputSettings: Codable, Equatable {
     var outputDirectory: URL = FileManager.default.urls(
         for: .documentDirectory,
         in: .userDomainMask
-    ).first!.appendingPathComponent("VoiceSnap")
+    ).first!.appendingPathComponent("WhisperPad")
     var fileNameFormat: FileNameFormat = .dateTime
     var fileExtension: FileExtension = .txt
     var includeMetadata: Bool = true
 
     enum FileNameFormat: String, Codable, CaseIterable {
-        case dateTime = "voicesnap_yyyyMMdd_HHmmss"
-        case timestamp = "voicesnap_timestamp"
-        case sequential = "voicesnap_001"
+        case dateTime = "WhisperPad_yyyyMMdd_HHmmss"
+        case timestamp = "WhisperPad_timestamp"
+        case sequential = "WhisperPad_001"
     }
 
     enum FileExtension: String, Codable, CaseIterable {
@@ -431,7 +431,7 @@ struct TranscriptionOutput: Codable, Equatable {
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ VoiceSnap 設定                                            ✕    │
+│ WhisperPad 設定                                            ✕    │
 ├─────────────────────────────────────────────────────────────────┤
 │ ┌─────────┐                                                     │
 │ │ 一般    │  ┌───────────────────────────────────────────────┐ │
@@ -548,11 +548,11 @@ struct TranscriptionOutput: Codable, Equatable {
 │ ☑ クリップボードにコピー                                     │
 │                                                               │
 │ □ ファイルに保存                                             │
-│   └─ 保存先: ~/Documents/VoiceSnap        [変更...]          │
+│   └─ 保存先: ~/Documents/WhisperPad        [変更...]          │
 │   └─ ファイル名形式:                                         │
-│      ○ 日時 (voicesnap_20241201_143052.txt)                 │
-│      ○ タイムスタンプ (voicesnap_1701415852.txt)            │
-│      ○ 連番 (voicesnap_001.txt)                             │
+│      ○ 日時 (WhisperPad_20241201_143052.txt)                 │
+│      ○ タイムスタンプ (WhisperPad_1701415852.txt)            │
+│      ○ 連番 (WhisperPad_001.txt)                             │
 │   └─ ファイル形式:                                           │
 │      ○ テキスト (.txt)                                      │
 │      ○ マークダウン (.md)                                   │
@@ -715,14 +715,14 @@ enum AppStatus: Equatable {
 
 #### 7.1.1 UserDefaults キー
 
-| キー                               | 型          | 説明                   |
-| ---------------------------------- | ----------- | ---------------------- |
-| `voicesnap.settings.general`       | Data (JSON) | 一般設定               |
-| `voicesnap.settings.hotkey`        | Data (JSON) | ホットキー設定         |
-| `voicesnap.settings.recording`     | Data (JSON) | 録音設定               |
-| `voicesnap.settings.transcription` | Data (JSON) | 文字起こし設定         |
-| `voicesnap.settings.output`        | Data (JSON) | 出力設定               |
-| `voicesnap.lastModelUsed`          | String      | 最後に使用したモデル名 |
+| キー                                | 型          | 説明                   |
+| ----------------------------------- | ----------- | ---------------------- |
+| `WhisperPad.settings.general`       | Data (JSON) | 一般設定               |
+| `WhisperPad.settings.hotkey`        | Data (JSON) | ホットキー設定         |
+| `WhisperPad.settings.recording`     | Data (JSON) | 録音設定               |
+| `WhisperPad.settings.transcription` | Data (JSON) | 文字起こし設定         |
+| `WhisperPad.settings.output`        | Data (JSON) | 出力設定               |
+| `WhisperPad.lastModelUsed`          | String      | 最後に使用したモデル名 |
 
 #### 7.1.2 設定モデル（完全版）
 
@@ -782,7 +782,7 @@ struct OutputSettings: Codable, Equatable {
 #### 7.2.1 履歴保存先
 
 ```
-~/Library/Application Support/VoiceSnap/
+~/Library/Application Support/WhisperPad/
 ├── history.json                    # 履歴メタデータ
 ├── transcriptions/
 │   ├── {uuid}.txt                  # 書き起こしテキスト
@@ -818,10 +818,10 @@ struct TranscriptionHistoryItem: Codable, Equatable, Identifiable {
 
 ### 7.3 一時データ
 
-| データ           | 保存先                        | 寿命           |
-| ---------------- | ----------------------------- | -------------- |
-| 録音中音声       | `NSTemporaryDirectory()`      | 処理完了まで   |
-| モデルキャッシュ | `~/Library/Caches/VoiceSnap/` | 明示的削除まで |
+| データ           | 保存先                         | 寿命           |
+| ---------------- | ------------------------------ | -------------- |
+| 録音中音声       | `NSTemporaryDirectory()`       | 処理完了まで   |
+| モデルキャッシュ | `~/Library/Caches/WhisperPad/` | 明示的削除まで |
 
 ---
 
@@ -843,12 +843,12 @@ struct TranscriptionHistoryItem: Codable, Equatable, Identifiable {
 import PackageDescription
 
 let package = Package(
-    name: "VoiceSnap",
+    name: "WhisperPad",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "VoiceSnap", targets: ["VoiceSnap"])
+        .executable(name: "WhisperPad", targets: ["WhisperPad"])
     ],
     dependencies: [
         .package(
@@ -866,7 +866,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "VoiceSnap",
+            name: "WhisperPad",
             dependencies: [
                 "WhisperKit",
                 .product(
@@ -877,9 +877,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "VoiceSnapTests",
+            name: "WhisperPadTests",
             dependencies: [
-                "VoiceSnap",
+                "WhisperPad",
                 .product(
                     name: "ComposableArchitecture",
                     package: "swift-composable-architecture"
@@ -933,7 +933,7 @@ let package = Package(
 
 ```xml
 <key>NSMicrophoneUsageDescription</key>
-<string>VoiceSnapは音声をテキストに変換するためにマイクを使用します。音声データはデバイス上でのみ処理され、外部に送信されることはありません。</string>
+<string>WhisperPadは音声をテキストに変換するためにマイクを使用します。音声データはデバイス上でのみ処理され、外部に送信されることはありません。</string>
 ```
 
 ---
@@ -943,7 +943,7 @@ let package = Package(
 ### 10.1 エラー種別
 
 ```swift
-enum VoiceSnapError: Error, Equatable, LocalizedError {
+enum WhisperPadError: Error, Equatable, LocalizedError {
     // 権限エラー
     case microphonePermissionDenied
     case accessibilityPermissionDenied
@@ -980,7 +980,7 @@ enum VoiceSnapError: Error, Equatable, LocalizedError {
     var recoverySuggestion: String? {
         switch self {
         case .microphonePermissionDenied:
-            return "システム環境設定 > プライバシーとセキュリティ > マイク で VoiceSnap を許可してください"
+            return "システム環境設定 > プライバシーとセキュリティ > マイク で WhisperPad を許可してください"
         // ... 他のケース
         }
     }

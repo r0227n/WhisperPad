@@ -1,4 +1,4 @@
-# VoiceSnap 開発タスクリスト
+# WhisperPad 開発タスクリスト
 
 > Swift/SwiftUI 初学者向け。各タスクは半日〜1 日程度で完了できる想定。
 
@@ -15,11 +15,13 @@
 **作業内容**:
 
 1. **`.gitignore`作成**
+
    - プロジェクトルートに`.gitignore`を作成
    - macOS、Xcode、Swift 関連の除外パターンを追加
    - 参考: [github/gitignore - Swift.gitignore](https://github.com/github/gitignore/blob/main/Swift.gitignore)
 
 2. **`Entitlements`設定**
+
    - `WhisperPad/WhisperPad/WhisperPad.entitlements`を新規作成
    - App Sandbox、マイクアクセス、ファイルアクセス権限を追加
    - Xcode でターゲットに紐付け
@@ -63,6 +65,7 @@
 **作業内容**:
 
 1. **AppIcon 設定**
+
    - `Assets.xcassets/AppIcon.appiconset/`にアイコンを追加
    - 必要なサイズ: 16x16, 32x32, 128x128, 256x256, 512x512（@1x, @2x）
 
@@ -96,6 +99,7 @@
 **作業内容**:
 
 1. **`Package.swift`の作成**
+
    - プロジェクトルートに`Package.swift`を作成
    - 必要な依存関係を定義（WhisperKit, TCA, HotKey）
    - macOS 14.0 以降をターゲットに設定
@@ -121,12 +125,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "VoiceSnap",
+    name: "WhisperPad",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "VoiceSnap", targets: ["VoiceSnap"])
+        .executable(name: "WhisperPad", targets: ["WhisperPad"])
     ],
     dependencies: [
         .package(
@@ -144,7 +148,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "VoiceSnap",
+            name: "WhisperPad",
             dependencies: [
                 "WhisperKit",
                 .product(
@@ -155,9 +159,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "VoiceSnapTests",
+            name: "WhisperPadTests",
             dependencies: [
-                "VoiceSnap",
+                "WhisperPad",
                 .product(
                     name: "ComposableArchitecture",
                     package: "swift-composable-architecture"
@@ -190,10 +194,12 @@ let package = Package(
 **作業内容**:
 
 1. **メニューバー専用アプリ化**
+
    - Info.plist に`LSUIElement = true`を追加
    - `WhisperPadApp.swift`から`WindowGroup`を削除
 
 2. **AppDelegate 導入**
+
    - `App/AppDelegate.swift`を新規作成
    - `NSStatusItem`でメニューバーにアイコンを表示
    - `WhisperPadApp.swift`で`@NSApplicationDelegateAdaptor`を使用
@@ -243,6 +249,7 @@ let package = Package(
 **作業内容**:
 
 1. **不要ファイル削除**
+
    - `ContentView.swift`を削除
    - 関連する参照を削除
 
@@ -284,11 +291,13 @@ let package = Package(
 **作業内容**:
 
 1. **TCA パッケージ追加**
+
    - Xcode で`swift-composable-architecture`パッケージを追加
    - URL: `https://github.com/pointfreeco/swift-composable-architecture`
    - バージョン: `1.23.0`以上
 
 2. **AppReducer 実装**
+
    - `App/AppReducer.swift`を新規作成
    - `AppStatus`（idle, recording, transcribing, completed, error）を定義
    - 基本的なアクション（startRecording, stopRecording 等）を定義
@@ -377,6 +386,7 @@ struct AppReducer {
 **作業内容**:
 
 1. **メニュー項目の動的更新**
+
    - `appStatus`に応じてメニュー項目のタイトルを変更
      - idle: 「録音開始」
      - recording: 「録音停止」
@@ -384,6 +394,7 @@ struct AppReducer {
    - メニュー項目のアクションを Store と連携
 
 2. **アイコンの動的更新**
+
    - idle: `mic`（グレー）
    - recording: `mic.fill`（赤）
    - transcribing: `gear`（回転アニメーション）
@@ -423,11 +434,13 @@ struct AppReducer {
 **作業内容**:
 
 1. **RecordingFeature 作成**
+
    - `Features/Recording/RecordingFeature.swift`を新規作成
    - 録音状態（idle, preparing, recording, stopping）を定義
    - AppReducer に子 Reducer として統合
 
 2. **マイク権限要求**
+
    - 権限要求ロジックを実装
    - 権限拒否時のハンドリング
 
@@ -469,11 +482,13 @@ let settings: [String: Any] = [
 **作業内容**:
 
 1. **メニューとの連携**
+
    - 「録音開始」クリックで録音開始
    - 「録音停止」クリックで録音停止
    - 録音中はメニューバーアイコンを赤に変更
 
 2. **録音時間表示**
+
    - 録音中の経過時間をメニューに表示（オプション）
 
 3. **動作確認**
@@ -511,11 +526,13 @@ let settings: [String: Any] = [
 **作業内容**:
 
 1. **WhisperKit パッケージ追加**
+
    - Xcode で WhisperKit パッケージを追加
    - URL: `https://github.com/argmaxinc/WhisperKit`
    - バージョン: `0.9.0`以上
 
 2. **TranscriptionClient 基本実装**
+
    - `Clients/TranscriptionClient.swift`を新規作成
    - WhisperKit の初期化
    - モデル一覧取得
@@ -547,10 +564,12 @@ let settings: [String: Any] = [
 **作業内容**:
 
 1. **TranscriptionFeature 作成**
+
    - `Features/Transcription/TranscriptionFeature.swift`を新規作成
    - 文字起こし状態（idle, loading, processing, completed, failed）を定義
 
 2. **文字起こし実行**
+
    - 録音停止後に自動で文字起こしを開始
    - WhisperKit での音声認識を実行
    - 結果をコンソールに出力
@@ -590,10 +609,12 @@ let settings: [String: Any] = [
 **作業内容**:
 
 1. **クリップボード出力**
+
    - `Clients/OutputClient.swift`を新規作成
    - `NSPasteboard`でクリップボードにコピー
 
 2. **完了通知**
+
    - macOS 通知センターへの通知送信
    - サウンド再生（`NSSound`）
 
@@ -628,11 +649,13 @@ let settings: [String: Any] = [
 **作業内容**:
 
 1. **設定画面基本**
+
    - `Features/Settings/SettingsView.swift`を新規作成
    - メニューの「設定」から開けるようにする
    - 基本的な設定項目 UI（完了通知 ON/OFF 等）
 
 2. **SettingsFeature 実装**
+
    - `Features/Settings/SettingsFeature.swift`を新規作成
    - 設定状態の管理
 
@@ -671,6 +694,7 @@ let settings: [String: Any] = [
 **作業内容**:
 
 1. **HotKey パッケージ追加**
+
    - Xcode で HotKey パッケージを追加
    - URL: `https://github.com/soffes/HotKey`
    - バージョン: `0.2.0`以上
@@ -706,12 +730,14 @@ let settings: [String: Any] = [
 **作業内容**:
 
 1. **エラーハンドリング**
-   - `Models/VoiceSnapError.swift`を新規作成
+
+   - `Models/WhisperPadError.swift`を新規作成
    - エラー種別の定義
    - エラー時のアラート表示
    - メニューバーアイコンの変化
 
 2. **ログイン時起動**
+
    - 設定画面に「ログイン時に起動」オプションを追加
    - `SMAppService`での登録/解除
 
@@ -722,7 +748,7 @@ let settings: [String: Any] = [
 
 **対象ファイル**:
 
-- `WhisperPad/WhisperPad/Models/VoiceSnapError.swift`（新規）
+- `WhisperPad/WhisperPad/Models/WhisperPadError.swift`（新規）
 - `SettingsView.swift`（修正）
 - 各 Feature（エラーハンドリング追加）
 
@@ -760,7 +786,7 @@ WhisperPad/
 │   ├── OutputClient.swift
 │   └── UserDefaultsClient.swift
 ├── Models/
-│   └── VoiceSnapError.swift
+│   └── WhisperPadError.swift
 └── Resources/
     ├── Assets.xcassets
     └── Info.plist

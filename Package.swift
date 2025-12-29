@@ -3,12 +3,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "VoiceSnap",
+    name: "WhisperPad",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "VoiceSnap", targets: ["VoiceSnap"])
+        .executable(name: "WhisperPad", targets: ["WhisperPad"])
     ],
     dependencies: [
         .package(
@@ -26,7 +26,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "VoiceSnap",
+            name: "WhisperPad",
             dependencies: [
                 "WhisperKit",
                 .product(
@@ -37,9 +37,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "VoiceSnapTests",
+            name: "WhisperPadTests",
             dependencies: [
-                "VoiceSnap",
+                "WhisperPad",
                 .product(
                     name: "ComposableArchitecture",
                     package: "swift-composable-architecture"
