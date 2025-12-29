@@ -13,7 +13,6 @@ import SwiftUI
 /// ステータスアイテムとメニューを管理します。
 @main
 struct WhisperPadApp: App {
-
     // MARK: - Properties
 
     /// AppKit の AppDelegate をブリッジするアダプター
