@@ -1,4 +1,5 @@
 [copy]
+    include = .claude/**
     include = **/.env.example
     include = .mise.toml
     include = .swiftformat
