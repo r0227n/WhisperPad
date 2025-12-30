@@ -4,6 +4,7 @@
 //
 
 import AppKit
+import AVFoundation
 import ComposableArchitecture
 import os.log
 
@@ -42,6 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case recording = 100
         case settings = 200
         case quit = 300
+        case micPermissionStatus = 400
     }
 
     // MARK: - Initialization
@@ -84,6 +86,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         statusMenu = createMenu()
+        statusMenu?.delegate = self
         statusItem.menu = statusMenu
         logger.info("Status item setup completed")
     }
@@ -300,6 +303,16 @@ private extension AppDelegate {
     }
 }
 
+// MARK: - NSMenuDelegate
+
+extension AppDelegate: NSMenuDelegate {
+    func menuWillOpen(_ menu: NSMenu) {
+        #if DEBUG
+        updatePermissionMenuItems()
+        #endif
+    }
+}
+
 // MARK: - Debug Menu and Actions
 
 #if DEBUG
@@ -348,9 +361,49 @@ private extension AppDelegate {
         debugError.target = self
         debugMenu.addItem(debugError)
 
+        // Permissions サブメニュー
+        debugMenu.addItem(NSMenuItem.separator())
+        addPermissionsSubmenu(to: debugMenu)
+
         let debugItem = NSMenuItem(title: "Debug", action: nil, keyEquivalent: "")
         debugItem.submenu = debugMenu
         menu.addItem(debugItem)
+    }
+
+    /// Permissions サブメニューを追加
+    func addPermissionsSubmenu(to debugMenu: NSMenu) {
+        let permissionsMenu = NSMenu(title: "Permissions")
+
+        // マイク権限状態（動的タイトル）
+        let micStatusItem = NSMenuItem(
+            title: "Microphone: Checking...",
+            action: nil,
+            keyEquivalent: ""
+        )
+        micStatusItem.tag = MenuItemTag.micPermissionStatus.rawValue
+        permissionsMenu.addItem(micStatusItem)
+
+        // マイク権限リクエスト
+        let requestMicItem = NSMenuItem(
+            title: "Request Microphone Permission",
+            action: #selector(debugRequestMicrophonePermission),
+            keyEquivalent: ""
+        )
+        requestMicItem.target = self
+        permissionsMenu.addItem(requestMicItem)
+
+        // マイク設定を開く
+        let openMicSettingsItem = NSMenuItem(
+            title: "Open Microphone Settings...",
+            action: #selector(debugOpenMicrophoneSettings),
+            keyEquivalent: ""
+        )
+        openMicSettingsItem.target = self
+        permissionsMenu.addItem(openMicSettingsItem)
+
+        let permissionsItem = NSMenuItem(title: "Permissions", action: nil, keyEquivalent: "")
+        permissionsItem.submenu = permissionsMenu
+        debugMenu.addItem(permissionsItem)
     }
 
     @objc func debugSetIdle() {
@@ -376,6 +429,67 @@ private extension AppDelegate {
     @objc func debugSetError() {
         logger.debug("Debug: Set Error")
         store.send(.errorOccurred("Debug error message"))
+    }
+
+    // MARK: - Permission Debug Actions
+
+    @objc func debugRequestMicrophonePermission() {
+        logger.debug("Debug: Requesting microphone permission")
+        // アプリをアクティブ化してダイアログを前面に表示
+        NSApp.activate(ignoringOtherApps: true)
+        AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
+            self?.logger.debug("Debug: Microphone permission result: \(granted)")
+            DispatchQueue.main.async {
+                self?.updatePermissionMenuItems()
+            }
+        }
+    }
+
+    @objc func debugOpenMicrophoneSettings() {
+        logger.debug("Debug: Opening microphone settings")
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    /// 権限メニュー項目を更新
+    func updatePermissionMenuItems() {
+        guard let menu = statusItem?.menu else { return }
+
+        // Debug メニューを探す
+        for item in menu.items {
+            guard let submenu = item.submenu, submenu.title == "Debug" else { continue }
+            // Permissions サブメニューを探す
+            for debugItem in submenu.items {
+                guard let permMenu = debugItem.submenu, permMenu.title == "Permissions" else { continue }
+
+                // マイク権限状態を更新
+                if let micItem = permMenu.item(withTag: MenuItemTag.micPermissionStatus.rawValue) {
+                    let status = AVCaptureDevice.authorizationStatus(for: .audio)
+                    micItem.title = "Microphone: \(statusEmoji(for: status)) \(statusText(for: status))"
+                }
+            }
+        }
+    }
+
+    private func statusEmoji(for status: AVAuthorizationStatus) -> String {
+        switch status {
+        case .authorized: return "✅"
+        case .denied: return "❌"
+        case .restricted: return "🚫"
+        case .notDetermined: return "❓"
+        @unknown default: return "❓"
+        }
+    }
+
+    private func statusText(for status: AVAuthorizationStatus) -> String {
+        switch status {
+        case .authorized: return "Authorized"
+        case .denied: return "Denied"
+        case .restricted: return "Restricted"
+        case .notDetermined: return "Not Determined"
+        @unknown default: return "Unknown"
+        }
     }
 }
 #endif

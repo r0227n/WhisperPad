@@ -4,6 +4,7 @@
 //
 
 import ComposableArchitecture
+import Foundation
 
 /// アプリケーションのステータス
 enum AppStatus: Equatable, Sendable {
@@ -35,6 +36,12 @@ struct AppReducer {
 
         /// 最後の文字起こし結果
         var lastTranscription: String?
+
+        /// 録音機能の状態
+        var recording: RecordingFeature.State = .init()
+
+        /// 最後に録音されたファイルの URL
+        var lastRecordingURL: URL?
     }
 
     // MARK: - Action
@@ -51,6 +58,8 @@ struct AppReducer {
         case errorOccurred(String)
         /// 待機状態にリセット
         case resetToIdle
+        /// 録音機能のアクション
+        case recording(RecordingFeature.Action)
     }
 
     // MARK: - Dependencies
@@ -63,11 +72,48 @@ struct AppReducer {
         Reduce { state, action in
             switch action {
             case .startRecording:
+                // 録音機能に委譲
+                return .send(.recording(.startRecordingButtonTapped))
+
+            case .stopRecording:
+                // 録音機能に委譲
+                return .send(.recording(.stopRecordingButtonTapped))
+
+            // RecordingFeature のデリゲートアクションを処理
+            case let .recording(.delegate(.recordingCompleted(url))):
+                state.appStatus = .transcribing
+                state.lastRecordingURL = url
+                // Phase 4: ここで TranscriptionFeature を呼び出す
+                // 現時点では transcriptionCompleted をシミュレート
+                return .run { send in
+                    // TODO: Phase 4 で実際の文字起こしを実装
+                    try await clock.sleep(for: .seconds(2))
+                    await send(.transcriptionCompleted("（文字起こし機能は Phase 4 で実装予定）"))
+                }
+
+            case .recording(.delegate(.recordingCancelled)):
+                state.appStatus = .idle
+                return .none
+
+            case let .recording(.delegate(.recordingFailed(error))):
+                state.appStatus = .error(error.localizedDescription)
+                return .run { send in
+                    try await clock.sleep(for: .seconds(5))
+                    await send(.resetToIdle)
+                }
+                .cancellable(id: "autoReset")
+
+            // RecordingFeature の内部アクションで appStatus を更新
+            case .recording(.recordingStarted):
                 state.appStatus = .recording
                 return .cancel(id: "autoReset")
 
-            case .stopRecording:
-                state.appStatus = .transcribing
+            case .recording(.prepareRecording):
+                state.appStatus = .recording
+                return .cancel(id: "autoReset")
+
+            case .recording:
+                // その他の録音アクションは無視
                 return .none
 
             case let .transcriptionCompleted(text):
@@ -91,6 +137,11 @@ struct AppReducer {
                 state.appStatus = .idle
                 return .none
             }
+        }
+
+        // 録音機能の子 Reducer を統合
+        Scope(state: \.recording, action: \.recording) {
+            RecordingFeature()
         }
     }
 }
