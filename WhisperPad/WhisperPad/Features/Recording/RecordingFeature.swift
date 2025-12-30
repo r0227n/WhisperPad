@@ -6,6 +6,16 @@
 import ComposableArchitecture
 import Foundation
 
+// MARK: - Constants
+
+/// 録音機能の定数
+enum RecordingConstants {
+    /// 最大録音時間（秒）
+    ///
+    /// - Note: 将来的に設定画面から変更可能にする予定
+    static let maxRecordingDuration: TimeInterval = 60
+}
+
 /// 録音機能の TCA Reducer
 ///
 /// 音声録音のライフサイクル（権限要求、録音開始/停止、タイマー管理）を管理します。
@@ -78,9 +88,6 @@ struct RecordingFeature {
     @Dependency(\.audioRecorder) var audioRecorder
     @Dependency(\.continuousClock) var clock
     @Dependency(\.uuid) var uuid
-
-    /// 最大録音時間（秒）
-    private let maxRecordingDuration: TimeInterval = 60
 
     // MARK: - Reducer Body
 
@@ -158,7 +165,7 @@ struct RecordingFeature {
                     let newDuration = duration + 1
                     state.status = .recording(duration: newDuration)
                     // 最大録音時間に達した場合は自動停止
-                    if newDuration >= maxRecordingDuration {
+                    if newDuration >= RecordingConstants.maxRecordingDuration {
                         return .send(.stopRecordingButtonTapped)
                     }
                 }
