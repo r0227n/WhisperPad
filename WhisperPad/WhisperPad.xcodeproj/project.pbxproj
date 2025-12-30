@@ -10,14 +10,30 @@
 		F70A490A2EFEFD0000CBD639 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = F70A49092EFEFD0000CBD639 /* ComposableArchitecture */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		F70A49102EFEFD0200CBD639 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F70A48EE2EFEFCC800CBD639 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F70A48F52EFEFCC800CBD639;
+			remoteInfo = WhisperPad;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		F70A48F62EFEFCC800CBD639 /* WhisperPad.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhisperPad.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F70A490E2EFEFD0200CBD639 /* WhisperPadTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhisperPadTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F70A48F82EFEFCC800CBD639 /* WhisperPad */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = WhisperPad;
+			sourceTree = "<group>";
+		};
+		F70A490F2EFEFD0200CBD639 /* WhisperPadTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WhisperPadTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -31,6 +47,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F70A49112EFEFD0200CBD639 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -38,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				F70A48F82EFEFCC800CBD639 /* WhisperPad */,
+				F70A490F2EFEFD0200CBD639 /* WhisperPadTests */,
 				F70A48F72EFEFCC800CBD639 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -46,6 +70,7 @@
 			isa = PBXGroup;
 			children = (
 				F70A48F62EFEFCC800CBD639 /* WhisperPad.app */,
+				F70A490E2EFEFD0200CBD639 /* WhisperPadTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -77,6 +102,29 @@
 			productReference = F70A48F62EFEFCC800CBD639 /* WhisperPad.app */;
 			productType = "com.apple.product-type.application";
 		};
+		F70A490D2EFEFD0200CBD639 /* WhisperPadTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F70A49142EFEFD0200CBD639 /* Build configuration list for PBXNativeTarget "WhisperPadTests" */;
+			buildPhases = (
+				F70A49122EFEFD0200CBD639 /* Sources */,
+				F70A49112EFEFD0200CBD639 /* Frameworks */,
+				F70A49132EFEFD0200CBD639 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F70A49152EFEFD0200CBD639 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F70A490F2EFEFD0200CBD639 /* WhisperPadTests */,
+			);
+			name = WhisperPadTests;
+			packageProductDependencies = (
+			);
+			productName = WhisperPadTests;
+			productReference = F70A490E2EFEFD0200CBD639 /* WhisperPadTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -89,6 +137,10 @@
 				TargetAttributes = {
 					F70A48F52EFEFCC800CBD639 = {
 						CreatedOnToolsVersion = 26.1.1;
+					};
+					F70A490D2EFEFD0200CBD639 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = F70A48F52EFEFCC800CBD639;
 					};
 				};
 			};
@@ -110,12 +162,20 @@
 			projectRoot = "";
 			targets = (
 				F70A48F52EFEFCC800CBD639 /* WhisperPad */,
+				F70A490D2EFEFD0200CBD639 /* WhisperPadTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		F70A48F42EFEFCC800CBD639 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F70A49132EFEFD0200CBD639 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -154,7 +214,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F70A49122EFEFD0200CBD639 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F70A49152EFEFD0200CBD639 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F70A48F52EFEFCC800CBD639 /* WhisperPad */;
+			targetProxy = F70A49102EFEFD0200CBD639 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		F70A48FF2EFEFCC900CBD639 /* Debug */ = {
@@ -278,14 +353,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = WhisperPad/WhisperPad.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Y9M563G252;
-				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WhisperPad/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -303,7 +378,6 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.r0227n.WhisperPad;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
@@ -322,14 +396,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = WhisperPad/WhisperPad.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Y9M563G252;
-				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WhisperPad/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -347,7 +421,6 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.r0227n.WhisperPad;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
@@ -358,6 +431,50 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				XROS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Release;
+		};
+		F70A49162EFEFD0200CBD639 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9M563G252;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.r0227n.WhisperPadTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WhisperPad.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WhisperPad";
+			};
+			name = Debug;
+		};
+		F70A49172EFEFD0200CBD639 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9M563G252;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.r0227n.WhisperPadTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WhisperPad.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WhisperPad";
 			};
 			name = Release;
 		};
@@ -378,6 +495,15 @@
 			buildConfigurations = (
 				F70A49022EFEFCC900CBD639 /* Debug */,
 				F70A49032EFEFCC900CBD639 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F70A49142EFEFD0200CBD639 /* Build configuration list for PBXNativeTarget "WhisperPadTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F70A49162EFEFD0200CBD639 /* Debug */,
+				F70A49172EFEFD0200CBD639 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

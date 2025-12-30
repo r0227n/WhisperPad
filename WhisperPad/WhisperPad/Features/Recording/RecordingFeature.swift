@@ -5,6 +5,9 @@
 
 import ComposableArchitecture
 import Foundation
+import OSLog
+
+private let logger = Logger(subsystem: "com.whisperpad", category: "RecordingFeature")
 
 // MARK: - Constants
 
@@ -120,26 +123,14 @@ struct RecordingFeature {
 
             case .prepareRecording:
                 state.status = .preparing
-                let url = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("whisperpad_\(uuid().uuidString)")
-                    .appendingPathExtension("wav")
-                state.recordingURL = url
+                // URLではなくidentifierのみを生成
+                // URL生成はクライアント内部で行われ、非同期境界での破損を防止
+                let identifier = uuid().uuidString
 
-                // URL ではなく String (パス) をキャプチャして非同期コンテキスト間での破損を防止
-                //
-                // TCA のエフェクトシステムでは @Sendable クロージャの制約により、
-                // 参照型の内部状態が破損するリスクがあります。
-                // Swift 5.5 以降 URL は Sendable に準拠していますが、
-                // TCA のベストプラクティスとして値型（String）経由での受け渡しを使用します。
-                //
-                // 参考: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/
-                let urlPath = url.path
-
-                return .run { [urlPath] send in
+                return .run { [identifier] send in
                     do {
-                        // String から URL を再作成（値型からの変換なので安全）
-                        let recordingURL = URL(fileURLWithPath: urlPath)
-                        try await audioRecorder.startRecording(recordingURL)
+                        // クライアントがURLを生成して返す
+                        let recordingURL = try await audioRecorder.startRecording(identifier)
                         await send(.recordingStarted(recordingURL))
                     } catch {
                         let recordingError =

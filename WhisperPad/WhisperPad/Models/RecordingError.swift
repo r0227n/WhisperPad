@@ -18,12 +18,10 @@ enum RecordingError: Error, Equatable, Sendable, LocalizedError {
     /// - Note: macOS では AVAudioSession を使用しないため未使用。
     ///   iOS 対応時に使用予定。
     case audioSessionSetupFailed
-    /// AVAudioEngine の開始に失敗
-    case audioEngineStartFailed(String)
+    /// AVAudioRecorder の開始に失敗
+    case recorderStartFailed(String)
     /// オーディオファイルの作成に失敗
     case audioFileCreationFailed(String)
-    /// オーディオコンバーターの処理に失敗
-    case audioConverterFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -35,12 +33,10 @@ enum RecordingError: Error, Equatable, Sendable, LocalizedError {
             "録音ファイルのURLが設定されていません。"
         case .audioSessionSetupFailed:
             "オーディオセッションの設定に失敗しました。"
-        case let .audioEngineStartFailed(message):
-            "オーディオエンジンの開始に失敗しました: \(message)"
+        case let .recorderStartFailed(message):
+            "録音の開始に失敗しました: \(message)"
         case let .audioFileCreationFailed(message):
             "オーディオファイルの作成に失敗しました: \(message)"
-        case let .audioConverterFailed(message):
-            "オーディオ変換に失敗しました: \(message)"
         }
     }
 }
