@@ -384,8 +384,10 @@ extension AppDelegate {
         debugLogger.debug("Debug: Requesting notification permission")
         NSApp.activate(ignoringOtherApps: true)
 
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { [weak self] granted, error in
-            self?.debugLogger.debug("Debug: Notification permission result: \(granted), error: \(String(describing: error))")
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .sound]) { [weak self] granted, error in
+            let errorDesc = error.map { String(describing: $0) } ?? "nil"
+            self?.debugLogger.debug("Debug: Notification permission result: \(granted), error: \(errorDesc)")
             DispatchQueue.main.async {
                 self?.updateOutputMenuItems()
             }

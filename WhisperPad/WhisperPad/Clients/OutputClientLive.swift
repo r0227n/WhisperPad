@@ -46,11 +46,10 @@ extension OutputClient: DependencyKey {
                 }
 
                 // 連番の場合、既存ファイルをチェックして次の番号を決定
-                let sequentialNumber: Int
-                if settings.fileNameFormat == .sequential {
-                    sequentialNumber = Self.findNextSequentialNumber(in: settings.outputDirectory)
+                let sequentialNumber: Int = if settings.fileNameFormat == .sequential {
+                    Self.findNextSequentialNumber(in: settings.outputDirectory)
                 } else {
-                    sequentialNumber = 1
+                    1
                 }
 
                 // ファイルパスを生成
@@ -62,18 +61,18 @@ extension OutputClient: DependencyKey {
                     let metadata = Self.generateMetadata()
                     if settings.fileExtension == .md {
                         content = """
-                            ---
-                            \(metadata)
-                            ---
+                        ---
+                        \(metadata)
+                        ---
 
-                            \(text)
-                            """
+                        \(text)
+                        """
                     } else {
                         content = """
-                            \(metadata)
+                        \(metadata)
 
-                            \(text)
-                            """
+                        \(text)
+                        """
                     }
                 }
 
@@ -91,12 +90,12 @@ extension OutputClient: DependencyKey {
                 let content = UNMutableNotificationContent()
                 content.title = title
                 content.body = body
-                content.sound = nil  // サウンドは別途再生
+                content.sound = nil // サウンドは別途再生
 
                 let request = UNNotificationRequest(
                     identifier: UUID().uuidString,
                     content: content,
-                    trigger: nil  // 即時配信
+                    trigger: nil // 即時配信
                 )
 
                 do {
@@ -165,8 +164,8 @@ extension OutputClient: DependencyKey {
         let dateString = formatter.string(from: Date())
 
         return """
-            created: \(dateString)
-            app: WhisperPad
-            """
+        created: \(dateString)
+        app: WhisperPad
+        """
     }
 }
