@@ -6,6 +6,7 @@
 import AppKit
 import AVFoundation
 import ComposableArchitecture
+import Dependencies
 import os.log
 
 /// メニューバーアプリケーションを管理する AppDelegate
@@ -365,6 +366,10 @@ private extension AppDelegate {
         debugMenu.addItem(NSMenuItem.separator())
         addPermissionsSubmenu(to: debugMenu)
 
+        // WhisperKit サブメニュー
+        debugMenu.addItem(NSMenuItem.separator())
+        addWhisperKitSubmenu(to: debugMenu)
+
         let debugItem = NSMenuItem(title: "Debug", action: nil, keyEquivalent: "")
         debugItem.submenu = debugMenu
         menu.addItem(debugItem)
@@ -490,6 +495,132 @@ private extension AppDelegate {
         case .notDetermined: return "Not Determined"
         @unknown default: return "Unknown"
         }
+    }
+
+    // MARK: - WhisperKit Debug Menu
+
+    /// WhisperKit サブメニューを追加
+    func addWhisperKitSubmenu(to debugMenu: NSMenu) {
+        let whisperKitMenu = NSMenu(title: "WhisperKit")
+
+        // モデル一覧を取得
+        let fetchModelsItem = NSMenuItem(
+            title: "Fetch Available Models",
+            action: #selector(debugFetchAvailableModels),
+            keyEquivalent: ""
+        )
+        fetchModelsItem.target = self
+        whisperKitMenu.addItem(fetchModelsItem)
+
+        // 推奨モデルを取得
+        let recommendedModelItem = NSMenuItem(
+            title: "Get Recommended Model",
+            action: #selector(debugGetRecommendedModel),
+            keyEquivalent: ""
+        )
+        recommendedModelItem.target = self
+        whisperKitMenu.addItem(recommendedModelItem)
+
+        whisperKitMenu.addItem(NSMenuItem.separator())
+
+        // tiny モデルをダウンロード
+        let downloadTinyItem = NSMenuItem(
+            title: "Download tiny Model",
+            action: #selector(debugDownloadTinyModel),
+            keyEquivalent: ""
+        )
+        downloadTinyItem.target = self
+        whisperKitMenu.addItem(downloadTinyItem)
+
+        let whisperKitItem = NSMenuItem(title: "WhisperKit", action: nil, keyEquivalent: "")
+        whisperKitItem.submenu = whisperKitMenu
+        debugMenu.addItem(whisperKitItem)
+    }
+
+    // MARK: - WhisperKit Debug Actions
+
+    @objc func debugFetchAvailableModels() {
+        logger.debug("Debug: Fetching available models")
+
+        @Dependency(\.transcriptionClient) var transcriptionClient
+
+        Task {
+            do {
+                let models = try await transcriptionClient.fetchAvailableModels()
+                logger.info("Debug: Found \(models.count) models")
+                for model in models {
+                    logger.info("  - \(model)")
+                }
+                await MainActor.run {
+                    showAlert(
+                        title: "Available Models",
+                        message: "Found \(models.count) models:\n\n\(models.joined(separator: "\n"))"
+                    )
+                }
+            } catch {
+                logger.error("Debug: Failed to fetch models: \(error.localizedDescription)")
+                await MainActor.run {
+                    showAlert(title: "Error", message: "Failed to fetch models: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    @objc func debugGetRecommendedModel() {
+        logger.debug("Debug: Getting recommended model")
+
+        @Dependency(\.transcriptionClient) var transcriptionClient
+
+        Task {
+            let recommended = await transcriptionClient.recommendedModel()
+            logger.info("Debug: Recommended model: \(recommended)")
+            await MainActor.run {
+                showAlert(title: "Recommended Model", message: recommended)
+            }
+        }
+    }
+
+    @objc func debugDownloadTinyModel() {
+        logger.debug("Debug: Downloading tiny model")
+
+        @Dependency(\.transcriptionClient) var transcriptionClient
+
+        Task {
+            do {
+                await MainActor.run {
+                    showAlert(
+                        title: "Downloading",
+                        message: "Downloading openai_whisper-tiny model...\nThis may take a while."
+                    )
+                }
+                let url = try await transcriptionClient.downloadModel("openai_whisper-tiny") { progress in
+                    self.logger.debug("Debug: Download progress: \(Int(progress * 100))%")
+                }
+                logger.info("Debug: Model downloaded to: \(url.path)")
+                await MainActor.run {
+                    showAlert(
+                        title: "Download Complete",
+                        message: "Model downloaded to:\n\(url.path)"
+                    )
+                }
+            } catch {
+                logger.error("Debug: Failed to download model: \(error.localizedDescription)")
+                await MainActor.run {
+                    showAlert(title: "Error", message: "Failed to download model: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    /// アラートを表示
+    private func showAlert(title: String, message: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
     }
 }
 #endif
