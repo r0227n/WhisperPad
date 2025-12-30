@@ -9,6 +9,7 @@ import AVFoundation
 import ComposableArchitecture
 import Dependencies
 import os.log
+import UniformTypeIdentifiers
 import UserNotifications
 
 // MARK: - Debug Menu and Actions
@@ -231,6 +232,17 @@ extension AppDelegate {
 
         outputMenu.addItem(NSMenuItem.separator())
 
+        // Save Transcription to File
+        let saveToFileItem = NSMenuItem(
+            title: "Save Transcription to File...",
+            action: #selector(debugSaveTranscriptionToFile),
+            keyEquivalent: ""
+        )
+        saveToFileItem.target = self
+        outputMenu.addItem(saveToFileItem)
+
+        outputMenu.addItem(NSMenuItem.separator())
+
         // Notification permission status
         let notifStatusItem = NSMenuItem(
             title: "Notification: Checking...",
@@ -316,6 +328,56 @@ extension AppDelegate {
             debugLogger.warning("Debug: Sound 'Glass' not found")
             showAlert(title: "Sound Not Found", message: "System sound 'Glass' was not found")
         }
+    }
+
+    @objc func debugSaveTranscriptionToFile() {
+        debugLogger.debug("Debug: Save transcription to file")
+
+        // 文字起こし結果を取得
+        guard let transcription = store.state.lastTranscription, !transcription.isEmpty else {
+            showAlert(
+                title: "No Transcription",
+                message: "No transcription text available. Please run a transcription first."
+            )
+            return
+        }
+
+        // NSSavePanel を表示
+        let savePanel = NSSavePanel()
+        savePanel.title = "Save Transcription"
+        savePanel.nameFieldStringValue = generateDefaultFileName()
+        savePanel.allowedContentTypes = [.plainText]
+        savePanel.canCreateDirectories = true
+
+        NSApp.activate(ignoringOtherApps: true)
+
+        savePanel.begin { [weak self] response in
+            guard response == .OK, let url = savePanel.url else {
+                self?.debugLogger.debug("Debug: Save cancelled")
+                return
+            }
+
+            do {
+                try transcription.write(to: url, atomically: true, encoding: .utf8)
+                self?.debugLogger.info("Debug: Transcription saved to \(url.path)")
+                self?.showAlert(
+                    title: "File Saved",
+                    message: "Transcription saved to:\n\(url.path)"
+                )
+            } catch {
+                self?.debugLogger.error("Debug: Failed to save: \(error.localizedDescription)")
+                self?.showAlert(
+                    title: "Save Failed",
+                    message: "Failed to save file: \(error.localizedDescription)"
+                )
+            }
+        }
+    }
+
+    private func generateDefaultFileName() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd_HHmmss"
+        return "WhisperPad_\(formatter.string(from: Date())).txt"
     }
 
     @objc func debugRequestNotificationPermission() {
