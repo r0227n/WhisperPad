@@ -40,6 +40,9 @@ struct AppReducer {
         /// 録音機能の状態
         var recording: RecordingFeature.State = .init()
 
+        /// 文字起こし機能の状態
+        var transcription: TranscriptionFeature.State = .init()
+
         /// 最後に録音されたファイルの URL
         var lastRecordingURL: URL?
     }
@@ -60,6 +63,8 @@ struct AppReducer {
         case resetToIdle
         /// 録音機能のアクション
         case recording(RecordingFeature.Action)
+        /// 文字起こし機能のアクション
+        case transcription(TranscriptionFeature.Action)
     }
 
     // MARK: - Dependencies
@@ -83,13 +88,8 @@ struct AppReducer {
             case let .recording(.delegate(.recordingCompleted(url))):
                 state.appStatus = .transcribing
                 state.lastRecordingURL = url
-                // Phase 4: ここで TranscriptionFeature を呼び出す
-                // 現時点では transcriptionCompleted をシミュレート
-                return .run { send in
-                    // TODO: Phase 4 で実際の文字起こしを実装
-                    try await clock.sleep(for: .seconds(2))
-                    await send(.transcriptionCompleted("（文字起こし機能は Phase 4 で実装予定）"))
-                }
+                // TranscriptionFeature に文字起こしを委譲
+                return .send(.transcription(.startTranscription(audioURL: url, language: nil)))
 
             case .recording(.delegate(.recordingCancelled)):
                 state.appStatus = .idle
@@ -114,6 +114,17 @@ struct AppReducer {
 
             case .recording:
                 // その他の録音アクションは無視
+                return .none
+
+            // TranscriptionFeature のデリゲートアクションを処理
+            case let .transcription(.delegate(.transcriptionCompleted(text))):
+                return .send(.transcriptionCompleted(text))
+
+            case let .transcription(.delegate(.transcriptionFailed(error))):
+                return .send(.errorOccurred(error.localizedDescription))
+
+            case .transcription:
+                // その他の文字起こしアクションは無視
                 return .none
 
             case let .transcriptionCompleted(text):
@@ -142,6 +153,11 @@ struct AppReducer {
         // 録音機能の子 Reducer を統合
         Scope(state: \.recording, action: \.recording) {
             RecordingFeature()
+        }
+
+        // 文字起こし機能の子 Reducer を統合
+        Scope(state: \.transcription, action: \.transcription) {
+            TranscriptionFeature()
         }
     }
 }
