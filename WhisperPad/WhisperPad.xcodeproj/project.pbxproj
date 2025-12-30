@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		F70A490A2EFEFD0000CBD639 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = F70A49092EFEFD0000CBD639 /* ComposableArchitecture */; };
+		F7B12A002F1300000000001A /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = F7B12A002F1300000000001B /* WhisperKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +45,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F70A490A2EFEFD0000CBD639 /* ComposableArchitecture in Frameworks */,
+				F7B12A002F1300000000001A /* WhisperKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -97,6 +99,7 @@
 			name = WhisperPad;
 			packageProductDependencies = (
 				F70A49092EFEFD0000CBD639 /* ComposableArchitecture */,
+				F7B12A002F1300000000001B /* WhisperKit */,
 			);
 			productName = WhisperPad;
 			productReference = F70A48F62EFEFCC800CBD639 /* WhisperPad.app */;
@@ -155,6 +158,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				F70A49082EFEFD0000CBD639 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+				F7B12A002F1300000000001C /* XCRemoteSwiftPackageReference "WhisperKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F70A48F72EFEFCC800CBD639 /* Products */;
@@ -519,6 +523,14 @@
 				minimumVersion = 1.23.1;
 			};
 		};
+		F7B12A002F1300000000001C /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.15.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -526,6 +538,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F70A49082EFEFD0000CBD639 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
 			productName = ComposableArchitecture;
+		};
+		F7B12A002F1300000000001B /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F7B12A002F1300000000001C /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = WhisperKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

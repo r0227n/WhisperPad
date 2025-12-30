@@ -4,9 +4,9 @@
 //
 
 import AppKit
-import AVFoundation
 import ComposableArchitecture
 import os.log
+import UserNotifications
 
 /// メニューバーアプリケーションを管理する AppDelegate
 ///
@@ -19,7 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
 
     /// ステータスアイテムのメニュー
-    private var statusMenu: NSMenu?
+    var statusMenu: NSMenu?
 
     /// TCA Store
     let store: StoreOf<AppReducer>
@@ -39,11 +39,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Menu Item Tags
 
     /// メニュー項目を識別するためのタグ
-    private enum MenuItemTag: Int {
+    enum MenuItemTag: Int {
         case recording = 100
         case settings = 200
         case quit = 300
         case micPermissionStatus = 400
+        case notificationPermissionStatus = 500
     }
 
     // MARK: - Initialization
@@ -61,6 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         logger.info("Application did finish launching")
         setupStatusItem()
         setupObservation()
+        requestNotificationPermission()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -97,6 +99,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             self.updateMenuForCurrentState()
             self.updateIconForCurrentState()
+        }
+    }
+
+    /// 通知権限を要求
+    private func requestNotificationPermission() {
+        Task {
+            do {
+                let granted = try await UNUserNotificationCenter.current()
+                    .requestAuthorization(options: [.alert, .sound])
+                if granted {
+                    logger.info("Notification permission granted")
+                } else {
+                    logger.warning("Notification permission denied")
+                }
+            } catch {
+                logger.error("Notification permission request failed: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -309,187 +328,7 @@ extension AppDelegate: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
         #if DEBUG
         updatePermissionMenuItems()
+        updateOutputMenuItems()
         #endif
     }
 }
-
-// MARK: - Debug Menu and Actions
-
-#if DEBUG
-private extension AppDelegate {
-    /// デバッグメニューを追加
-    func addDebugMenu(to menu: NSMenu) {
-        let debugMenu = NSMenu(title: "Debug")
-
-        let debugIdle = NSMenuItem(
-            title: "Set Idle",
-            action: #selector(debugSetIdle),
-            keyEquivalent: ""
-        )
-        debugIdle.target = self
-        debugMenu.addItem(debugIdle)
-
-        let debugRecording = NSMenuItem(
-            title: "Set Recording",
-            action: #selector(debugSetRecording),
-            keyEquivalent: ""
-        )
-        debugRecording.target = self
-        debugMenu.addItem(debugRecording)
-
-        let debugTranscribing = NSMenuItem(
-            title: "Set Transcribing",
-            action: #selector(debugSetTranscribing),
-            keyEquivalent: ""
-        )
-        debugTranscribing.target = self
-        debugMenu.addItem(debugTranscribing)
-
-        let debugCompleted = NSMenuItem(
-            title: "Set Completed",
-            action: #selector(debugSetCompleted),
-            keyEquivalent: ""
-        )
-        debugCompleted.target = self
-        debugMenu.addItem(debugCompleted)
-
-        let debugError = NSMenuItem(
-            title: "Set Error",
-            action: #selector(debugSetError),
-            keyEquivalent: ""
-        )
-        debugError.target = self
-        debugMenu.addItem(debugError)
-
-        // Permissions サブメニュー
-        debugMenu.addItem(NSMenuItem.separator())
-        addPermissionsSubmenu(to: debugMenu)
-
-        let debugItem = NSMenuItem(title: "Debug", action: nil, keyEquivalent: "")
-        debugItem.submenu = debugMenu
-        menu.addItem(debugItem)
-    }
-
-    /// Permissions サブメニューを追加
-    func addPermissionsSubmenu(to debugMenu: NSMenu) {
-        let permissionsMenu = NSMenu(title: "Permissions")
-
-        // マイク権限状態（動的タイトル）
-        let micStatusItem = NSMenuItem(
-            title: "Microphone: Checking...",
-            action: nil,
-            keyEquivalent: ""
-        )
-        micStatusItem.tag = MenuItemTag.micPermissionStatus.rawValue
-        permissionsMenu.addItem(micStatusItem)
-
-        // マイク権限リクエスト
-        let requestMicItem = NSMenuItem(
-            title: "Request Microphone Permission",
-            action: #selector(debugRequestMicrophonePermission),
-            keyEquivalent: ""
-        )
-        requestMicItem.target = self
-        permissionsMenu.addItem(requestMicItem)
-
-        // マイク設定を開く
-        let openMicSettingsItem = NSMenuItem(
-            title: "Open Microphone Settings...",
-            action: #selector(debugOpenMicrophoneSettings),
-            keyEquivalent: ""
-        )
-        openMicSettingsItem.target = self
-        permissionsMenu.addItem(openMicSettingsItem)
-
-        let permissionsItem = NSMenuItem(title: "Permissions", action: nil, keyEquivalent: "")
-        permissionsItem.submenu = permissionsMenu
-        debugMenu.addItem(permissionsItem)
-    }
-
-    @objc func debugSetIdle() {
-        logger.debug("Debug: Set Idle")
-        store.send(.resetToIdle)
-    }
-
-    @objc func debugSetRecording() {
-        logger.debug("Debug: Set Recording")
-        store.send(.startRecording)
-    }
-
-    @objc func debugSetTranscribing() {
-        logger.debug("Debug: Set Transcribing")
-        store.send(.stopRecording)
-    }
-
-    @objc func debugSetCompleted() {
-        logger.debug("Debug: Set Completed")
-        store.send(.transcriptionCompleted("Debug transcription text"))
-    }
-
-    @objc func debugSetError() {
-        logger.debug("Debug: Set Error")
-        store.send(.errorOccurred("Debug error message"))
-    }
-
-    // MARK: - Permission Debug Actions
-
-    @objc func debugRequestMicrophonePermission() {
-        logger.debug("Debug: Requesting microphone permission")
-        // アプリをアクティブ化してダイアログを前面に表示
-        NSApp.activate(ignoringOtherApps: true)
-        AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
-            self?.logger.debug("Debug: Microphone permission result: \(granted)")
-            DispatchQueue.main.async {
-                self?.updatePermissionMenuItems()
-            }
-        }
-    }
-
-    @objc func debugOpenMicrophoneSettings() {
-        logger.debug("Debug: Opening microphone settings")
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
-            NSWorkspace.shared.open(url)
-        }
-    }
-
-    /// 権限メニュー項目を更新
-    func updatePermissionMenuItems() {
-        guard let menu = statusItem?.menu else { return }
-
-        // Debug メニューを探す
-        for item in menu.items {
-            guard let submenu = item.submenu, submenu.title == "Debug" else { continue }
-            // Permissions サブメニューを探す
-            for debugItem in submenu.items {
-                guard let permMenu = debugItem.submenu, permMenu.title == "Permissions" else { continue }
-
-                // マイク権限状態を更新
-                if let micItem = permMenu.item(withTag: MenuItemTag.micPermissionStatus.rawValue) {
-                    let status = AVCaptureDevice.authorizationStatus(for: .audio)
-                    micItem.title = "Microphone: \(statusEmoji(for: status)) \(statusText(for: status))"
-                }
-            }
-        }
-    }
-
-    private func statusEmoji(for status: AVAuthorizationStatus) -> String {
-        switch status {
-        case .authorized: return "✅"
-        case .denied: return "❌"
-        case .restricted: return "🚫"
-        case .notDetermined: return "❓"
-        @unknown default: return "❓"
-        }
-    }
-
-    private func statusText(for status: AVAuthorizationStatus) -> String {
-        switch status {
-        case .authorized: return "Authorized"
-        case .denied: return "Denied"
-        case .restricted: return "Restricted"
-        case .notDetermined: return "Not Determined"
-        @unknown default: return "Unknown"
-        }
-    }
-}
-#endif
