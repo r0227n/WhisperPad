@@ -6,6 +6,7 @@
 import AppKit
 import ComposableArchitecture
 import os.log
+import UserNotifications
 
 /// メニューバーアプリケーションを管理する AppDelegate
 ///
@@ -38,10 +39,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Menu Item Tags
 
     /// メニュー項目を識別するためのタグ
-    private enum MenuItemTag: Int {
+    enum MenuItemTag: Int {
         case recording = 100
         case settings = 200
         case quit = 300
+        case micPermissionStatus = 400
+        case notificationPermissionStatus = 500
     }
 
     // MARK: - Initialization
@@ -59,6 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         logger.info("Application did finish launching")
         setupStatusItem()
         setupObservation()
+        requestNotificationPermission()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -95,6 +99,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             self.updateMenuForCurrentState()
             self.updateIconForCurrentState()
+        }
+    }
+
+    /// 通知権限を要求
+    private func requestNotificationPermission() {
+        Task {
+            do {
+                let granted = try await UNUserNotificationCenter.current()
+                    .requestAuthorization(options: [.alert, .sound])
+                if granted {
+                    logger.info("Notification permission granted")
+                } else {
+                    logger.warning("Notification permission denied")
+                }
+            } catch {
+                logger.error("Notification permission request failed: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -307,6 +328,7 @@ extension AppDelegate: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
         #if DEBUG
         updatePermissionMenuItems()
+        updateOutputMenuItems()
         #endif
     }
 }

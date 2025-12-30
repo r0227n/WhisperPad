@@ -6,8 +6,10 @@
 #if DEBUG
 import AppKit
 import AVFoundation
+import ComposableArchitecture
 import Dependencies
 import os.log
+import UserNotifications
 
 // MARK: - Debug Menu and Actions
 
@@ -59,6 +61,9 @@ extension AppDelegate {
         // Permissions サブメニュー
         debugMenu.addItem(NSMenuItem.separator())
         addPermissionsSubmenu(to: debugMenu)
+
+        // Output サブメニュー
+        addOutputSubmenu(to: debugMenu)
 
         // WhisperKit サブメニュー
         debugMenu.addItem(NSMenuItem.separator())
@@ -188,6 +193,193 @@ extension AppDelegate {
         case .restricted: return "Restricted"
         case .notDetermined: return "Not Determined"
         @unknown default: return "Unknown"
+        }
+    }
+
+    // MARK: - Output Debug Menu
+
+    /// Output サブメニューを追加
+    private func addOutputSubmenu(to debugMenu: NSMenu) {
+        let outputMenu = NSMenu(title: "Output")
+
+        // Test Copy to Clipboard
+        let copyItem = NSMenuItem(
+            title: "Test Copy to Clipboard",
+            action: #selector(debugTestCopyToClipboard),
+            keyEquivalent: ""
+        )
+        copyItem.target = self
+        outputMenu.addItem(copyItem)
+
+        // Test Show Notification
+        let notificationItem = NSMenuItem(
+            title: "Test Show Notification",
+            action: #selector(debugTestShowNotification),
+            keyEquivalent: ""
+        )
+        notificationItem.target = self
+        outputMenu.addItem(notificationItem)
+
+        // Test Play Sound
+        let soundItem = NSMenuItem(
+            title: "Test Play Sound",
+            action: #selector(debugTestPlaySound),
+            keyEquivalent: ""
+        )
+        soundItem.target = self
+        outputMenu.addItem(soundItem)
+
+        outputMenu.addItem(NSMenuItem.separator())
+
+        // Notification permission status
+        let notifStatusItem = NSMenuItem(
+            title: "Notification: Checking...",
+            action: nil,
+            keyEquivalent: ""
+        )
+        notifStatusItem.tag = MenuItemTag.notificationPermissionStatus.rawValue
+        outputMenu.addItem(notifStatusItem)
+
+        // Request Notification Permission
+        let requestNotifItem = NSMenuItem(
+            title: "Request Notification Permission",
+            action: #selector(debugRequestNotificationPermission),
+            keyEquivalent: ""
+        )
+        requestNotifItem.target = self
+        outputMenu.addItem(requestNotifItem)
+
+        // Open Notification Settings
+        let openNotifSettingsItem = NSMenuItem(
+            title: "Open Notification Settings...",
+            action: #selector(debugOpenNotificationSettings),
+            keyEquivalent: ""
+        )
+        openNotifSettingsItem.target = self
+        outputMenu.addItem(openNotifSettingsItem)
+
+        let outputItem = NSMenuItem(title: "Output", action: nil, keyEquivalent: "")
+        outputItem.submenu = outputMenu
+        debugMenu.addItem(outputItem)
+    }
+
+    // MARK: - Output Debug Actions
+
+    @objc func debugTestCopyToClipboard() {
+        debugLogger.debug("Debug: Testing clipboard copy")
+        let testText = "WhisperPad Debug: Clipboard Test - \(Date())"
+
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        let success = pasteboard.setString(testText, forType: .string)
+
+        debugLogger.debug("Debug: Clipboard copy result: \(success)")
+
+        showAlert(
+            title: success ? "Clipboard Copy Succeeded" : "Clipboard Copy Failed",
+            message: success ? "Text copied: \(testText)" : "Failed to copy text to clipboard"
+        )
+    }
+
+    @objc func debugTestShowNotification() {
+        debugLogger.debug("Debug: Testing notification")
+
+        let content = UNMutableNotificationContent()
+        content.title = "WhisperPad Debug"
+        content.body = "Test notification - \(Date())"
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: content,
+            trigger: nil
+        )
+
+        UNUserNotificationCenter.current().add(request) { [weak self] error in
+            DispatchQueue.main.async {
+                if let error {
+                    self?.debugLogger.error("Debug: Notification failed: \(error.localizedDescription)")
+                    self?.showAlert(title: "Notification Failed", message: error.localizedDescription)
+                } else {
+                    self?.debugLogger.debug("Debug: Notification sent successfully")
+                }
+            }
+        }
+    }
+
+    @objc func debugTestPlaySound() {
+        debugLogger.debug("Debug: Testing completion sound")
+        if let sound = NSSound(named: "Glass") {
+            sound.play()
+            debugLogger.debug("Debug: Sound played")
+        } else {
+            debugLogger.warning("Debug: Sound 'Glass' not found")
+            showAlert(title: "Sound Not Found", message: "System sound 'Glass' was not found")
+        }
+    }
+
+    @objc func debugRequestNotificationPermission() {
+        debugLogger.debug("Debug: Requesting notification permission")
+        NSApp.activate(ignoringOtherApps: true)
+
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { [weak self] granted, error in
+            self?.debugLogger.debug("Debug: Notification permission result: \(granted), error: \(String(describing: error))")
+            DispatchQueue.main.async {
+                self?.updateOutputMenuItems()
+            }
+        }
+    }
+
+    @objc func debugOpenNotificationSettings() {
+        debugLogger.debug("Debug: Opening notification settings")
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    /// Output メニュー項目を更新
+    func updateOutputMenuItems() {
+        guard let menu = statusMenu else { return }
+
+        // Debug メニューを探す
+        for item in menu.items {
+            guard let submenu = item.submenu, submenu.title == "Debug" else { continue }
+            // Output サブメニューを探す
+            for debugItem in submenu.items {
+                guard let outputMenu = debugItem.submenu, outputMenu.title == "Output" else { continue }
+
+                // 通知権限状態を更新
+                if let notifItem = outputMenu.item(withTag: MenuItemTag.notificationPermissionStatus.rawValue) {
+                    UNUserNotificationCenter.current().getNotificationSettings { settings in
+                        DispatchQueue.main.async {
+                            let status = settings.authorizationStatus
+                            let emoji: String
+                            let text: String
+                            switch status {
+                            case .authorized:
+                                emoji = "✅"
+                                text = "Authorized"
+                            case .denied:
+                                emoji = "❌"
+                                text = "Denied"
+                            case .notDetermined:
+                                emoji = "❓"
+                                text = "Not Determined"
+                            case .provisional:
+                                emoji = "⚠️"
+                                text = "Provisional"
+                            case .ephemeral:
+                                emoji = "⏳"
+                                text = "Ephemeral"
+                            @unknown default:
+                                emoji = "❓"
+                                text = "Unknown"
+                            }
+                            notifItem.title = "Notification: \(emoji) \(text)"
+                        }
+                    }
+                }
+            }
         }
     }
 

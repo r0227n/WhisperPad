@@ -70,6 +70,7 @@ struct AppReducer {
     // MARK: - Dependencies
 
     @Dependency(\.continuousClock) var clock
+    @Dependency(\.outputClient) var outputClient
 
     // MARK: - Reducer Body
 
@@ -130,7 +131,20 @@ struct AppReducer {
             case let .transcriptionCompleted(text):
                 state.appStatus = .completed
                 state.lastTranscription = text
-                return .run { send in
+                return .run { [outputClient] send in
+                    // クリップボードにコピー
+                    _ = await outputClient.copyToClipboard(text)
+
+                    // 通知を表示
+                    await outputClient.showNotification(
+                        "WhisperPad",
+                        "文字起こしが完了しました"
+                    )
+
+                    // 完了音を再生
+                    await outputClient.playCompletionSound()
+
+                    // 自動リセット
                     try await clock.sleep(for: .seconds(3))
                     await send(.resetToIdle)
                 }
