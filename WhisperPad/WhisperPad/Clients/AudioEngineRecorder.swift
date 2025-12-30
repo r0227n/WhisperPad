@@ -223,15 +223,28 @@ final class AudioEngineRecorder {
     }
 
     /// オーディオバッファを処理してファイルに書き込む
+    ///
+    /// 処理フロー:
+    /// 1. 音声レベル計算: 入力バッファ（Float32）から RMS → dB 変換
+    /// 2. ファイル書き込み: AVAudioConverter で Int16 に変換後、WAV ファイルに書き込み
+    ///
+    /// - Note: 音声レベル計算とファイル書き込みは異なるフォーマットで処理される
+    ///   - 音声レベル: Float32（入力フォーマット）- UI 表示用
+    ///   - ファイル出力: Int16（WhisperKit 推奨フォーマット）- 音声認識用
+    ///
+    /// - Parameters:
+    ///   - buffer: 入力オーディオバッファ（ハードウェアサンプルレート、Float32）
+    ///   - converter: サンプルレート・フォーマット変換用コンバーター
+    ///   - file: 出力先の WAV ファイル
     private func processAudioBuffer(
         _ buffer: AVAudioPCMBuffer,
         converter: AVAudioConverter?,
         file: AVAudioFile
     ) {
-        // 音声レベル計算
+        // 1. 音声レベル計算（Float32 入力バッファから直接計算）
         updateAudioLevel(from: buffer)
 
-        // フォーマット変換してファイルに書き込み
+        // 2. フォーマット変換してファイルに書き込み（Int16 に変換）
         guard let converter,
             let convertedBuffer = convertBuffer(buffer, using: converter)
         else {
@@ -272,6 +285,16 @@ final class AudioEngineRecorder {
         return outputBuffer
     }
 
+    /// 入力バッファから音声レベルを計算して更新する
+    ///
+    /// Float32 形式の入力バッファから RMS（二乗平均平方根）を計算し、
+    /// デシベル値に変換して `lastAudioLevel` を更新します。
+    ///
+    /// - Note: `floatChannelData` が nil の場合（通常は発生しない）、
+    ///   音声レベルは更新されません。AVAudioEngine の inputNode は
+    ///   常に Float32 形式で出力するため、実用上は問題ありません。
+    ///
+    /// - Parameter buffer: Float32 形式の入力オーディオバッファ
     private func updateAudioLevel(from buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData?[0] else { return }
         let frameLength = Int(buffer.frameLength)
