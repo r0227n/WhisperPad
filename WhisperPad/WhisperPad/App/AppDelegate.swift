@@ -139,16 +139,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        // 設定項目（現段階では無効）
+        // 設定項目
         let settingsItem = NSMenuItem(
             title: "設定...",
-            action: nil,
+            action: #selector(openSettings),
             keyEquivalent: ","
         )
         settingsItem.keyEquivalentModifierMask = .command
         settingsItem.tag = MenuItemTag.settings.rawValue
+        settingsItem.target = self
         settingsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
-        settingsItem.isEnabled = false
         menu.addItem(settingsItem)
 
         menu.addItem(NSMenuItem.separator())
@@ -269,6 +269,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func stopRecording() {
         logger.info("Stop recording requested")
         store.send(.stopRecording)
+    }
+
+    /// 設定画面を開く
+    @objc private func openSettings() {
+        logger.info("Open settings requested")
+
+        // HiddenWindowView に通知を送信して Settings シーンを開く
+        // macOS 14+ では @Environment(\.openSettings) を使用する必要があるため、
+        // SwiftUI コンテキスト内から開く
+        NotificationCenter.default.post(name: .openSettingsRequest, object: nil)
     }
 
     /// アプリケーションを終了
