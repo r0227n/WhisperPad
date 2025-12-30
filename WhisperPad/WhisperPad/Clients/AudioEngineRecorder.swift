@@ -6,6 +6,7 @@
 import AppKit
 @preconcurrency import AVFAudio
 import AVFoundation
+import OSLog
 
 /// AVAudioEngine を使用した音声録音マネージャー
 ///
@@ -22,6 +23,9 @@ final class AudioEngineRecorder {
     private var converter: AVAudioConverter?
     private var startTime: Date?
     private var lastAudioLevel: Float = -160.0 // 無音レベル
+
+    /// ロガー
+    private let logger = Logger(subsystem: "com.whisperpad", category: "AudioEngineRecorder")
 
     // シングルトンインスタンス
     static let shared = AudioEngineRecorder()
@@ -254,7 +258,7 @@ final class AudioEngineRecorder {
         do {
             try file.write(from: convertedBuffer)
         } catch {
-            // エラーログ（必要に応じて実装）
+            logger.error("Failed to write audio buffer: \(error.localizedDescription)")
         }
     }
 
