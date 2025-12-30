@@ -1,0 +1,114 @@
+# =========================
+# Xcode
+# =========================
+
+# Build generated
+build/
+DerivedData/
+
+# Various settings
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+
+# Other
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+*.xcuserstate
+
+# =========================
+# Swift Package Manager
+# =========================
+
+.build/
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.swiftpm/xcode/xcuserdata/
+Package.resolved
+
+# =========================
+# CocoaPods
+# =========================
+
+# Pods directory is not committed by default
+# Uncomment if you want to commit Pods
+Pods/
+!Podfile.lock
+
+# =========================
+# Carthage
+# =========================
+
+Carthage/Build/
+Carthage/Checkouts/
+
+# =========================
+# fastlane
+# =========================
+
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# =========================
+# macOS
+# =========================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Thumbnails
+*.Trashes
+
+# =========================
+# IDE
+# =========================
+
+# JetBrains IDEs
+.idea/
+
+# Vim
+*.swp
+*.swo
+*~
+
+# VS Code
+# .vscode/  # Uncomment if you don't want to commit VS Code settings
+
+# =========================
+# Project Specific
+# =========================
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Archives and packages
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Crash logs
+*.crash
+
+# =========================
+# Temporary Files
+# =========================
+
+*.tmp
+*.temp
+*.log
