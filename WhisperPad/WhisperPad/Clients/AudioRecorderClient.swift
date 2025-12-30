@@ -86,7 +86,7 @@ extension AudioRecorderClient {
         }
 
         // identifier の長さと内容を確認（デバッグ用）
-        assert(identifier.count > 0, "identifier must not be empty")
+        assert(!identifier.isEmpty, "identifier must not be empty")
 
         // Caches ディレクトリの取得
         guard let cachePath = NSSearchPathForDirectoriesInDomains(
