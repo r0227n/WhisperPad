@@ -19,54 +19,14 @@ extension AppDelegate {
     func addDebugMenu(to menu: NSMenu) {
         let debugMenu = NSMenu(title: "Debug")
 
-        let debugIdle = NSMenuItem(
-            title: "Set Idle",
-            action: #selector(debugSetIdle),
-            keyEquivalent: ""
-        )
-        debugIdle.target = self
-        debugMenu.addItem(debugIdle)
-
-        let debugRecording = NSMenuItem(
-            title: "Set Recording",
-            action: #selector(debugSetRecording),
-            keyEquivalent: ""
-        )
-        debugRecording.target = self
-        debugMenu.addItem(debugRecording)
-
-        let debugTranscribing = NSMenuItem(
-            title: "Set Transcribing",
-            action: #selector(debugSetTranscribing),
-            keyEquivalent: ""
-        )
-        debugTranscribing.target = self
-        debugMenu.addItem(debugTranscribing)
-
-        let debugCompleted = NSMenuItem(
-            title: "Set Completed",
-            action: #selector(debugSetCompleted),
-            keyEquivalent: ""
-        )
-        debugCompleted.target = self
-        debugMenu.addItem(debugCompleted)
-
-        let debugError = NSMenuItem(
-            title: "Set Error",
-            action: #selector(debugSetError),
-            keyEquivalent: ""
-        )
-        debugError.target = self
-        debugMenu.addItem(debugError)
-
-        // Permissions サブメニュー
+        debugMenu.addItem(createMenuItem(title: "Set Idle", action: #selector(debugSetIdle)))
+        debugMenu.addItem(createMenuItem(title: "Set Recording", action: #selector(debugSetRecording)))
+        debugMenu.addItem(createMenuItem(title: "Set Transcribing", action: #selector(debugSetTranscribing)))
+        debugMenu.addItem(createMenuItem(title: "Set Completed", action: #selector(debugSetCompleted)))
+        debugMenu.addItem(createMenuItem(title: "Set Error", action: #selector(debugSetError)))
         debugMenu.addItem(NSMenuItem.separator())
         addPermissionsSubmenu(to: debugMenu)
-
-        // Output サブメニュー
         addOutputSubmenu(to: debugMenu)
-
-        // WhisperKit サブメニュー
         debugMenu.addItem(NSMenuItem.separator())
         addWhisperKitSubmenu(to: debugMenu)
 
@@ -79,32 +39,19 @@ extension AppDelegate {
     private func addPermissionsSubmenu(to debugMenu: NSMenu) {
         let permissionsMenu = NSMenu(title: "Permissions")
 
-        // マイク権限状態（動的タイトル）
-        let micStatusItem = NSMenuItem(
-            title: "Microphone: Checking...",
-            action: nil,
-            keyEquivalent: ""
-        )
+        // マイク権限状態（動的タイトル・無効アイテム）
+        let micStatusItem = NSMenuItem(title: "Microphone: Checking...", action: nil, keyEquivalent: "")
         micStatusItem.tag = DebugMenuItemTag.micPermissionStatus.rawValue
         permissionsMenu.addItem(micStatusItem)
 
-        // マイク権限リクエスト
-        let requestMicItem = NSMenuItem(
+        permissionsMenu.addItem(createMenuItem(
             title: "Request Microphone Permission",
-            action: #selector(debugRequestMicrophonePermission),
-            keyEquivalent: ""
-        )
-        requestMicItem.target = self
-        permissionsMenu.addItem(requestMicItem)
-
-        // マイク設定を開く
-        let openMicSettingsItem = NSMenuItem(
+            action: #selector(debugRequestMicrophonePermission)
+        ))
+        permissionsMenu.addItem(createMenuItem(
             title: "Open Microphone Settings...",
-            action: #selector(debugOpenMicrophoneSettings),
-            keyEquivalent: ""
-        )
-        openMicSettingsItem.target = self
-        permissionsMenu.addItem(openMicSettingsItem)
+            action: #selector(debugOpenMicrophoneSettings)
+        ))
 
         let permissionsItem = NSMenuItem(title: "Permissions", action: nil, keyEquivalent: "")
         permissionsItem.submenu = permissionsMenu
@@ -203,72 +150,35 @@ extension AppDelegate {
     private func addOutputSubmenu(to debugMenu: NSMenu) {
         let outputMenu = NSMenu(title: "Output")
 
-        // Test Copy to Clipboard
-        let copyItem = NSMenuItem(
+        outputMenu.addItem(createMenuItem(
             title: "Test Copy to Clipboard",
-            action: #selector(debugTestCopyToClipboard),
-            keyEquivalent: ""
-        )
-        copyItem.target = self
-        outputMenu.addItem(copyItem)
-
-        // Test Show Notification
-        let notificationItem = NSMenuItem(
+            action: #selector(debugTestCopyToClipboard)
+        ))
+        outputMenu.addItem(createMenuItem(
             title: "Test Show Notification",
-            action: #selector(debugTestShowNotification),
-            keyEquivalent: ""
-        )
-        notificationItem.target = self
-        outputMenu.addItem(notificationItem)
-
-        // Test Play Sound
-        let soundItem = NSMenuItem(
-            title: "Test Play Sound",
-            action: #selector(debugTestPlaySound),
-            keyEquivalent: ""
-        )
-        soundItem.target = self
-        outputMenu.addItem(soundItem)
-
+            action: #selector(debugTestShowNotification)
+        ))
+        outputMenu.addItem(createMenuItem(title: "Test Play Sound", action: #selector(debugTestPlaySound)))
         outputMenu.addItem(NSMenuItem.separator())
-
-        // Save Transcription to File
-        let saveToFileItem = NSMenuItem(
+        outputMenu.addItem(createMenuItem(
             title: "Save Transcription to File...",
-            action: #selector(debugSaveTranscriptionToFile),
-            keyEquivalent: ""
-        )
-        saveToFileItem.target = self
-        outputMenu.addItem(saveToFileItem)
-
+            action: #selector(debugSaveTranscriptionToFile)
+        ))
         outputMenu.addItem(NSMenuItem.separator())
 
-        // Notification permission status
-        let notifStatusItem = NSMenuItem(
-            title: "Notification: Checking...",
-            action: nil,
-            keyEquivalent: ""
-        )
+        // Notification permission status (disabled item)
+        let notifStatusItem = NSMenuItem(title: "Notification: Checking...", action: nil, keyEquivalent: "")
         notifStatusItem.tag = MenuItemTag.notificationPermissionStatus.rawValue
         outputMenu.addItem(notifStatusItem)
 
-        // Request Notification Permission
-        let requestNotifItem = NSMenuItem(
+        outputMenu.addItem(createMenuItem(
             title: "Request Notification Permission",
-            action: #selector(debugRequestNotificationPermission),
-            keyEquivalent: ""
-        )
-        requestNotifItem.target = self
-        outputMenu.addItem(requestNotifItem)
-
-        // Open Notification Settings
-        let openNotifSettingsItem = NSMenuItem(
+            action: #selector(debugRequestNotificationPermission)
+        ))
+        outputMenu.addItem(createMenuItem(
             title: "Open Notification Settings...",
-            action: #selector(debugOpenNotificationSettings),
-            keyEquivalent: ""
-        )
-        openNotifSettingsItem.target = self
-        outputMenu.addItem(openNotifSettingsItem)
+            action: #selector(debugOpenNotificationSettings)
+        ))
 
         let outputItem = NSMenuItem(title: "Output", action: nil, keyEquivalent: "")
         outputItem.submenu = outputMenu
@@ -414,32 +324,10 @@ extension AppDelegate {
 
                 // 通知権限状態を更新
                 if let notifItem = outputMenu.item(withTag: MenuItemTag.notificationPermissionStatus.rawValue) {
-                    UNUserNotificationCenter.current().getNotificationSettings { settings in
+                    UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
                         DispatchQueue.main.async {
-                            let status = settings.authorizationStatus
-                            let emoji: String
-                            let text: String
-                            switch status {
-                            case .authorized:
-                                emoji = "✅"
-                                text = "Authorized"
-                            case .denied:
-                                emoji = "❌"
-                                text = "Denied"
-                            case .notDetermined:
-                                emoji = "❓"
-                                text = "Not Determined"
-                            case .provisional:
-                                emoji = "⚠️"
-                                text = "Provisional"
-                            case .ephemeral:
-                                emoji = "⏳"
-                                text = "Ephemeral"
-                            @unknown default:
-                                emoji = "❓"
-                                text = "Unknown"
-                            }
-                            notifItem.title = "Notification: \(emoji) \(text)"
+                            let result = self?.notificationStatusText(for: settings.authorizationStatus)
+                            notifItem.title = "Notification: \(result?.emoji ?? "❓") \(result?.text ?? "Unknown")"
                         }
                     }
                 }
@@ -453,34 +341,16 @@ extension AppDelegate {
     private func addWhisperKitSubmenu(to debugMenu: NSMenu) {
         let whisperKitMenu = NSMenu(title: "WhisperKit")
 
-        // モデル一覧を取得
-        let fetchModelsItem = NSMenuItem(
+        whisperKitMenu.addItem(createMenuItem(
             title: "Fetch Available Models",
-            action: #selector(debugFetchAvailableModels),
-            keyEquivalent: ""
-        )
-        fetchModelsItem.target = self
-        whisperKitMenu.addItem(fetchModelsItem)
-
-        // 推奨モデルを取得
-        let recommendedModelItem = NSMenuItem(
+            action: #selector(debugFetchAvailableModels)
+        ))
+        whisperKitMenu.addItem(createMenuItem(
             title: "Get Recommended Model",
-            action: #selector(debugGetRecommendedModel),
-            keyEquivalent: ""
-        )
-        recommendedModelItem.target = self
-        whisperKitMenu.addItem(recommendedModelItem)
-
+            action: #selector(debugGetRecommendedModel)
+        ))
         whisperKitMenu.addItem(NSMenuItem.separator())
-
-        // tiny モデルをダウンロード
-        let downloadTinyItem = NSMenuItem(
-            title: "Download tiny Model",
-            action: #selector(debugDownloadTinyModel),
-            keyEquivalent: ""
-        )
-        downloadTinyItem.target = self
-        whisperKitMenu.addItem(downloadTinyItem)
+        whisperKitMenu.addItem(createMenuItem(title: "Download tiny Model", action: #selector(debugDownloadTinyModel)))
 
         let whisperKitItem = NSMenuItem(title: "WhisperKit", action: nil, keyEquivalent: "")
         whisperKitItem.submenu = whisperKitMenu
@@ -571,6 +441,26 @@ extension AppDelegate {
         alert.addButton(withTitle: "OK")
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
+    }
+
+    /// メニューアイテムを作成
+    private func createMenuItem(title: String, action: Selector, tag: Int? = nil) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
+        item.target = self
+        if let tag { item.tag = tag }
+        return item
+    }
+
+    /// 通知権限ステータスの表示文字列を取得
+    private func notificationStatusText(for status: UNAuthorizationStatus) -> (emoji: String, text: String) {
+        switch status {
+        case .authorized: ("✅", "Authorized")
+        case .denied: ("❌", "Denied")
+        case .notDetermined: ("❓", "Not Determined")
+        case .provisional: ("⚠️", "Provisional")
+        case .ephemeral: ("⏳", "Ephemeral")
+        @unknown default: ("❓", "Unknown")
+        }
     }
 }
 
