@@ -8,7 +8,7 @@ import SwiftUI
 
 /// 設定画面のルートビュー
 ///
-/// タブ形式で一般設定、モデル設定、出力設定を表示します。
+/// タブ形式で一般設定、ホットキー設定、録音設定、モデル設定、出力設定を表示します。
 struct SettingsView: View {
     @Bindable var store: StoreOf<SettingsFeature>
 
@@ -19,6 +19,18 @@ struct SettingsView: View {
                     Label(SettingsTab.general.rawValue, systemImage: SettingsTab.general.iconName)
                 }
                 .tag(SettingsTab.general)
+
+            HotkeySettingsTab(store: store)
+                .tabItem {
+                    Label(SettingsTab.hotkey.rawValue, systemImage: SettingsTab.hotkey.iconName)
+                }
+                .tag(SettingsTab.hotkey)
+
+            RecordingSettingsTab(store: store)
+                .tabItem {
+                    Label(SettingsTab.recording.rawValue, systemImage: SettingsTab.recording.iconName)
+                }
+                .tag(SettingsTab.recording)
 
             ModelSettingsTab(store: store)
                 .tabItem {
@@ -32,7 +44,7 @@ struct SettingsView: View {
                 }
                 .tag(SettingsTab.output)
         }
-        .frame(width: 500, height: 450)
+        .frame(width: 520, height: 500)
         .onAppear {
             store.send(.onAppear)
         }
