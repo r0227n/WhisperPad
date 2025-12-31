@@ -5,6 +5,7 @@
 
 import AppKit
 import ComposableArchitecture
+import Dependencies
 import os.log
 import UserNotifications
 
@@ -36,6 +37,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         category: "AppDelegate"
     )
 
+    /// ホットキークライアント
+    @Dependency(\.hotKeyClient) private var hotKeyClient
+
     // MARK: - Menu Item Tags
 
     /// メニュー項目を識別するためのタグ
@@ -64,12 +68,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusItem()
         setupObservation()
         requestNotificationPermission()
+        setupHotKeys()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         logger.info("Application will terminate")
         animationTimer?.invalidate()
         animationTimer = nil
+
+        // ホットキーを解除
+        Task {
+            await hotKeyClient.unregisterOpenSettings()
+        }
     }
 
     // MARK: - Setup
@@ -116,6 +126,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             } catch {
                 logger.error("Notification permission request failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// グローバルホットキーを設定
+    private func setupHotKeys() {
+        Task {
+            // アクセシビリティ権限をチェック
+            let hasPermission = await hotKeyClient.checkAccessibilityPermission()
+
+            if !hasPermission {
+                logger.warning("Accessibility permission not granted, requesting...")
+                await hotKeyClient.requestAccessibilityPermission()
+            }
+
+            // 設定画面を開くホットキーを登録 (⌘ + Shift + ,)
+            await hotKeyClient.registerOpenSettings {
+                Task { @MainActor in
+                    NotificationCenter.default.post(name: .openSettingsRequest, object: nil)
+                }
             }
         }
     }
