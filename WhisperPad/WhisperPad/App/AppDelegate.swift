@@ -140,7 +140,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 一時停止/再開項目（録音中/一時停止中のみ表示）
         let pauseResumeItem = NSMenuItem(
-            title: "録音停止",
+            title: "一時停止",
             action: #selector(pauseRecording),
             keyEquivalent: ""
         )
@@ -203,7 +203,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .recording:
             configureMenuItem(recordingItem, title: "録音終了", action: #selector(endRecording), symbol: "stop.fill")
             configureMenuItem(
-                pauseResumeItem, title: "録音停止", action: #selector(pauseRecording), symbol: "pause.fill"
+                pauseResumeItem, title: "一時停止", action: #selector(pauseRecording), symbol: "pause.fill"
             )
             pauseResumeItem.isHidden = false
 
