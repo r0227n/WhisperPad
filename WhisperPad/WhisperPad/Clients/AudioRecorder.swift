@@ -172,6 +172,10 @@ actor AudioRecorder {
             // 結合失敗時は最初のセグメントのみを使用
             logger.error("Segment merge failed: \(error.localizedDescription). Using first segment only.")
             let finalURL = try AudioRecorderClient.generateRecordingURL(identifier: baseIdentifier)
+            // 既存ファイルがあれば削除
+            if FileManager.default.fileExists(atPath: finalURL.path) {
+                try FileManager.default.removeItem(at: finalURL)
+            }
             try FileManager.default.moveItem(at: segmentURLs[0], to: finalURL)
 
             // 残りのセグメントを削除
