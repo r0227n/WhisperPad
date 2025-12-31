@@ -17,8 +17,8 @@ actor TranscriptionService {
     /// デフォルトのモデルリポジトリ
     static let defaultModelRepo = "argmaxinc/whisperkit-coreml"
 
-    /// モデル保存先ディレクトリ
-    private static var modelsDirectory: URL {
+    /// デフォルトのモデル保存先ディレクトリ
+    private static var defaultModelsDirectory: URL {
         let appSupport = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
@@ -31,6 +31,7 @@ actor TranscriptionService {
     private var whisperKit: WhisperKit?
     private var currentModelName: String?
     private var modelState: TranscriptionModelState = .unloaded
+    private var customStorageURL: URL?
 
     /// ロガー
     private let logger = Logger(subsystem: "com.whisperpad", category: "TranscriptionService")
@@ -47,9 +48,68 @@ actor TranscriptionService {
         currentModelName
     }
 
+    /// 現在のモデル保存先ディレクトリ
+    var modelsDirectory: URL {
+        customStorageURL ?? Self.defaultModelsDirectory
+    }
+
     // MARK: - Initialization
 
     init() {}
+
+    // MARK: - Storage Management
+
+    /// カスタムストレージ場所を設定
+    func setStorageLocation(_ url: URL?) {
+        customStorageURL = url
+        logger.info("Storage location set to: \(url?.path ?? "default")")
+    }
+
+    /// ストレージ使用量を取得
+    func getStorageUsage() -> Int64 {
+        let fileManager = FileManager.default
+        let directory = modelsDirectory
+
+        guard fileManager.fileExists(atPath: directory.path) else {
+            return 0
+        }
+
+        var totalSize: Int64 = 0
+
+        if let enumerator = fileManager.enumerator(
+            at: directory,
+            includingPropertiesForKeys: [.fileSizeKey],
+            options: [.skipsHiddenFiles]
+        ) {
+            for case let fileURL as URL in enumerator {
+                if let fileSize = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                    totalSize += Int64(fileSize)
+                }
+            }
+        }
+
+        logger.info("Storage usage: \(totalSize) bytes")
+        return totalSize
+    }
+
+    /// モデルを削除
+    func deleteModel(_ modelName: String) throws {
+        let modelPath = modelsDirectory.appendingPathComponent(modelName)
+        let fileManager = FileManager.default
+
+        guard fileManager.fileExists(atPath: modelPath.path) else {
+            logger.warning("Model not found for deletion: \(modelName)")
+            throw TranscriptionError.modelNotFound(modelName)
+        }
+
+        do {
+            try fileManager.removeItem(at: modelPath)
+            logger.info("Model deleted: \(modelName)")
+        } catch {
+            logger.error("Failed to delete model: \(error.localizedDescription)")
+            throw TranscriptionError.modelDownloadFailed("削除に失敗: \(error.localizedDescription)")
+        }
+    }
 
     // MARK: - Model Management
 
@@ -77,8 +137,8 @@ actor TranscriptionService {
     }
 
     /// モデルがダウンロード済みかどうかを確認
-    nonisolated func isModelDownloaded(modelName: String) -> Bool {
-        let modelPath = Self.modelsDirectory.appendingPathComponent(modelName)
+    func isModelDownloaded(modelName: String) -> Bool {
+        let modelPath = modelsDirectory.appendingPathComponent(modelName)
         let exists = FileManager.default.fileExists(atPath: modelPath.path)
         return exists
     }
@@ -91,16 +151,18 @@ actor TranscriptionService {
         logger.info("Downloading model: \(modelName)")
         modelState = .downloading(progress: 0)
 
+        let targetDirectory = modelsDirectory
+
         do {
             // ダウンロード先ディレクトリを作成
             try FileManager.default.createDirectory(
-                at: Self.modelsDirectory,
+                at: targetDirectory,
                 withIntermediateDirectories: true
             )
 
             let modelFolder = try await WhisperKit.download(
                 variant: modelName,
-                downloadBase: Self.modelsDirectory,
+                downloadBase: targetDirectory,
                 from: Self.defaultModelRepo,
                 progressCallback: { progress in
                     let progressValue = progress.fractionCompleted
@@ -142,10 +204,12 @@ actor TranscriptionService {
 
         modelState = .loading
 
+        let targetDirectory = modelsDirectory
+
         do {
             let config = WhisperKitConfig(
                 model: targetModel,
-                downloadBase: Self.modelsDirectory,
+                downloadBase: targetDirectory,
                 modelRepo: Self.defaultModelRepo,
                 verbose: true,
                 logLevel: .info,

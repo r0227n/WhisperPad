@@ -43,6 +43,9 @@ struct AppReducer {
         /// 文字起こし機能の状態
         var transcription: TranscriptionFeature.State = .init()
 
+        /// 設定機能の状態
+        var settings: SettingsFeature.State = .init()
+
         /// 最後に録音されたファイルの URL
         var lastRecordingURL: URL?
     }
@@ -65,6 +68,8 @@ struct AppReducer {
         case recording(RecordingFeature.Action)
         /// 文字起こし機能のアクション
         case transcription(TranscriptionFeature.Action)
+        /// 設定機能のアクション
+        case settings(SettingsFeature.Action)
     }
 
     // MARK: - Dependencies
@@ -128,6 +133,20 @@ struct AppReducer {
                 // その他の文字起こしアクションは無視
                 return .none
 
+            // SettingsFeature のデリゲートアクションを処理
+            case .settings(.delegate(.modelChanged)):
+                // モデルが変更された場合、TranscriptionFeature を再初期化
+                state.transcription.isModelInitialized = false
+                return .none
+
+            case .settings(.delegate(.settingsChanged)):
+                // 設定が変更された場合の処理（必要に応じて）
+                return .none
+
+            case .settings:
+                // その他の設定アクションは無視
+                return .none
+
             case let .transcriptionCompleted(text):
                 state.appStatus = .completed
                 state.lastTranscription = text
@@ -172,6 +191,11 @@ struct AppReducer {
         // 文字起こし機能の子 Reducer を統合
         Scope(state: \.transcription, action: \.transcription) {
             TranscriptionFeature()
+        }
+
+        // 設定機能の子 Reducer を統合
+        Scope(state: \.settings, action: \.settings) {
+            SettingsFeature()
         }
     }
 }
