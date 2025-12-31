@@ -2,6 +2,10 @@
     # Project configuration files
     include = .claude/**
 
+    # TODO files
+    include = todo.md
+    include = **.todo.md
+
     # Exclude sensitive files
     exclude = **/.env
     exclude = **/*.xcuserstate
@@ -15,7 +19,7 @@
 
 [hooks]
     postCreate = mise install
-    postCreate = nohup swift package resolve &
+    postCreate = nohup swift package resolve > /dev/null 2>&1 &
 
 [defaults]
     editor = cursor
