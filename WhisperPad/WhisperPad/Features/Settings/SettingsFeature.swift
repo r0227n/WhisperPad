@@ -102,6 +102,8 @@ struct SettingsFeature {
         case updateGeneralSettings(GeneralSettings)
         /// 録音設定を更新
         case updateRecordingSettings(RecordingSettings)
+        /// ホットキー設定を更新
+        case updateHotKeySettings(HotKeySettings)
         /// 文字起こし設定を更新
         case updateTranscriptionSettings(TranscriptionSettings)
         /// 出力設定を更新
@@ -192,6 +194,10 @@ struct SettingsFeature {
 
             case let .updateRecordingSettings(recording):
                 state.settings.recording = recording
+                return .send(.saveSettings)
+
+            case let .updateHotKeySettings(hotKey):
+                state.settings.hotKey = hotKey
                 return .send(.saveSettings)
 
             case let .updateTranscriptionSettings(transcription):

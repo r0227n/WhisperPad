@@ -100,6 +100,79 @@ private final class HotKeyManager {
         cancelHotKey = nil
         logger.info("Cancel hotkey unregistered")
     }
+
+    // MARK: - 動的キーコンボ対応
+
+    /// 動的キーコンボで録音ホットキーを登録（Push-to-Talk対応）
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - keyDownHandler: キーが押されたときのハンドラー
+    ///   - keyUpHandler: キーが離されたときのハンドラー（Push-to-Talk用）
+    func registerRecordingWithCombo(
+        _ combo: HotKeySettings.KeyComboSettings,
+        keyDownHandler: @escaping () -> Void,
+        keyUpHandler: @escaping () -> Void
+    ) {
+        recordingToggleHotKey = nil
+        let hotKey = HotKey(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+        hotKey.keyDownHandler = keyDownHandler
+        hotKey.keyUpHandler = keyUpHandler
+        recordingToggleHotKey = hotKey
+        logger
+            .info(
+                "Recording hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
+            )
+    }
+
+    /// 動的キーコンボでペーストホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    func registerPasteWithCombo(
+        _ combo: HotKeySettings.KeyComboSettings,
+        handler: @escaping () -> Void
+    ) {
+        pasteHotKey = nil
+        let hotKey = HotKey(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+        hotKey.keyDownHandler = handler
+        pasteHotKey = hotKey
+        logger.info("Paste hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)")
+    }
+
+    /// 動的キーコンボで設定を開くホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    func registerOpenSettingsWithCombo(
+        _ combo: HotKeySettings.KeyComboSettings,
+        handler: @escaping () -> Void
+    ) {
+        openSettingsHotKey = nil
+        let hotKey = HotKey(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+        hotKey.keyDownHandler = handler
+        openSettingsHotKey = hotKey
+        logger.info(
+            "Open settings hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
+        )
+    }
+
+    /// すべてのホットキーを解除
+    func unregisterAll() {
+        openSettingsHotKey = nil
+        recordingToggleHotKey = nil
+        pasteHotKey = nil
+        cancelHotKey = nil
+        logger.info("All hotkeys unregistered")
+    }
 }
 
 // MARK: - DependencyKey
@@ -155,6 +228,30 @@ extension HotKeyClient: DependencyKey {
             unregisterCancel: {
                 await MainActor.run {
                     HotKeyManager.shared.unregisterCancel()
+                }
+            },
+            registerRecordingWithCombo: { combo, keyDownHandler, keyUpHandler in
+                await MainActor.run {
+                    HotKeyManager.shared.registerRecordingWithCombo(
+                        combo,
+                        keyDownHandler: keyDownHandler,
+                        keyUpHandler: keyUpHandler
+                    )
+                }
+            },
+            registerPasteWithCombo: { combo, handler in
+                await MainActor.run {
+                    HotKeyManager.shared.registerPasteWithCombo(combo, handler: handler)
+                }
+            },
+            registerOpenSettingsWithCombo: { combo, handler in
+                await MainActor.run {
+                    HotKeyManager.shared.registerOpenSettingsWithCombo(combo, handler: handler)
+                }
+            },
+            unregisterAll: {
+                await MainActor.run {
+                    HotKeyManager.shared.unregisterAll()
                 }
             }
         )
