@@ -53,9 +53,9 @@ extension StreamingAudioClient: TestDependencyKey {
                 return AsyncThrowingStream { continuation in
                     Task {
                         // シミュレートされた音声データを生成
-                        for _ in 0..<10 {
+                        for _ in 0 ..< 10 {
                             try? await Task.sleep(for: .milliseconds(100))
-                            let samples = (0..<1600).map { _ in Float.random(in: -0.1...0.1) }
+                            let samples = (0 ..< 1600).map { _ in Float.random(in: -0.1 ... 0.1) }
                             continuation.yield(samples)
                         }
                         continuation.finish()
@@ -76,7 +76,7 @@ extension StreamingAudioClient: TestDependencyKey {
             startRecording: {
                 clientLogger.debug("[TEST] startRecording called")
                 return AsyncThrowingStream { continuation in
-                    let samples = (0..<1600).map { _ in Float.random(in: -0.1...0.1) }
+                    let samples = (0 ..< 1600).map { _ in Float.random(in: -0.1 ... 0.1) }
                     continuation.yield(samples)
                     continuation.finish()
                 }
