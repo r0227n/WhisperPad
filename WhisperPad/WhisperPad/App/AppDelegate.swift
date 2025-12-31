@@ -196,63 +196,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         else { return }
 
         switch store.appStatus {
-        case .idle:
-            recordingItem.title = "録音開始"
-            recordingItem.action = #selector(startRecording)
-            recordingItem.target = self
-            recordingItem.isEnabled = true
-            recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
+        case .idle, .completed, .error:
+            configureMenuItem(recordingItem, title: "録音開始", action: #selector(startRecording), symbol: "mic.fill")
             pauseResumeItem.isHidden = true
 
         case .recording:
-            recordingItem.title = "録音終了"
-            recordingItem.action = #selector(endRecording)
-            recordingItem.target = self
-            recordingItem.isEnabled = true
-            recordingItem.image = NSImage(systemSymbolName: "stop.fill", accessibilityDescription: nil)
-            // 一時停止ボタンを表示
-            pauseResumeItem.title = "録音停止"
-            pauseResumeItem.action = #selector(pauseRecording)
-            pauseResumeItem.target = self
+            configureMenuItem(recordingItem, title: "録音終了", action: #selector(endRecording), symbol: "stop.fill")
+            configureMenuItem(
+                pauseResumeItem, title: "録音停止", action: #selector(pauseRecording), symbol: "pause.fill"
+            )
             pauseResumeItem.isHidden = false
-            pauseResumeItem.image = NSImage(systemSymbolName: "pause.fill", accessibilityDescription: nil)
 
         case .paused:
-            recordingItem.title = "録音終了"
-            recordingItem.action = #selector(endRecording)
-            recordingItem.target = self
-            recordingItem.isEnabled = true
-            recordingItem.image = NSImage(systemSymbolName: "stop.fill", accessibilityDescription: nil)
-            // 再開ボタンを表示
-            pauseResumeItem.title = "録音再開"
-            pauseResumeItem.action = #selector(resumeRecording)
-            pauseResumeItem.target = self
+            configureMenuItem(recordingItem, title: "録音終了", action: #selector(endRecording), symbol: "stop.fill")
+            configureMenuItem(
+                pauseResumeItem, title: "録音再開", action: #selector(resumeRecording), symbol: "play.fill"
+            )
             pauseResumeItem.isHidden = false
-            pauseResumeItem.image = NSImage(systemSymbolName: "play.fill", accessibilityDescription: nil)
 
         case .transcribing:
-            recordingItem.title = "文字起こし中..."
-            recordingItem.action = nil
-            recordingItem.isEnabled = false
-            recordingItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
-            pauseResumeItem.isHidden = true
-
-        case .completed:
-            recordingItem.title = "録音開始"
-            recordingItem.action = #selector(startRecording)
-            recordingItem.target = self
-            recordingItem.isEnabled = true
-            recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
-            pauseResumeItem.isHidden = true
-
-        case .error:
-            recordingItem.title = "録音開始"
-            recordingItem.action = #selector(startRecording)
-            recordingItem.target = self
-            recordingItem.isEnabled = true
-            recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
+            configureMenuItem(recordingItem, title: "文字起こし中...", action: nil, symbol: "gear", isEnabled: false)
             pauseResumeItem.isHidden = true
         }
+    }
+
+    private func configureMenuItem(
+        _ item: NSMenuItem,
+        title: String,
+        action: Selector?,
+        symbol: String,
+        isEnabled: Bool = true
+    ) {
+        item.title = title
+        item.action = action
+        item.target = action != nil ? self : nil
+        item.isEnabled = isEnabled
+        item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
     }
 
     /// 現在の状態に応じてアイコンを更新
