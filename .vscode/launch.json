@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug WhisperPad",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.build/DerivedData/Build/Products/Debug/WhisperPad.app/Contents/MacOS/WhisperPad",
+      "preLaunchTask": "Build WhisperPad (Debug)",
+      "cwd": "${workspaceFolder}",
+      "terminal": "console"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build WhisperPad (Debug)",
+      "type": "shell",
+      "command": "xcodebuild",
+      "args": [
+        "-project",
+        "WhisperPad/WhisperPad.xcodeproj",
+        "-scheme",
+        "WhisperPad",
+        "-configuration",
+        "Debug",
+        "-derivedDataPath",
+        "${workspaceFolder}/.build/DerivedData",
+        "build"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$swiftc"]
+    }
+  ]
+}
