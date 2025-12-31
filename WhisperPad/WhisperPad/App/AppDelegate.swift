@@ -137,6 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// 状態監視を設定
+    @MainActor
     private func setupObservation() {
         observe { [weak self] in
             guard let self else { return }
@@ -268,7 +269,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Actions
 
     /// 録音を開始
-    @objc private func startRecording() {
+    @objc func startRecording() {
         logger.info("Start recording requested")
         store.send(.startRecording)
     }
@@ -280,7 +281,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// 録音を一時停止
-    @objc private func pauseRecording() {
+    @objc func pauseRecording() {
         logger.info("Pause recording requested")
         store.send(.pauseRecording)
     }
@@ -331,7 +332,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Streaming Actions
 
     /// ストリーミング文字起こしを開始
-    @objc private func startStreaming() {
+    @objc func startStreaming() {
         logger.info("Start streaming transcription requested")
         showStreamingPopup()
         store.send(.startStreamingTranscription)
@@ -353,7 +354,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// 設定画面を開く
-    @objc private func openSettings() {
+    @objc func openSettings() {
         logger.info("Open settings requested")
 
         // HiddenWindowView に通知を送信して Settings シーンを開く
@@ -363,7 +364,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// アプリケーションを終了
-    @objc private func quitApplication() {
+    @objc func quitApplication() {
         logger.info("Quit application requested")
         NSApp.terminate(nil)
     }

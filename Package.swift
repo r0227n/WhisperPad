@@ -34,7 +34,8 @@ let package = Package(
                     package: "swift-composable-architecture"
                 ),
                 "HotKey",
-            ]
+            ],
+            path: "WhisperPad/WhisperPad"
         ),
         .testTarget(
             name: "WhisperPadTests",
@@ -44,7 +45,8 @@ let package = Package(
                     name: "ComposableArchitecture",
                     package: "swift-composable-architecture"
                 ),
-            ]
+            ],
+            path: "WhisperPad/WhisperPadTests"
         ),
     ]
 )
