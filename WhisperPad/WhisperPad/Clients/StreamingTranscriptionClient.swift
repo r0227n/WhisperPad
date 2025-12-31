@@ -37,7 +37,10 @@ extension StreamingTranscriptionClient: DependencyKey {
             if _service == nil {
                 _service = StreamingTranscriptionService()
             }
-            return _service!
+            guard let service = _service else {
+                fatalError("StreamingTranscriptionService was unexpectedly nil after initialization")
+            }
+            return service
         }
     }
 

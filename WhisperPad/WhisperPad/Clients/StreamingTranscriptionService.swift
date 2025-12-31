@@ -14,7 +14,7 @@ import WhisperKit
 actor StreamingTranscriptionService {
     // MARK: - Constants
 
-    nonisolated(unsafe) private let logger = Logger(
+    private let logger = Logger(
         subsystem: "com.whisperpad",
         category: "StreamingTranscriptionService"
     )
@@ -23,10 +23,12 @@ actor StreamingTranscriptionService {
 
     /// デフォルトのモデル保存先ディレクトリ（TranscriptionServiceと同じパス）
     private static var modelsDirectory: URL {
-        let appSupport = FileManager.default.urls(
+        guard let appSupport = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
-        ).first!
+        ).first else {
+            fatalError("Application Support directory not found")
+        }
         return appSupport.appendingPathComponent("WhisperPad/models", isDirectory: true)
     }
 
