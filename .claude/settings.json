@@ -25,7 +25,9 @@
       "Bash(xargs:*)",
       "Bash(open:*)",
       "Bash(codesign:*)"
-    ]
+    ],
+    "deny": [],
+    "defaultMode": "plan"
   },
   "hooks": {
     "PostToolUse": [
