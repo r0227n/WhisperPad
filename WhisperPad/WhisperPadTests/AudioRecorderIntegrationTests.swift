@@ -19,7 +19,7 @@ final class AudioRecorderIntegrationTests: XCTestCase {
         let client = AudioRecorderClient.liveValue
         XCTAssertNotNil(client.requestPermission)
         XCTAssertNotNil(client.startRecording)
-        XCTAssertNotNil(client.stopRecording)
+        XCTAssertNotNil(client.endRecording)
         XCTAssertNotNil(client.currentTime)
         XCTAssertNotNil(client.currentLevel)
     }

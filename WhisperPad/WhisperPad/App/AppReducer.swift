@@ -3,6 +3,7 @@
 //  WhisperPad
 //
 
+import AppKit
 import ComposableArchitecture
 import Foundation
 
@@ -12,6 +13,8 @@ enum AppStatus: Equatable, Sendable {
     case idle
     /// 録音中
     case recording
+    /// 一時停止中
+    case paused
     /// 文字起こし中
     case transcribing
     /// 完了
@@ -56,8 +59,12 @@ struct AppReducer {
     enum Action {
         /// 録音を開始
         case startRecording
-        /// 録音を停止
-        case stopRecording
+        /// 録音を終了
+        case endRecording
+        /// 録音を一時停止
+        case pauseRecording
+        /// 録音を再開
+        case resumeRecording
         /// 文字起こしが完了
         case transcriptionCompleted(String)
         /// エラーが発生
@@ -86,9 +93,17 @@ struct AppReducer {
                 // 録音機能に委譲
                 return .send(.recording(.startRecordingButtonTapped))
 
-            case .stopRecording:
+            case .endRecording:
                 // 録音機能に委譲
-                return .send(.recording(.stopRecordingButtonTapped))
+                return .send(.recording(.endRecordingButtonTapped))
+
+            case .pauseRecording:
+                // 録音機能に委譲
+                return .send(.recording(.pauseRecordingButtonTapped))
+
+            case .resumeRecording:
+                // 録音機能に委譲
+                return .send(.recording(.resumeRecordingButtonTapped))
 
             // RecordingFeature のデリゲートアクションを処理
             case let .recording(.delegate(.recordingCompleted(url))):
@@ -109,6 +124,26 @@ struct AppReducer {
                 }
                 .cancellable(id: "autoReset")
 
+            case let .recording(.delegate(.recordingPartialSuccess(url, usedSegments, totalSegments))):
+                state.appStatus = .transcribing
+                state.lastRecordingURL = url
+                // ダイアログ表示後に文字起こしを開始
+                return .run { send in
+                    await MainActor.run {
+                        let alert = NSAlert()
+                        alert.alertStyle = .warning
+                        alert.messageText = "録音の一部が保存されました"
+                        alert.informativeText = """
+                        音声ファイルの結合に失敗したため、\
+                        最初のセグメント（\(usedSegments)/\(totalSegments)）のみが保存されました。
+                        一時停止後の録音内容は失われています。
+                        """
+                        alert.addButton(withTitle: "OK")
+                        alert.runModal()
+                    }
+                    await send(.transcription(.startTranscription(audioURL: url, language: nil)))
+                }
+
             // RecordingFeature の内部アクションで appStatus を更新
             case .recording(.recordingStarted):
                 state.appStatus = .recording
@@ -117,6 +152,14 @@ struct AppReducer {
             case .recording(.prepareRecording):
                 state.appStatus = .recording
                 return .cancel(id: "autoReset")
+
+            case .recording(.recordingPaused):
+                state.appStatus = .paused
+                return .none
+
+            case .recording(.recordingResumed):
+                state.appStatus = .recording
+                return .none
 
             case .recording:
                 // その他の録音アクションは無視

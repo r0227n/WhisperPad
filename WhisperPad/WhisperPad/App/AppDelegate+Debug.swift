@@ -70,7 +70,7 @@ extension AppDelegate {
 
     @objc func debugSetTranscribing() {
         debugLogger.debug("Debug: Set Transcribing")
-        store.send(.stopRecording)
+        store.send(.endRecording)
     }
 
     @objc func debugSetCompleted() {

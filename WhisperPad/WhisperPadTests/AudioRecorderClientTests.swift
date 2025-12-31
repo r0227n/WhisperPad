@@ -41,8 +41,11 @@ final class AudioRecorderClientTests: XCTestCase {
         // コンパイルが通ればOK（型チェック）
         let _: @Sendable (String) async throws -> URL = client.startRecording
         let _: @Sendable () async -> Bool = client.requestPermission
-        let _: @Sendable () async -> Void = client.stopRecording
+        let _: @Sendable () async throws -> StopResult? = client.endRecording
         let _: @Sendable () async -> TimeInterval? = client.currentTime
         let _: @Sendable () async -> Float? = client.currentLevel
+        let _: @Sendable () async -> Void = client.pauseRecording
+        let _: @Sendable () async throws -> Void = client.resumeRecording
+        let _: @Sendable () async -> Bool = client.isPaused
     }
 }

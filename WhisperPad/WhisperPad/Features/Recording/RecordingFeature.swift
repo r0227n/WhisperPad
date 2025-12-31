@@ -43,12 +43,22 @@ struct RecordingFeature {
             return false
         }
 
+        /// 一時停止中かどうか
+        var isPaused: Bool {
+            if case .paused = status { return true }
+            return false
+        }
+
         /// 現在の録音時間（秒）
         var currentDuration: TimeInterval {
-            if case let .recording(duration) = status {
-                return duration
+            switch status {
+            case let .recording(duration):
+                duration
+            case let .paused(duration):
+                duration
+            default:
+                0
             }
-            return 0
         }
     }
 
@@ -58,10 +68,14 @@ struct RecordingFeature {
         // ユーザー操作
         /// 録音開始ボタンがタップされた
         case startRecordingButtonTapped
-        /// 録音停止ボタンがタップされた
-        case stopRecordingButtonTapped
+        /// 録音終了ボタンがタップされた
+        case endRecordingButtonTapped
         /// 録音キャンセルボタンがタップされた
         case cancelRecordingButtonTapped
+        /// 録音一時停止ボタンがタップされた
+        case pauseRecordingButtonTapped
+        /// 録音再開ボタンがタップされた
+        case resumeRecordingButtonTapped
 
         // 内部アクション
         /// 権限を要求
@@ -80,6 +94,14 @@ struct RecordingFeature {
         case audioLevelUpdated(Float)
         /// 録音が完了
         case recordingFinished(Result<URL, RecordingError>)
+        /// 録音が一時停止された
+        case recordingPaused
+        /// 録音が再開された
+        case recordingResumed
+        /// 録音再開に失敗
+        case resumeFailed(RecordingError)
+        /// 録音停止結果を受信
+        case stopResultReceived(StopResult)
 
         // デリゲートアクション（親 Reducer への通知）
         /// デリゲートアクション
@@ -155,28 +177,109 @@ struct RecordingFeature {
                 if case let .recording(duration) = state.status {
                     let newDuration = duration + 1
                     state.status = .recording(duration: newDuration)
-                    // 最大録音時間に達した場合は自動停止
+                    // 最大録音時間に達した場合は自動終了
                     if newDuration >= RecordingConstants.maxRecordingDuration {
-                        return .send(.stopRecordingButtonTapped)
+                        return .send(.endRecordingButtonTapped)
                     }
                 }
                 return .none
 
-            case .stopRecordingButtonTapped:
-                guard case .recording = state.status else { return .none }
-                state.status = .stopping
+            case .endRecordingButtonTapped:
+                // recording または paused 状態で終了可能
+                switch state.status {
+                case .recording, .paused:
+                    break
+                default:
+                    return .none
+                }
+                state.status = .ending
 
                 return .merge(
                     .cancel(id: "timer"),
-                    .run { [url = state.recordingURL] send in
-                        await audioRecorder.stopRecording()
-                        if let url {
-                            await send(.recordingFinished(.success(url)))
-                        } else {
-                            await send(.recordingFailed(.noRecordingURL))
+                    .run { send in
+                        do {
+                            if let result = try await audioRecorder.endRecording() {
+                                await send(.stopResultReceived(result))
+                            } else {
+                                await send(.recordingFailed(.noRecordingURL))
+                            }
+                        } catch {
+                            let recordingError = (error as? RecordingError)
+                                ?? .recordingFailed(error.localizedDescription)
+                            await send(.recordingFailed(recordingError))
                         }
                     }
                 )
+
+            case let .stopResultReceived(result):
+                state.status = .idle
+                if result.isPartial {
+                    return .send(.delegate(.recordingPartialSuccess(
+                        url: result.url,
+                        usedSegments: result.usedSegments,
+                        totalSegments: result.totalSegments
+                    )))
+                } else {
+                    return .send(.delegate(.recordingCompleted(result.url)))
+                }
+
+            case .pauseRecordingButtonTapped:
+                guard case let .recording(duration) = state.status else { return .none }
+                return .merge(
+                    .cancel(id: "timer"),
+                    .run { [duration] send in
+                        await audioRecorder.pauseRecording()
+                        await send(.recordingPaused)
+                    }
+                )
+
+            case .recordingPaused:
+                if case let .recording(duration) = state.status {
+                    state.status = .paused(duration: duration)
+                }
+                return .none
+
+            case .resumeRecordingButtonTapped:
+                guard case .paused = state.status else { return .none }
+                return .run { send in
+                    do {
+                        try await audioRecorder.resumeRecording()
+                        await send(.recordingResumed)
+                    } catch {
+                        let recordingError = (error as? RecordingError)
+                            ?? .recordingFailed(error.localizedDescription)
+                        await send(.resumeFailed(recordingError))
+                    }
+                }
+
+            case .recordingResumed:
+                if case let .paused(duration) = state.status {
+                    state.status = .recording(duration: duration)
+                    // タイマー再開
+                    return .run { send in
+                        for await _ in await clock.timer(interval: .seconds(1)) {
+                            await send(.timerTick)
+                        }
+                    }
+                    .cancellable(id: "timer")
+                }
+                return .none
+
+            case let .resumeFailed(originalError):
+                // 再開失敗時は録音を終了
+                state.status = .ending
+                return .run { send in
+                    // 既存のセグメントを取得してみる
+                    do {
+                        if let result = try await audioRecorder.endRecording() {
+                            await send(.stopResultReceived(result))
+                        } else {
+                            await send(.recordingFailed(originalError))
+                        }
+                    } catch {
+                        await send(.recordingFailed(originalError))
+                    }
+                }
 
             case .cancelRecordingButtonTapped:
                 state.status = .idle
@@ -185,7 +288,7 @@ struct RecordingFeature {
                     .cancel(id: "recording"),
                     .cancel(id: "timer"),
                     .run { send in
-                        await audioRecorder.stopRecording()
+                        _ = try? await audioRecorder.endRecording()
                         await send(.delegate(.recordingCancelled))
                     }
                 )
@@ -227,8 +330,10 @@ extension RecordingFeature {
         case preparing
         /// 録音中（経過時間）
         case recording(duration: TimeInterval)
-        /// 停止処理中
-        case stopping
+        /// 一時停止中（経過時間）
+        case paused(duration: TimeInterval)
+        /// 終了処理中
+        case ending
     }
 
     /// マイク権限ステータス
@@ -249,5 +354,7 @@ extension RecordingFeature {
         case recordingCancelled
         /// 録音に失敗
         case recordingFailed(RecordingError)
+        /// 録音が部分的に成功（セグメント結合失敗時）
+        case recordingPartialSuccess(url: URL, usedSegments: Int, totalSegments: Int)
     }
 }

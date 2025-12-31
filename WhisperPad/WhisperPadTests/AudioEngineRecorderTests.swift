@@ -24,7 +24,7 @@ final class AudioRecorderTests: XCTestCase {
     }
 
     override func tearDown() async throws {
-        await recorder.stop()
+        _ = try? await recorder.stop()
 
         // テストファイルを削除（cachesDirectory を使用）
         if let cacheDir = try? FileManager.default.url(
@@ -37,6 +37,12 @@ final class AudioRecorderTests: XCTestCase {
                 .appendingPathComponent("com.whisperpad.recordings")
                 .appendingPathComponent("whisperpad_\(testIdentifier!).wav")
             try? FileManager.default.removeItem(at: testURL)
+
+            // セグメントファイルも削除
+            let segmentURL = cacheDir
+                .appendingPathComponent("com.whisperpad.recordings")
+                .appendingPathComponent("whisperpad_\(testIdentifier!)_segment0.wav")
+            try? FileManager.default.removeItem(at: segmentURL)
         }
 
         try await super.tearDown()
@@ -56,23 +62,23 @@ final class AudioRecorderTests: XCTestCase {
 
     // MARK: - URL生成テスト
 
-    func testStart_withValidURL() async throws {
+    func testStart_withValidIdentifier() async throws {
         // マイク権限がない場合はスキップ
         guard await AudioRecorder.requestPermission() else {
             throw XCTSkip("マイク権限が必要")
         }
 
-        try await recorder.start(url: testURL)
+        let resultURL = try await recorder.start(identifier: testIdentifier)
 
-        XCTAssertEqual(testURL.pathExtension, "wav")
-        XCTAssertTrue(testURL.lastPathComponent.contains(testIdentifier))
+        XCTAssertEqual(resultURL.pathExtension, "wav")
+        XCTAssertTrue(resultURL.lastPathComponent.contains(testIdentifier))
 
         // URL が有効なパスコンポーネントを持つことを確認
-        let directory = testURL.deletingLastPathComponent()
+        let directory = resultURL.deletingLastPathComponent()
         XCTAssertFalse(directory.path.isEmpty)
-        XCTAssertTrue(testURL.pathComponents.count > 1)
+        XCTAssertTrue(resultURL.pathComponents.count > 1)
 
-        await recorder.stop()
+        _ = try await recorder.stop()
     }
 
     // MARK: - 録音開始テスト
@@ -82,34 +88,41 @@ final class AudioRecorderTests: XCTestCase {
             throw XCTSkip("マイク権限が必要")
         }
 
-        try await recorder.start(url: testURL)
+        _ = try await recorder.start(identifier: testIdentifier)
 
         let isRecording = await recorder.isRecording
         XCTAssertTrue(isRecording)
-        XCTAssertTrue(FileManager.default.fileExists(atPath: testURL.path))
 
-        await recorder.stop()
+        // セグメントファイルが作成されることを確認
+        let segmentURL = try AudioRecorderClient.generateRecordingURL(identifier: testIdentifier)
+            .deletingLastPathComponent()
+            .appendingPathComponent("whisperpad_\(testIdentifier!)_segment0.wav")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: segmentURL.path))
+
+        _ = try await recorder.stop()
     }
 
-    // MARK: - 録音停止テスト
+    // MARK: - 録音終了テスト
 
     func testStop_createsValidWAVFile() async throws {
         guard await AudioRecorder.requestPermission() else {
             throw XCTSkip("マイク権限が必要")
         }
 
-        try await recorder.start(url: testURL)
+        _ = try await recorder.start(identifier: testIdentifier)
 
         // 短時間待機
         try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
 
-        await recorder.stop()
+        let result = try await recorder.stop()
 
         let isRecording = await recorder.isRecording
         XCTAssertFalse(isRecording)
+        XCTAssertNotNil(result)
+        XCTAssertFalse(result!.isPartial)
 
         // WAV ファイルヘッダー検証
-        let data = try Data(contentsOf: testURL)
+        let data = try Data(contentsOf: result!.url)
         XCTAssertGreaterThanOrEqual(data.count, 44)
         XCTAssertEqual(String(data: data[0 ..< 4], encoding: .ascii), "RIFF")
         XCTAssertEqual(String(data: data[8 ..< 12], encoding: .ascii), "WAVE")
@@ -122,7 +135,7 @@ final class AudioRecorderTests: XCTestCase {
             throw XCTSkip("マイク権限が必要")
         }
 
-        try await recorder.start(url: testURL)
+        _ = try await recorder.start(identifier: testIdentifier)
 
         try await Task.sleep(nanoseconds: 200_000_000) // 0.2秒
 
@@ -130,7 +143,7 @@ final class AudioRecorderTests: XCTestCase {
         XCTAssertNotNil(time)
         XCTAssertGreaterThan(time ?? 0, 0)
 
-        await recorder.stop()
+        _ = try await recorder.stop()
     }
 
     // MARK: - currentLevel テスト
@@ -140,14 +153,14 @@ final class AudioRecorderTests: XCTestCase {
             throw XCTSkip("マイク権限が必要")
         }
 
-        try await recorder.start(url: testURL)
+        _ = try await recorder.start(identifier: testIdentifier)
 
         try await Task.sleep(nanoseconds: 100_000_000) // 0.1秒
 
         let level = await recorder.currentLevel
         XCTAssertNotNil(level)
 
-        await recorder.stop()
+        _ = try await recorder.stop()
     }
 
     // MARK: - 重複開始テスト
@@ -160,34 +173,30 @@ final class AudioRecorderTests: XCTestCase {
         let testIdentifier2 = UUID().uuidString
         let testURL2 = try AudioRecorderClient.generateRecordingURL(identifier: testIdentifier2)
 
-        try await recorder.start(url: testURL)
-        try await recorder.start(url: testURL2)
+        _ = try await recorder.start(identifier: testIdentifier)
+        _ = try await recorder.start(identifier: testIdentifier2)
 
         let isRecording = await recorder.isRecording
         XCTAssertTrue(isRecording)
 
-        await recorder.stop()
+        _ = try await recorder.stop()
         try? FileManager.default.removeItem(at: testURL2)
     }
 
     // MARK: - 空identifier テスト
 
-    func testStart_withEmptyIdentifier_doesNotCrash() async throws {
+    func testStart_withEmptyIdentifier_throwsError() async throws {
         guard await AudioRecorder.requestPermission() else {
             throw XCTSkip("マイク権限が必要")
         }
 
-        let emptyURL = try AudioRecorderClient.generateRecordingURL(identifier: "")
-
-        try await recorder.start(url: emptyURL)
-
-        XCTAssertEqual(emptyURL.pathExtension, "wav")
-
-        // deletingLastPathComponent でクラッシュしないことを確認
-        let directory = emptyURL.deletingLastPathComponent()
-        XCTAssertFalse(directory.path.isEmpty)
-
-        await recorder.stop()
-        try? FileManager.default.removeItem(at: emptyURL)
+        // 空の identifier は AudioRecorderClient.generateRecordingURL でエラーになる
+        do {
+            _ = try AudioRecorderClient.generateRecordingURL(identifier: "")
+            XCTFail("Expected error to be thrown")
+        } catch {
+            // エラーがスローされることを確認
+            XCTAssertTrue(error is RecordingError)
+        }
     }
 }
