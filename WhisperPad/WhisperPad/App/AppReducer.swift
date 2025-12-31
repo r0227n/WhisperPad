@@ -3,6 +3,7 @@
 //  WhisperPad
 //
 
+import AppKit
 import ComposableArchitecture
 import Foundation
 
@@ -122,6 +123,26 @@ struct AppReducer {
                     await send(.resetToIdle)
                 }
                 .cancellable(id: "autoReset")
+
+            case let .recording(.delegate(.recordingPartialSuccess(url, usedSegments, totalSegments))):
+                state.appStatus = .transcribing
+                state.lastRecordingURL = url
+                // ダイアログ表示後に文字起こしを開始
+                return .run { send in
+                    await MainActor.run {
+                        let alert = NSAlert()
+                        alert.alertStyle = .warning
+                        alert.messageText = "録音の一部が保存されました"
+                        alert.informativeText = """
+                            音声ファイルの結合に失敗したため、\
+                            最初のセグメント（\(usedSegments)/\(totalSegments)）のみが保存されました。
+                            一時停止後の録音内容は失われています。
+                            """
+                        alert.addButton(withTitle: "OK")
+                        alert.runModal()
+                    }
+                    await send(.transcription(.startTranscription(audioURL: url, language: nil)))
+                }
 
             // RecordingFeature の内部アクションで appStatus を更新
             case .recording(.recordingStarted):
