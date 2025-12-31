@@ -112,3 +112,7 @@ playground.xcworkspace
 *.tmp
 *.temp
 *.log
+
+# TODO files
+todo.md
+**.todo.md
