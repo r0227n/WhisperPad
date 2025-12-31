@@ -164,6 +164,7 @@ final class RecordingFeatureTests: XCTestCase {
         let testURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("test.wav")
         let testClock = TestClock()
+        let stopResult = StopResult(url: testURL, isPartial: false, usedSegments: 1, totalSegments: 1)
 
         let store = TestStore(
             initialState: RecordingFeature.State(
@@ -175,7 +176,7 @@ final class RecordingFeatureTests: XCTestCase {
             RecordingFeature()
         } withDependencies: {
             var client = AudioRecorderClient.testValue
-            client.endRecording = {}
+            client.endRecording = { stopResult }
             $0.audioRecorder = client
             $0.continuousClock = testClock
         }
@@ -184,6 +185,67 @@ final class RecordingFeatureTests: XCTestCase {
         await store.send(.endRecordingButtonTapped) { state in
             state.status = .ending
         }
+    }
+
+    /// 録音再開が失敗した場合のテスト
+    func testResumeRecording_fails_transitionsToEnding() async {
+        let testClock = TestClock()
+        let expectedError = RecordingError.audioFileCreationFailed("Test error")
+
+        let store = TestStore(
+            initialState: RecordingFeature.State(
+                status: .paused(duration: 10),
+                permissionStatus: .granted
+            )
+        ) {
+            RecordingFeature()
+        } withDependencies: {
+            var client = AudioRecorderClient.testValue
+            client.resumeRecording = {
+                throw expectedError
+            }
+            client.endRecording = { nil }
+            $0.audioRecorder = client
+            $0.continuousClock = testClock
+        }
+        store.exhaustivity = .off
+
+        await store.send(.resumeRecordingButtonTapped)
+        await store.receive(\.resumeFailed) { state in
+            state.status = .ending
+        }
+    }
+
+    /// セグメント結合が部分的に成功した場合のテスト
+    func testEndRecording_partialSuccess() async {
+        let testURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test.wav")
+        let testClock = TestClock()
+        let partialResult = StopResult(url: testURL, isPartial: true, usedSegments: 1, totalSegments: 3)
+
+        let store = TestStore(
+            initialState: RecordingFeature.State(
+                status: .recording(duration: 30),
+                recordingURL: testURL,
+                permissionStatus: .granted
+            )
+        ) {
+            RecordingFeature()
+        } withDependencies: {
+            var client = AudioRecorderClient.testValue
+            client.endRecording = { partialResult }
+            $0.audioRecorder = client
+            $0.continuousClock = testClock
+        }
+        store.exhaustivity = .off
+
+        await store.send(.endRecordingButtonTapped) { state in
+            state.status = .ending
+        }
+        await store.receive(\.stopResultReceived) { state in
+            state.status = .idle
+        }
+        await store.receive(\.delegate)
     }
 
     /// idle 状態で一時停止ボタンを押しても何も起こらないことを確認

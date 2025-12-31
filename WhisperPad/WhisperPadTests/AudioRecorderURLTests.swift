@@ -23,12 +23,19 @@ final class AudioRecorderURLTests: XCTestCase {
         XCTAssertTrue(url.lastPathComponent.contains(identifier))
     }
 
-    /// 空のidentifierでURL生成
+    /// 空のidentifierでエラーがスローされる
     func testGenerateRecordingURL_withEmptyIdentifier() throws {
-        let url = try AudioRecorderClient.generateRecordingURL(identifier: "")
-
-        XCTAssertEqual(url.pathExtension, "wav")
-        XCTAssertEqual(url.lastPathComponent, "whisperpad_.wav")
+        XCTAssertThrowsError(try AudioRecorderClient.generateRecordingURL(identifier: "")) { error in
+            guard let recordingError = error as? RecordingError else {
+                XCTFail("Expected RecordingError")
+                return
+            }
+            if case let RecordingError.audioFileCreationFailed(message) = recordingError {
+                XCTAssertTrue(message.contains("empty"))
+            } else {
+                XCTFail("Expected audioFileCreationFailed error")
+            }
+        }
     }
 
     /// 特殊文字を含むidentifierでURL生成
