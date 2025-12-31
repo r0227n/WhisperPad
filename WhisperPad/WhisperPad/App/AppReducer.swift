@@ -119,8 +119,9 @@ struct AppReducer {
             case let .recording(.delegate(.recordingCompleted(url))):
                 state.appStatus = .transcribing
                 state.lastRecordingURL = url
-                // TranscriptionFeature に文字起こしを委譲
-                return .send(.transcription(.startTranscription(audioURL: url, language: nil)))
+                // TranscriptionFeature に文字起こしを委譲（設定から言語を取得）
+                let language = state.settings.settings.transcription.language.whisperCode
+                return .send(.transcription(.startTranscription(audioURL: url, language: language)))
 
             case .recording(.delegate(.recordingCancelled)):
                 state.appStatus = .idle
@@ -137,7 +138,8 @@ struct AppReducer {
             case let .recording(.delegate(.recordingPartialSuccess(url, usedSegments, totalSegments))):
                 state.appStatus = .transcribing
                 state.lastRecordingURL = url
-                // ダイアログ表示後に文字起こしを開始
+                // ダイアログ表示後に文字起こしを開始（設定から言語を取得）
+                let partialLanguage = state.settings.settings.transcription.language.whisperCode
                 return .run { send in
                     await MainActor.run {
                         let alert = NSAlert()
@@ -151,7 +153,7 @@ struct AppReducer {
                         alert.addButton(withTitle: "OK")
                         alert.runModal()
                     }
-                    await send(.transcription(.startTranscription(audioURL: url, language: nil)))
+                    await send(.transcription(.startTranscription(audioURL: url, language: partialLanguage)))
                 }
 
             // RecordingFeature の内部アクションで appStatus を更新
