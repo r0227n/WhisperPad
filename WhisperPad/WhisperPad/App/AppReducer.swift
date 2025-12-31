@@ -119,8 +119,9 @@ struct AppReducer {
             case let .recording(.delegate(.recordingCompleted(url))):
                 state.appStatus = .transcribing
                 state.lastRecordingURL = url
-                // TranscriptionFeature に文字起こしを委譲
-                return .send(.transcription(.startTranscription(audioURL: url, language: nil)))
+                // TranscriptionFeature に文字起こしを委譲（設定から言語を取得）
+                let language = state.settings.settings.transcription.language.whisperCode
+                return .send(.transcription(.startTranscription(audioURL: url, language: language)))
 
             case .recording(.delegate(.recordingCancelled)):
                 state.appStatus = .idle
