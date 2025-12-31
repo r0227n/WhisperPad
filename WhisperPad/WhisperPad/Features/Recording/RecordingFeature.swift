@@ -98,6 +98,10 @@ struct RecordingFeature {
         case recordingPaused
         /// 録音が再開された
         case recordingResumed
+        /// 録音再開に失敗
+        case resumeFailed(RecordingError)
+        /// 録音停止結果を受信
+        case stopResultReceived(StopResult)
 
         // デリゲートアクション（親 Reducer への通知）
         /// デリゲートアクション
@@ -192,15 +196,32 @@ struct RecordingFeature {
 
                 return .merge(
                     .cancel(id: "timer"),
-                    .run { [url = state.recordingURL] send in
-                        await audioRecorder.endRecording()
-                        if let url {
-                            await send(.recordingFinished(.success(url)))
-                        } else {
-                            await send(.recordingFailed(.noRecordingURL))
+                    .run { send in
+                        do {
+                            if let result = try await audioRecorder.endRecording() {
+                                await send(.stopResultReceived(result))
+                            } else {
+                                await send(.recordingFailed(.noRecordingURL))
+                            }
+                        } catch {
+                            let recordingError = (error as? RecordingError)
+                                ?? .recordingFailed(error.localizedDescription)
+                            await send(.recordingFailed(recordingError))
                         }
                     }
                 )
+
+            case let .stopResultReceived(result):
+                state.status = .idle
+                if result.isPartial {
+                    return .send(.delegate(.recordingPartialSuccess(
+                        url: result.url,
+                        usedSegments: result.usedSegments,
+                        totalSegments: result.totalSegments
+                    )))
+                } else {
+                    return .send(.delegate(.recordingCompleted(result.url)))
+                }
 
             case .pauseRecordingButtonTapped:
                 guard case let .recording(duration) = state.status else { return .none }
@@ -221,8 +242,14 @@ struct RecordingFeature {
             case .resumeRecordingButtonTapped:
                 guard case .paused = state.status else { return .none }
                 return .run { send in
-                    await audioRecorder.resumeRecording()
-                    await send(.recordingResumed)
+                    do {
+                        try await audioRecorder.resumeRecording()
+                        await send(.recordingResumed)
+                    } catch {
+                        let recordingError = (error as? RecordingError)
+                            ?? .recordingFailed(error.localizedDescription)
+                        await send(.resumeFailed(recordingError))
+                    }
                 }
 
             case .recordingResumed:
@@ -238,6 +265,22 @@ struct RecordingFeature {
                 }
                 return .none
 
+            case let .resumeFailed(originalError):
+                // 再開失敗時は録音を終了
+                state.status = .ending
+                return .run { send in
+                    // 既存のセグメントを取得してみる
+                    do {
+                        if let result = try await audioRecorder.endRecording() {
+                            await send(.stopResultReceived(result))
+                        } else {
+                            await send(.recordingFailed(originalError))
+                        }
+                    } catch {
+                        await send(.recordingFailed(originalError))
+                    }
+                }
+
             case .cancelRecordingButtonTapped:
                 state.status = .idle
                 state.recordingURL = nil
@@ -245,7 +288,7 @@ struct RecordingFeature {
                     .cancel(id: "recording"),
                     .cancel(id: "timer"),
                     .run { send in
-                        await audioRecorder.endRecording()
+                        _ = try? await audioRecorder.endRecording()
                         await send(.delegate(.recordingCancelled))
                     }
                 )
@@ -311,5 +354,7 @@ extension RecordingFeature {
         case recordingCancelled
         /// 録音に失敗
         case recordingFailed(RecordingError)
+        /// 録音が部分的に成功（セグメント結合失敗時）
+        case recordingPartialSuccess(url: URL, usedSegments: Int, totalSegments: Int)
     }
 }
