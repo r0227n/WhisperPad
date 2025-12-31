@@ -264,6 +264,7 @@ WhisperPad/
 | ------------------ | -------------------------- | ------------ |
 | `⌥ Option + Space` | 録音開始/停止（トグル）    | 可           |
 | `⌘ + Shift + V`    | 最後の書き起こしをペースト | 可           |
+| `⌘ + Shift + ,`    | 設定を開く                 | 可           |
 | `Escape`           | 録音キャンセル             | 不可         |
 
 #### 4.2.2 録音モード
@@ -279,6 +280,7 @@ WhisperPad/
 struct HotKeySettings: Codable, Equatable {
     var recordingHotKey: KeyCombo
     var pasteHotKey: KeyCombo
+    var openSettingsHotKey: KeyCombo
     var recordingMode: RecordingMode
 
     struct KeyCombo: Codable, Equatable {
@@ -553,6 +555,11 @@ struct TranscriptionOutput: Codable, Equatable {
 │ 最後の書き起こしをペースト:                                   │
 │ ┌─────────────────────────────────────┐                      │
 │ │  ⌘ Cmd + Shift + V       [変更]    │                      │
+│ └─────────────────────────────────────┘                      │
+│                                                               │
+│ 設定を開く:                                                   │
+│ ┌─────────────────────────────────────┐                      │
+│ │  ⌘ Cmd + Shift + ,       [変更]    │                      │
 │ └─────────────────────────────────────┘                      │
 │                                                               │
 │ ⚠️ 他のアプリと競合する場合は変更してください                 │
