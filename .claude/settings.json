@@ -1,4 +1,17 @@
 {
+  "extraKnownMarketplaces": {
+    "claude-toolkit": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/r0227n/claude-toolkit.git",
+        "ref": "feature/parallel-dev",
+        "path": "plugins/parallel-dev"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "parallel-dev@claude-toolkit": true
+  },
   "permissions": {
     "allow": [
       "Edit",
