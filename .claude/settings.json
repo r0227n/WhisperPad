@@ -11,18 +11,15 @@
       "Bash(mise:*)",
       "Bash(swift package:*)",
       "Bash(xcodebuild:*)",
-      "Bash(timeout * xcodebuild test:*)",
+      "Bash(timeout 30 xcodebuild test:*)",
+      "Bash(timeout 60 xcodebuild test:*)",
       "Bash(swift test:*)",
       "Bash(swift -e:*)",
-
-      // プロセス・ログ
       "Bash(log show:*)",
       "Bash(xcrun xcresulttool:*)",
       "Bash(pkill:*)",
       "Bash(killall:*)",
       "Bash(pgrep:*)",
-
-      // その他
       "Bash(xargs:*)",
       "Bash(open:*)",
       "Bash(codesign:*)"
