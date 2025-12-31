@@ -21,6 +21,15 @@ actor StreamingTranscriptionService {
 
     private static let defaultModelRepo = "argmaxinc/whisperkit-coreml"
 
+    /// デフォルトのモデル保存先ディレクトリ（TranscriptionServiceと同じパス）
+    private static var modelsDirectory: URL {
+        let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first!
+        return appSupport.appendingPathComponent("WhisperPad/models", isDirectory: true)
+    }
+
     // MARK: - State
 
     private var whisperKit: WhisperKit?
@@ -51,14 +60,17 @@ actor StreamingTranscriptionService {
         do {
             let config = WhisperKitConfig(
                 model: targetModel,
+                downloadBase: Self.modelsDirectory,
                 modelRepo: Self.defaultModelRepo,
-                verbose: false,
-                logLevel: .error,
+                verbose: true,
+                logLevel: .info,
                 prewarm: true,
                 load: true,
                 download: true
             )
 
+            logger
+                .info("WhisperKit initializing with model: \(targetModel), downloadBase: \(Self.modelsDirectory.path)")
             whisperKit = try await WhisperKit(config)
             logger.info("WhisperKit initialized successfully")
         } catch {
