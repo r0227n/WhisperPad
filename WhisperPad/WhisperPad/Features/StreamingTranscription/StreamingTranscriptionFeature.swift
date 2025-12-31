@@ -126,6 +126,7 @@ struct StreamingTranscriptionFeature {
     @Dependency(\.streamingTranscription) var streamingTranscription
     @Dependency(\.continuousClock) var clock
     @Dependency(\.outputClient) var outputClient
+    @Dependency(\.userDefaultsClient) var userDefaultsClient
 
     // MARK: - Reducer Body
 
@@ -214,10 +215,10 @@ struct StreamingTranscriptionFeature {
             case .saveToFileButtonTapped:
                 guard case let .completed(text) = state.status else { return .none }
 
-                return .run { send in
+                return .run { [userDefaultsClient, outputClient] send in
                     do {
-                        let settings = FileOutputSettings.default
-                        let url = try await outputClient.saveToFile(text, settings)
+                        let appSettings = await userDefaultsClient.loadSettings()
+                        let url = try await outputClient.saveToFile(text, appSettings.output)
                         await send(.fileSaveCompleted(url))
                     } catch {
                         await send(.fileSaveFailed(error.localizedDescription))
@@ -294,7 +295,23 @@ struct StreamingTranscriptionFeature {
                 state.confirmedText = text
                 state.pendingText = ""
                 state.decodingText = ""
-                return .run { _ in await streamingTranscription.reset() }
+
+                return .run { [userDefaultsClient, outputClient] send in
+                    await streamingTranscription.reset()
+
+                    // ユーザー設定を読み込み
+                    let appSettings = await userDefaultsClient.loadSettings()
+
+                    // 自動ファイル出力が有効な場合
+                    if appSettings.output.isEnabled {
+                        do {
+                            let url = try await outputClient.saveToFile(text, appSettings.output)
+                            await send(.fileSaveCompleted(url))
+                        } catch {
+                            await send(.fileSaveFailed(error.localizedDescription))
+                        }
+                    }
+                }
 
             case let .finalizationFailed(message):
                 state.status = .error(message)

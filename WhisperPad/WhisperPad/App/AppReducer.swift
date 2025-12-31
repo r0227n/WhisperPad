@@ -203,15 +203,32 @@ struct AppReducer {
             case let .transcriptionCompleted(text):
                 state.appStatus = .completed
                 state.lastTranscription = text
+                let outputSettings = state.settings.settings.output
+
                 return .run { [outputClient] send in
                     // クリップボードにコピー
                     _ = await outputClient.copyToClipboard(text)
 
-                    // 通知を表示
-                    await outputClient.showNotification(
-                        "WhisperPad",
-                        "文字起こしが完了しました"
-                    )
+                    // 自動ファイル出力が有効な場合
+                    if outputSettings.isEnabled {
+                        do {
+                            let url = try await outputClient.saveToFile(text, outputSettings)
+                            await outputClient.showNotification(
+                                "WhisperPad",
+                                "保存完了: \(url.lastPathComponent)"
+                            )
+                        } catch {
+                            await outputClient.showNotification(
+                                "WhisperPad",
+                                "ファイル保存に失敗: \(error.localizedDescription)"
+                            )
+                        }
+                    } else {
+                        await outputClient.showNotification(
+                            "WhisperPad",
+                            "文字起こしが完了しました"
+                        )
+                    }
 
                     // 完了音を再生
                     await outputClient.playCompletionSound()
