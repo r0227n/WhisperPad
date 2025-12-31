@@ -41,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// メニュー項目を識別するためのタグ
     enum MenuItemTag: Int {
         case recording = 100
+        case pauseResume = 101
         case settings = 200
         case quit = 300
         case micPermissionStatus = 400
@@ -137,6 +138,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
         menu.addItem(recordingItem)
 
+        // 一時停止/再開項目（録音中/一時停止中のみ表示）
+        let pauseResumeItem = NSMenuItem(
+            title: "録音停止",
+            action: #selector(pauseRecording),
+            keyEquivalent: ""
+        )
+        pauseResumeItem.tag = MenuItemTag.pauseResume.rawValue
+        pauseResumeItem.target = self
+        pauseResumeItem.image = NSImage(systemSymbolName: "pause.fill", accessibilityDescription: nil)
+        pauseResumeItem.isHidden = true
+        menu.addItem(pauseResumeItem)
+
         menu.addItem(NSMenuItem.separator())
 
         // 設定項目
@@ -178,7 +191,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// 現在の状態に応じてメニューを更新
     private func updateMenuForCurrentState() {
         guard let menu = statusMenu,
-              let recordingItem = menu.item(withTag: MenuItemTag.recording.rawValue)
+              let recordingItem = menu.item(withTag: MenuItemTag.recording.rawValue),
+              let pauseResumeItem = menu.item(withTag: MenuItemTag.pauseResume.rawValue)
         else { return }
 
         switch store.appStatus {
@@ -188,6 +202,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             recordingItem.target = self
             recordingItem.isEnabled = true
             recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
+            pauseResumeItem.isHidden = true
 
         case .recording:
             recordingItem.title = "録音終了"
@@ -195,12 +210,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             recordingItem.target = self
             recordingItem.isEnabled = true
             recordingItem.image = NSImage(systemSymbolName: "stop.fill", accessibilityDescription: nil)
+            // 一時停止ボタンを表示
+            pauseResumeItem.title = "録音停止"
+            pauseResumeItem.action = #selector(pauseRecording)
+            pauseResumeItem.target = self
+            pauseResumeItem.isHidden = false
+            pauseResumeItem.image = NSImage(systemSymbolName: "pause.fill", accessibilityDescription: nil)
+
+        case .paused:
+            recordingItem.title = "録音終了"
+            recordingItem.action = #selector(endRecording)
+            recordingItem.target = self
+            recordingItem.isEnabled = true
+            recordingItem.image = NSImage(systemSymbolName: "stop.fill", accessibilityDescription: nil)
+            // 再開ボタンを表示
+            pauseResumeItem.title = "録音再開"
+            pauseResumeItem.action = #selector(resumeRecording)
+            pauseResumeItem.target = self
+            pauseResumeItem.isHidden = false
+            pauseResumeItem.image = NSImage(systemSymbolName: "play.fill", accessibilityDescription: nil)
 
         case .transcribing:
             recordingItem.title = "文字起こし中..."
             recordingItem.action = nil
             recordingItem.isEnabled = false
             recordingItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
+            pauseResumeItem.isHidden = true
 
         case .completed:
             recordingItem.title = "録音開始"
@@ -208,6 +243,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             recordingItem.target = self
             recordingItem.isEnabled = true
             recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
+            pauseResumeItem.isHidden = true
 
         case .error:
             recordingItem.title = "録音開始"
@@ -215,6 +251,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             recordingItem.target = self
             recordingItem.isEnabled = true
             recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
+            pauseResumeItem.isHidden = true
         }
     }
 
@@ -231,6 +268,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         case .recording:
             setStatusIcon(symbolName: "mic.fill", color: .systemRed)
+
+        case .paused:
+            setStatusIcon(symbolName: "pause.fill", color: .systemOrange)
 
         case .transcribing:
             startGearAnimation()
@@ -269,6 +309,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func endRecording() {
         logger.info("End recording requested")
         store.send(.endRecording)
+    }
+
+    /// 録音を一時停止
+    @objc private func pauseRecording() {
+        logger.info("Pause recording requested")
+        store.send(.pauseRecording)
+    }
+
+    /// 録音を再開
+    @objc private func resumeRecording() {
+        logger.info("Resume recording requested")
+        store.send(.resumeRecording)
     }
 
     /// 設定画面を開く

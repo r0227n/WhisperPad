@@ -12,6 +12,8 @@ enum AppStatus: Equatable, Sendable {
     case idle
     /// 録音中
     case recording
+    /// 一時停止中
+    case paused
     /// 文字起こし中
     case transcribing
     /// 完了
@@ -58,6 +60,10 @@ struct AppReducer {
         case startRecording
         /// 録音を終了
         case endRecording
+        /// 録音を一時停止
+        case pauseRecording
+        /// 録音を再開
+        case resumeRecording
         /// 文字起こしが完了
         case transcriptionCompleted(String)
         /// エラーが発生
@@ -90,6 +96,14 @@ struct AppReducer {
                 // 録音機能に委譲
                 return .send(.recording(.endRecordingButtonTapped))
 
+            case .pauseRecording:
+                // 録音機能に委譲
+                return .send(.recording(.pauseRecordingButtonTapped))
+
+            case .resumeRecording:
+                // 録音機能に委譲
+                return .send(.recording(.resumeRecordingButtonTapped))
+
             // RecordingFeature のデリゲートアクションを処理
             case let .recording(.delegate(.recordingCompleted(url))):
                 state.appStatus = .transcribing
@@ -117,6 +131,14 @@ struct AppReducer {
             case .recording(.prepareRecording):
                 state.appStatus = .recording
                 return .cancel(id: "autoReset")
+
+            case .recording(.recordingPaused):
+                state.appStatus = .paused
+                return .none
+
+            case .recording(.recordingResumed):
+                state.appStatus = .recording
+                return .none
 
             case .recording:
                 // その他の録音アクションは無視
