@@ -154,7 +154,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
 
-            // 録音トグルホットキーを登録 (⌥ Space)
+            // 録音トグルホットキーを登録 (⌥⇧ Space)
             await hotKeyClient.registerRecordingToggle { [weak self] in
                 Task { @MainActor in
                     self?.toggleRecording()
