@@ -9,7 +9,7 @@ import Dependencies
 import HotKey
 import OSLog
 
-private nonisolated(unsafe) let logger = Logger(
+nonisolated(unsafe) private let logger = Logger(
     subsystem: "com.whisperpad",
     category: "HotKeyClientLive"
 )

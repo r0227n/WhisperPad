@@ -42,6 +42,9 @@
 --stripunusedargs closure-only
 --ifdef no-indent
 
+# 修飾子の順序 (SwiftLint modifier_order と一致)
+--modifierorder nonisolated,override,private,fileprivate,internal,public,open,final,static,class,required,convenience,lazy,dynamic,mutating,nonmutating,weak,unowned,optional
+
 # 無効化するルール
 --disable redundantSelf
 --disable trailingCommas

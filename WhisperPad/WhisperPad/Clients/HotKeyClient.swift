@@ -7,7 +7,7 @@ import ComposableArchitecture
 import Foundation
 import OSLog
 
-private nonisolated(unsafe) let clientLogger = Logger(
+nonisolated(unsafe) private let clientLogger = Logger(
     subsystem: "com.whisperpad",
     category: "HotKeyClient"
 )
