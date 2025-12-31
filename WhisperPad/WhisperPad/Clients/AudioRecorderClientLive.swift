@@ -28,13 +28,11 @@ extension AudioRecorderClient: DependencyKey {
                     )
                 }
 
-                // URL 生成を actor 境界を越える前に行う
-                let url = try Self.generateRecordingURL(identifier: identifier)
-                try await audioRecorder.start(url: url)
-                return url
+                // AudioRecorder.start() が URL を返す
+                return try await audioRecorder.start(identifier: identifier)
             },
             endRecording: {
-                await audioRecorder.stop()
+                try await audioRecorder.stop()
             },
             currentTime: {
                 await audioRecorder.currentTime
@@ -46,7 +44,7 @@ extension AudioRecorderClient: DependencyKey {
                 await audioRecorder.pause()
             },
             resumeRecording: {
-                await audioRecorder.resume()
+                try await audioRecorder.resume()
             },
             isPaused: {
                 await audioRecorder.isPaused

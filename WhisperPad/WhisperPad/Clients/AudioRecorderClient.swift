@@ -27,8 +27,11 @@ struct AudioRecorderClient: Sendable {
     /// URL生成はクライアント内部で行われ、非同期境界での破損を防止します。
     var startRecording: @Sendable (_ identifier: String) async throws -> URL
 
-    /// 録音を終了
-    var endRecording: @Sendable () async -> Void
+    /// 録音を終了し、全セグメントを結合
+    ///
+    /// - Returns: 結合されたファイルの情報（部分的な成功の場合も含む）
+    /// - Throws: 結合に失敗した場合は RecordingError
+    var endRecording: @Sendable () async throws -> StopResult?
 
     /// 現在の録音時間を取得
     /// - Returns: 録音中の経過時間（秒）、録音していない場合は nil
@@ -38,11 +41,13 @@ struct AudioRecorderClient: Sendable {
     /// - Returns: 音声レベル（dB）、録音していない場合は nil
     var currentLevel: @Sendable () async -> Float?
 
-    /// 録音を一時停止
+    /// 録音を一時停止（マイクを完全に解放）
     var pauseRecording: @Sendable () async -> Void
 
-    /// 録音を再開
-    var resumeRecording: @Sendable () async -> Void
+    /// 録音を再開（新しいセグメントファイルで開始）
+    ///
+    /// - Throws: セグメントファイルの作成に失敗した場合は RecordingError
+    var resumeRecording: @Sendable () async throws -> Void
 
     /// 一時停止中かどうか
     /// - Returns: 一時停止中の場合は true
@@ -59,7 +64,7 @@ extension AudioRecorderClient: TestDependencyKey {
                 clientLogger.error("[DEBUG] previewValue.startRecording called!")
                 return try Self.generateRecordingURL(identifier: identifier)
             },
-            endRecording: {},
+            endRecording: { nil },
             currentTime: { nil },
             currentLevel: { nil },
             pauseRecording: {},
@@ -75,7 +80,7 @@ extension AudioRecorderClient: TestDependencyKey {
                 clientLogger.error("[DEBUG] testValue.startRecording called!")
                 return try Self.generateRecordingURL(identifier: identifier)
             },
-            endRecording: {},
+            endRecording: { nil },
             currentTime: { nil },
             currentLevel: { nil },
             pauseRecording: {},
