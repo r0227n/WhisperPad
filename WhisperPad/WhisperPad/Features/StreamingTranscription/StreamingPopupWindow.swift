@@ -107,7 +107,7 @@ final class StreamingPopupWindow: NSPanel {
 
         // ウィンドウの位置を計算（ボタンの中央下）
         let windowOriginX = screenFrame.midX - Constants.windowWidth / 2
-        let windowOriginY = screenFrame.minY - Constants.windowHeight - 4  // 4pxのマージン
+        let windowOriginY = screenFrame.minY - Constants.windowHeight - 4 // 4pxのマージン
 
         // 画面端からはみ出さないように調整
         let adjustedOriginX = adjustXPosition(windowOriginX)
