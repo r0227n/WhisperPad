@@ -22,6 +22,8 @@ enum RecordingError: Error, Equatable, Sendable, LocalizedError {
     case recorderStartFailed(String)
     /// オーディオファイルの作成に失敗
     case audioFileCreationFailed(String)
+    /// 音声セグメントの結合に失敗
+    case segmentMergeFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -37,6 +39,8 @@ enum RecordingError: Error, Equatable, Sendable, LocalizedError {
             "録音の開始に失敗しました: \(message)"
         case let .audioFileCreationFailed(message):
             "オーディオファイルの作成に失敗しました: \(message)"
+        case let .segmentMergeFailed(message):
+            "音声セグメントの結合に失敗しました: \(message)"
         }
     }
 }
