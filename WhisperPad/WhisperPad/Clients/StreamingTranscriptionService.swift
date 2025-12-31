@@ -48,14 +48,26 @@ actor StreamingTranscriptionService {
     func initialize(modelName: String?, confirmationCount: Int = 2, language: String? = "ja") async throws {
         logger.info("Initializing StreamingTranscriptionService with model: \(modelName ?? "default")")
 
+        // テキスト状態をリセット（モデルは保持）
+        confirmedSegments.removeAll()
+        pendingSegment = ""
+        previousResults.removeAll()
+        accumulatedSamples.removeAll()
+
         self.confirmationCount = confirmationCount
         self.language = language
+
+        // WhisperKit が既に初期化されている場合はスキップ
+        if whisperKit != nil {
+            logger.info("WhisperKit already initialized, reusing existing instance")
+            return
+        }
 
         let targetModel: String
         if let modelName {
             targetModel = modelName
         } else {
-            let modelSupport = await WhisperKit.recommendedModels()
+            let modelSupport = WhisperKit.recommendedModels()
             targetModel = modelSupport.default
         }
 
