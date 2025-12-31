@@ -114,7 +114,7 @@ actor StreamingTranscriptionService {
             // 確定ロジック
             let isConfirmed = updateConfirmation(newText: transcribedText)
 
-            if isConfirmed && !transcribedText.isEmpty {
+            if isConfirmed, !transcribedText.isEmpty {
                 confirmedSegments.append(transcribedText)
                 pendingSegment = ""
                 previousResults.removeAll()
