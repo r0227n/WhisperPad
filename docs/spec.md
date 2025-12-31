@@ -31,12 +31,13 @@
 
 ### 1.2 主要機能
 
-| 機能                   | 説明                                                  |
-| ---------------------- | ----------------------------------------------------- |
-| メニューバー常駐       | システム起動時に自動起動し、メニューバーに常駐        |
-| ホットキー録音         | グローバルショートカットで即座に録音開始/停止         |
-| オンデバイス文字起こし | WhisperKit による完全ローカル処理（ネットワーク不要） |
-| 柔軟な出力             | クリップボード、ファイル、または両方への出力          |
+| 機能                   | 説明                                                           |
+| ---------------------- | -------------------------------------------------------------- |
+| メニューバー常駐       | システム起動時に自動起動し、メニューバーに常駐                 |
+| ホットキー録音         | グローバルショートカットで即座に録音開始/停止                  |
+| オンデバイス文字起こし | WhisperKit による完全ローカル処理（ネットワーク不要）          |
+| リアルタイム文字起こし | 音声入力中にリアルタイムでテキスト表示、ポップアップ UI で確認 |
+| 柔軟な出力             | クリップボード、ファイル、または両方への出力                   |
 
 ### 1.3 ターゲットユーザー
 
@@ -149,23 +150,31 @@ WhisperPad/
 │   │   ├── OutputSettingsView.swift    # 出力設定
 │   │   └── ModelSettingsView.swift     # モデル設定
 │   │
-│   └── History/
-│       ├── HistoryFeature.swift        # 履歴機能Reducer
-│       └── HistoryView.swift           # 履歴画面
+│   ├── History/
+│   │   ├── HistoryFeature.swift        # 履歴機能Reducer
+│   │   └── HistoryView.swift           # 履歴画面
+│   │
+│   └── StreamingTranscription/         # リアルタイム文字起こし機能
+│       ├── StreamingTranscriptionFeature.swift  # ストリーミングReducer
+│       ├── StreamingTranscriptionView.swift     # ポップアップ内View
+│       └── StreamingPopupWindow.swift           # ポップアップウィンドウ
 │
 ├── Clients/
 │   ├── AudioRecorderClient.swift       # 音声録音クライアント
 │   ├── TranscriptionClient.swift       # WhisperKit連携クライアント
 │   ├── HotKeyClient.swift              # ホットキー管理クライアント
 │   ├── OutputClient.swift              # 出力処理クライアント
-│   └── UserDefaultsClient.swift        # 設定永続化クライアント
+│   ├── UserDefaultsClient.swift        # 設定永続化クライアント
+│   ├── StreamingAudioClient.swift      # ストリーミング音声入力クライアント
+│   └── StreamingTranscriptionClient.swift  # ストリーミング文字起こしクライアント
 │
 ├── Models/
 │   ├── AppState.swift                  # アプリ全体の状態
 │   ├── RecordingState.swift            # 録音状態
 │   ├── Transcription.swift             # 書き起こしデータ
 │   ├── AppSettings.swift               # 設定モデル
-│   └── WhisperModel.swift              # Whisperモデル定義
+│   ├── WhisperModel.swift              # Whisperモデル定義
+│   └── StreamingSettings.swift         # ストリーミング設定
 │
 ├── Views/
 │   ├── MenuBarView.swift               # メニューバーUI
@@ -238,6 +247,7 @@ WhisperPad/
 │ ● 録音開始            ⌥⇧ Space    │  ← 状態により「録音終了」「一時停止」「再開」に変化
 │   ├ 録音中 → 「⏸ 一時停止」「⏹ 録音終了」
 │   └ 一時停止中 → 「▶ 再開」「⏹ 録音終了」
+│ 🎤 リアルタイム文字起こし   ⌘⇧ R   │  ← ポップアップ表示してストリーミング開始
 ├─────────────────────────────────────┤
 │ 📊 最後の書き起こし                  │
 │    "今日の会議では..."   [コピー]    │
@@ -260,12 +270,13 @@ WhisperPad/
 
 #### 4.2.1 デフォルトショートカット
 
-| ショートカット              | 動作                       | カスタマイズ |
-| --------------------------- | -------------------------- | ------------ |
-| `⌥⇧ Option + Shift + Space` | 録音開始/停止（トグル）    | 可           |
-| `⌘ + Shift + V`             | 最後の書き起こしをペースト | 可           |
-| `⌘ + Shift + ,`             | 設定を開く                 | 可           |
-| `Escape`                    | 録音キャンセル             | 不可         |
+| ショートカット              | 動作                          | カスタマイズ |
+| --------------------------- | ----------------------------- | ------------ |
+| `⌥⇧ Option + Shift + Space` | 録音開始/停止（トグル）       | 可           |
+| `⌘ + Shift + R`             | リアルタイム文字起こし開始    | 可           |
+| `⌘ + Shift + V`             | 最後の書き起こしをペースト    | 可           |
+| `⌘ + Shift + ,`             | 設定を開く                    | 可           |
+| `Escape`                    | 録音/ストリーミングキャンセル | 不可         |
 
 #### 4.2.2 録音モード
 
@@ -499,6 +510,176 @@ struct TranscriptionOutput: Codable, Equatable {
 }
 ```
 
+### 4.6 リアルタイム文字起こし機能
+
+リアルタイム文字起こし機能は、通常の録音→文字起こしとは別に、音声入力中にリアルタイムでテキストを表示する機能です。WhisperKit の `TranscriptionCallback` を活用してストリーミング処理を実現します。
+
+#### 4.6.1 通常録音との違い
+
+| 項目           | 通常録音                     | リアルタイム文字起こし             |
+| -------------- | ---------------------------- | ---------------------------------- |
+| 処理タイミング | 録音終了後に一括処理         | 録音中にリアルタイムで処理         |
+| テキスト表示   | 処理完了後に通知             | ポップアップ上でリアルタイム表示   |
+| 音声保存       | WAV ファイルとして保存可能   | 保存なし（ストリーミング処理のみ） |
+| 一時停止       | 対応                         | 非対応（停止のみ）                 |
+| 最大録音時間   | 設定可能（デフォルト 60 秒） | 制限なし（メモリに応じて）         |
+| 精度           | 高（全音声を一括処理）       | やや低（チャンク単位で処理）       |
+
+#### 4.6.2 起動方法
+
+| 方法       | 操作                                    |
+| ---------- | --------------------------------------- |
+| メニュー   | 「🎤 リアルタイム文字起こし」をクリック |
+| ホットキー | `⌘ + Shift + R`                         |
+
+#### 4.6.3 ポップアップウィンドウ
+
+リアルタイム文字起こし中は、メニューバー直下にフローティングポップアップウィンドウを表示します。
+
+**ウィンドウ仕様**：
+
+| 項目     | 値                                   |
+| -------- | ------------------------------------ |
+| サイズ   | 400 × 300 px                         |
+| 位置     | メニューバーアイコンの直下、中央揃え |
+| スタイル | NSPanel (borderless, nonactivating)  |
+| 背景     | VisualEffectView（HUD スタイル）     |
+| 角丸     | 12px                                 |
+
+**レイアウト**：
+
+```
+┌────────────────────────────────────────┐
+│ ● 録音中       経過時間  00:15    [✕]  │ ← ヘッダー
+├────────────────────────────────────────┤
+│                                        │
+│ 今日の会議では来期の予算について      │ ← 確定済みテキスト（通常色）
+│ 話し合いました。主な議題は            │
+│ 以下の通りです...                      │ ← 未確定テキスト（薄い色）
+│ マーケティング費用の                   │ ← デコード中（さらに薄い）
+│                                        │
+│                                        │
+├────────────────────────────────────────┤
+│ 12.5 tok/s    [ファイル保存] [コピー]  │ ← フッター
+└────────────────────────────────────────┘
+```
+
+#### 4.6.4 テキスト表示仕様
+
+リアルタイム文字起こしでは、テキストの確定度合いに応じて表示スタイルを変えます。
+
+| 種別               | 説明                               | 表示スタイル              |
+| ------------------ | ---------------------------------- | ------------------------- |
+| 確定済みセグメント | 複数回の処理で安定したテキスト     | 通常色（primary）         |
+| 未確定セグメント   | 現在のチャンクで認識されたテキスト | 薄い色（secondary）       |
+| デコード中テキスト | 現在デコード処理中の暫定テキスト   | さらに薄い（opacity 0.7） |
+
+**確定ロジック**：
+
+- セグメントが 2 回以上連続して同じ内容で出現した場合に「確定」とする
+- 確定したセグメントは履歴に保存される
+
+#### 4.6.5 ストリーミング処理仕様
+
+| 項目             | 値     | 説明                                   |
+| ---------------- | ------ | -------------------------------------- |
+| 処理間隔         | 1.0 秒 | 音声バッファを処理する間隔             |
+| 最小音声長       | 0.5 秒 | 処理をトリガーする最小音声長           |
+| VAD しきい値     | 0.3    | 無音判定のエネルギーしきい値           |
+| 確定に必要な回数 | 2 回   | セグメントを確定するまでの連続出現回数 |
+
+#### 4.6.6 状態遷移
+
+```swift
+enum StreamingStatus: Equatable {
+    case idle                           // 待機中
+    case initializing                   // モデル初期化中
+    case recording                      // ストリーミング録音中
+    case processing                     // 最終処理中
+    case completed                      // 完了（確認待ち）
+    case error(String)                  // エラー
+}
+```
+
+**状態遷移図**：
+
+```
+              ┌─────────────────┐
+              │      idle       │
+              │    （待機中）    │
+              └────────┬────────┘
+                       │ startStreamingButtonTapped
+                       ▼
+              ┌─────────────────┐
+              │  initializing   │
+              │  （初期化中）    │
+              └────────┬────────┘
+                       │
+         ┌─────────────┴─────────────┐
+         │ 成功                      │ 失敗
+         ▼                           ▼
+┌─────────────────┐         ┌─────────────────┐
+│    recording    │         │     error       │
+│    （録音中）    │         │   （エラー）     │
+└────────┬────────┘         └─────────────────┘
+         │
+   ┌─────┴─────┐
+   │ 停止       │ キャンセル
+   ▼           ▼
+┌──────────┐   │
+│processing│   │
+│（処理中） │   │
+└─────┬────┘   │
+      │        │
+      ▼        ▼
+┌──────────┐ ┌──────────┐
+│completed │ │   idle   │
+│ （完了）  │ │ （待機中）│
+└─────┬────┘ └──────────┘
+      │ confirmAndCopyButtonTapped
+      ▼
+┌──────────────────┐
+│      idle        │
+│    （待機中）     │
+└──────────────────┘
+```
+
+#### 4.6.7 終了後の処理
+
+ストリーミング終了後、ポップアップは「完了」状態で残り、ユーザーが以下の操作を行えます：
+
+| ボタン           | 動作                                                     |
+| ---------------- | -------------------------------------------------------- |
+| コピーして閉じる | テキストをクリップボードにコピーし、ポップアップを閉じる |
+| ファイル保存     | 保存ダイアログを表示し、テキストファイルとして保存       |
+| ✕ ボタン         | 保存せずにポップアップを閉じる                           |
+
+#### 4.6.8 設定項目
+
+```swift
+struct StreamingSettings: Codable, Equatable, Sendable {
+    /// 使用するモデル名（nil の場合は通常の TranscriptionSettings と同じ）
+    var modelName: String? = nil
+
+    /// 文字起こし処理間隔（秒）
+    var transcriptionInterval: Double = 1.0
+
+    /// セグメント確定に必要な確認回数
+    var confirmationCount: Int = 2
+
+    /// 無音検出しきい値
+    var silenceThreshold: Float = 0.3
+
+    /// デコードプレビューを表示するか
+    var showDecodingPreview: Bool = true
+
+    /// 言語設定（nil で自動検出）
+    var language: String? = "ja"
+
+    static let `default` = StreamingSettings()
+}
+```
+
 ---
 
 ## 5. 画面仕様
@@ -679,6 +860,90 @@ struct TranscriptionOutput: Codable, Equatable {
 └───────────────────────────────────────────────────────────────┘
 ```
 
+### 5.3 ストリーミングポップアップ
+
+リアルタイム文字起こし中に表示されるフローティングウィンドウです。
+
+#### 5.3.1 ウィンドウ仕様
+
+| 項目     | 値                                        |
+| -------- | ----------------------------------------- |
+| サイズ   | 400 × 300 px                              |
+| 位置     | メニューバーアイコンの直下、中央揃え      |
+| スタイル | NSPanel (borderless, nonactivatingPanel)  |
+| 背景     | NSVisualEffectView (material: .hudWindow) |
+| 角丸     | cornerRadius: 12                          |
+| シャドウ | あり（hasShadow: true）                   |
+| レベル   | .floating                                 |
+
+#### 5.3.2 画面レイアウト
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│ ● 録音中             経過時間  00:15               [✕]         │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  今日の会議では来期の予算について話し合いました。              │
+│  主な議題は以下の通りです。                                    │
+│  第一に、マーケティング費用の見直しについて...                │
+│  ▋                                                             │
+│                                                                │
+│                                                                │
+│                                                                │
+├────────────────────────────────────────────────────────────────┤
+│ 12.5 tok/s                     [ファイル保存] [コピーして閉じる]│
+└────────────────────────────────────────────────────────────────┘
+```
+
+#### 5.3.3 ヘッダー部
+
+| 要素           | 説明                                             |
+| -------------- | ------------------------------------------------ |
+| ステータス表示 | 「● 録音中」「● 処理中」「✓ 完了」などの状態表示 |
+| 経過時間       | 録音開始からの経過時間（MM:SS 形式）             |
+| 閉じるボタン   | ✕ ボタン。キャンセルまたは閉じる                 |
+
+**ステータス色**：
+
+| 状態     | 色                      | 説明             |
+| -------- | ----------------------- | ---------------- |
+| 初期化中 | 黄 (systemYellow)       | モデル読み込み中 |
+| 録音中   | 赤 (systemRed)          | パルスアニメ付き |
+| 処理中   | 青 (systemBlue)         | 最終処理中       |
+| 完了     | 緑 (systemGreen)        | 処理完了         |
+| エラー   | オレンジ (systemOrange) | エラー発生       |
+
+#### 5.3.4 テキスト表示部
+
+| 項目         | 仕様                                   |
+| ------------ | -------------------------------------- |
+| スクロール   | 自動スクロール（新しいテキストを追従） |
+| フォント     | .body (system font)                    |
+| 行間         | 標準（default spacing: 8）             |
+| テキスト選択 | 完了状態でのみ選択可能                 |
+
+**テキスト表示スタイル**：
+
+- 確定済みテキスト: `.foregroundColor(.primary)`
+- 未確定テキスト: `.foregroundColor(.secondary)`
+- デコード中: `.foregroundColor(.secondary).opacity(0.7)`
+
+#### 5.3.5 フッター部
+
+**録音中の表示**：
+
+| 要素       | 説明                                      |
+| ---------- | ----------------------------------------- |
+| 処理速度   | 「12.5 tok/s」（トークン/秒）             |
+| 停止ボタン | 「停止」ボタン（赤色、borderedProminent） |
+
+**完了状態の表示**：
+
+| 要素               | 説明                                      |
+| ------------------ | ----------------------------------------- |
+| ファイル保存ボタン | 「ファイル保存」（bordered）              |
+| コピーボタン       | 「コピーして閉じる」（borderedProminent） |
+
 ---
 
 ## 6. 状態遷移
@@ -770,6 +1035,7 @@ struct AppState: Equatable {
     var appStatus: AppStatus = .idle
     var recording: RecordingFeature.State = .init()
     var transcription: TranscriptionFeature.State = .init()
+    var streamingTranscription: StreamingTranscriptionFeature.State = .init()  // 追加
     var settings: SettingsFeature.State = .init()
     var history: HistoryFeature.State = .init()
     var lastTranscription: TranscriptionOutput?
@@ -781,6 +1047,8 @@ enum AppStatus: Equatable {
     case recording(duration: TimeInterval)      // 録音中
     case paused(duration: TimeInterval)         // 一時停止中
     case transcribing(progress: Double)         // 文字起こし中
+    case streamingTranscribing                  // ストリーミング文字起こし中（追加）
+    case streamingCompleted                     // ストリーミング完了（追加）
     case completed                              // 完了
     case error(message: String)                 // エラー
 }
@@ -788,14 +1056,16 @@ enum AppStatus: Equatable {
 
 ### 6.3 メニューバーアイコン状態
 
-| AppStatus       | アイコン                   | 色           | アニメーション           |
-| --------------- | -------------------------- | ------------ | ------------------------ |
-| `.idle`         | `mic`                      | systemGray   | なし                     |
-| `.recording`    | `mic.fill`                 | systemRed    | パルス（波形）           |
-| `.paused`       | `pause.circle`             | systemOrange | なし                     |
-| `.transcribing` | `gear`                     | systemBlue   | 回転                     |
-| `.completed`    | `checkmark.circle`         | systemGreen  | なし（3 秒後に idle へ） |
-| `.error`        | `exclamationmark.triangle` | systemYellow | なし                     |
+| AppStatus                | アイコン                   | 色           | アニメーション           |
+| ------------------------ | -------------------------- | ------------ | ------------------------ |
+| `.idle`                  | `mic`                      | systemGray   | なし                     |
+| `.recording`             | `mic.fill`                 | systemRed    | パルス（波形）           |
+| `.paused`                | `pause.circle`             | systemOrange | なし                     |
+| `.transcribing`          | `gear`                     | systemBlue   | 回転                     |
+| `.streamingTranscribing` | `waveform.badge.mic`       | systemPurple | パルス（波形）           |
+| `.streamingCompleted`    | `checkmark.circle`         | systemGreen  | なし                     |
+| `.completed`             | `checkmark.circle`         | systemGreen  | なし（3 秒後に idle へ） |
+| `.error`                 | `exclamationmark.triangle` | systemYellow | なし                     |
 
 ---
 
@@ -812,6 +1082,7 @@ enum AppStatus: Equatable {
 | `WhisperPad.settings.recording`     | Data (JSON) | 録音設定               |
 | `WhisperPad.settings.transcription` | Data (JSON) | 文字起こし設定         |
 | `WhisperPad.settings.output`        | Data (JSON) | 出力設定               |
+| `WhisperPad.settings.streaming`     | Data (JSON) | ストリーミング設定     |
 | `WhisperPad.lastModelUsed`          | String      | 最後に使用したモデル名 |
 
 #### 7.1.2 設定モデル（完全版）
@@ -823,13 +1094,15 @@ struct AppSettings: Codable, Equatable {
     var recording: RecordingSettings
     var transcription: TranscriptionSettings
     var output: OutputSettings
+    var streaming: StreamingSettings  // 追加
 
     static let `default` = AppSettings(
         general: .default,
         hotKey: .default,
         recording: .default,
         transcription: .default,
-        output: .default
+        output: .default,
+        streaming: .default  // 追加
     )
 }
 
@@ -864,6 +1137,28 @@ struct OutputSettings: Codable, Equatable {
     var saveOriginalAudio: Bool = false
 
     static let `default` = OutputSettings()
+}
+
+struct StreamingSettings: Codable, Equatable, Sendable {
+    /// 使用するモデル名（nil の場合は TranscriptionSettings と同じ）
+    var modelName: String? = nil
+
+    /// 文字起こし処理間隔（秒）
+    var transcriptionInterval: Double = 1.0
+
+    /// セグメント確定に必要な確認回数
+    var confirmationCount: Int = 2
+
+    /// 無音検出しきい値
+    var silenceThreshold: Float = 0.3
+
+    /// デコードプレビューを表示するか
+    var showDecodingPreview: Bool = true
+
+    /// 言語設定（nil で自動検出）
+    var language: String? = "ja"
+
+    static let `default` = StreamingSettings()
 }
 ```
 
@@ -1049,6 +1344,11 @@ enum WhisperPadError: Error, Equatable, LocalizedError {
     case transcriptionFailed(String)
     case transcriptionTimeout
 
+    // ストリーミングエラー
+    case streamingInitializationFailed(String)
+    case streamingProcessingFailed(String)
+    case streamingBufferOverflow
+
     // 出力エラー
     case clipboardWriteFailed
     case fileWriteFailed(String)
@@ -1079,12 +1379,13 @@ enum WhisperPadError: Error, Equatable, LocalizedError {
 
 ### 10.2 エラー表示
 
-| エラー種別       | 表示方法                            | 自動消去 |
-| ---------------- | ----------------------------------- | -------- |
-| 権限エラー       | アラートダイアログ + 設定へのリンク | 手動     |
-| 録音エラー       | メニューバー + 通知                 | 5 秒     |
-| 文字起こしエラー | メニューバー + 通知                 | 5 秒     |
-| 出力エラー       | 通知                                | 5 秒     |
+| エラー種別           | 表示方法                            | 自動消去 |
+| -------------------- | ----------------------------------- | -------- |
+| 権限エラー           | アラートダイアログ + 設定へのリンク | 手動     |
+| 録音エラー           | メニューバー + 通知                 | 5 秒     |
+| 文字起こしエラー     | メニューバー + 通知                 | 5 秒     |
+| ストリーミングエラー | ポップアップ内 + メニューバー       | 手動     |
+| 出力エラー           | 通知                                | 5 秒     |
 
 ### 10.3 リカバリー処理
 
@@ -1140,14 +1441,14 @@ enum ErrorRecoveryAction {
 
 ### 12.1 ロードマップ
 
-| バージョン | 機能                            | 優先度 |
-| ---------- | ------------------------------- | ------ |
-| v0.2.0     | リアルタイムプレビュー          | 高     |
-| v0.2.0     | カスタムプロンプト（用語集）    | 高     |
-| v0.3.0     | 話者分離（Speaker Diarization） | 中     |
-| v0.3.0     | ショートカットアプリ連携        | 中     |
-| v0.4.0     | 翻訳機能強化                    | 低     |
-| v0.4.0     | Obsidian/Notion 連携            | 低     |
+| バージョン | 機能                            | 優先度 | 状態       |
+| ---------- | ------------------------------- | ------ | ---------- |
+| v0.2.0     | リアルタイム文字起こし          | 高     | 仕様策定済 |
+| v0.2.0     | カスタムプロンプト（用語集）    | 高     | 未着手     |
+| v0.3.0     | 話者分離（Speaker Diarization） | 中     | 未着手     |
+| v0.3.0     | ショートカットアプリ連携        | 中     | 未着手     |
+| v0.4.0     | 翻訳機能強化                    | 低     | 未着手     |
+| v0.4.0     | Obsidian/Notion 連携            | 低     | 未着手     |
 
 ### 12.2 検討中の機能
 
