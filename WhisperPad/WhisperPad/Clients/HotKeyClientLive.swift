@@ -165,6 +165,26 @@ private final class HotKeyManager {
         )
     }
 
+    /// 動的キーコンボでキャンセルホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    func registerCancelWithCombo(
+        _ combo: HotKeySettings.KeyComboSettings,
+        handler: @escaping () -> Void
+    ) {
+        cancelHotKey = nil
+        let hotKey = HotKey(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+        hotKey.keyDownHandler = handler
+        cancelHotKey = hotKey
+        logger.info(
+            "Cancel hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
+        )
+    }
+
     /// すべてのホットキーを解除
     func unregisterAll() {
         openSettingsHotKey = nil
@@ -247,6 +267,11 @@ extension HotKeyClient: DependencyKey {
             registerOpenSettingsWithCombo: { combo, handler in
                 await MainActor.run {
                     HotKeyManager.shared.registerOpenSettingsWithCombo(combo, handler: handler)
+                }
+            },
+            registerCancelWithCombo: { combo, handler in
+                await MainActor.run {
+                    HotKeyManager.shared.registerCancelWithCombo(combo, handler: handler)
                 }
             },
             unregisterAll: {

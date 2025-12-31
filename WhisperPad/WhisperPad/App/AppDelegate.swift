@@ -9,6 +9,13 @@ import Dependencies
 import os.log
 import UserNotifications
 
+// MARK: - Notification.Name Extension
+
+extension Notification.Name {
+    /// ホットキー設定が変更された通知
+    static let hotKeySettingsChanged = Notification.Name("hotKeySettingsChanged")
+}
+
 /// メニューバーアプリケーションを管理する AppDelegate
 ///
 /// `NSStatusItem` を使用してメニューバーにアイコンを表示し、
@@ -32,16 +39,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var animationFrame: Int = 0
 
     /// ロガー
-    private let logger = Logger(
+    let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.example.WhisperPad",
         category: "AppDelegate"
     )
 
     /// ホットキークライアント
-    @Dependency(\.hotKeyClient) private var hotKeyClient
+    @Dependency(\.hotKeyClient) var hotKeyClient
 
     /// 出力クライアント
-    @Dependency(\.outputClient) private var outputClient
+    @Dependency(\.outputClient) var outputClient
 
     // MARK: - Menu Item Tags
 
@@ -70,6 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         logger.info("Application did finish launching")
         setupStatusItem()
         setupObservation()
+        setupHotKeyObserver()
         requestNotificationPermission()
         setupHotKeys()
     }
@@ -79,12 +87,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         animationTimer?.invalidate()
         animationTimer = nil
 
+        // NotificationCenter オブザーバーを解除
+        NotificationCenter.default.removeObserver(self, name: .hotKeySettingsChanged, object: nil)
+
         // ホットキーを解除
         Task {
-            await hotKeyClient.unregisterOpenSettings()
-            await hotKeyClient.unregisterRecordingToggle()
-            await hotKeyClient.unregisterPaste()
-            await hotKeyClient.unregisterCancel()
+            await hotKeyClient.unregisterAll()
         }
     }
 
@@ -132,47 +140,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             } catch {
                 logger.error("Notification permission request failed: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    /// グローバルホットキーを設定
-    private func setupHotKeys() {
-        Task {
-            // アクセシビリティ権限をチェック
-            let hasPermission = await hotKeyClient.checkAccessibilityPermission()
-
-            if !hasPermission {
-                logger.warning("Accessibility permission not granted, requesting...")
-                await hotKeyClient.requestAccessibilityPermission()
-            }
-
-            // 設定画面を開くホットキーを登録 (⌘⇧,)
-            await hotKeyClient.registerOpenSettings {
-                Task { @MainActor in
-                    NotificationCenter.default.post(name: .openSettingsRequest, object: nil)
-                }
-            }
-
-            // 録音トグルホットキーを登録 (⌥⇧ Space)
-            await hotKeyClient.registerRecordingToggle { [weak self] in
-                Task { @MainActor in
-                    self?.toggleRecording()
-                }
-            }
-
-            // ペーストホットキーを登録 (⌘⇧V)
-            await hotKeyClient.registerPaste { [weak self] in
-                Task { @MainActor in
-                    self?.pasteLastTranscription()
-                }
-            }
-
-            // 録音キャンセルホットキーを登録 (Escape)
-            await hotKeyClient.registerCancel { [weak self] in
-                Task { @MainActor in
-                    self?.cancelRecording()
-                }
             }
         }
     }
@@ -376,7 +343,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// 録音をトグル（開始/停止）
-    private func toggleRecording() {
+    func toggleRecording() {
         logger.info("Toggle recording hotkey triggered: ⌥␣")
         switch store.appStatus {
         case .idle, .completed, .error, .streamingCompleted:
@@ -390,7 +357,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// 最後の書き起こしをペースト
-    private func pasteLastTranscription() {
+    func pasteLastTranscription() {
         logger.info("Paste hotkey triggered: ⌘⇧V")
         guard let text = store.lastTranscription, !text.isEmpty else {
             logger.warning("No transcription to paste")
@@ -403,7 +370,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// 録音をキャンセル
-    private func cancelRecording() {
+    func cancelRecording() {
         // 録音中または一時停止中のみキャンセル可能
         guard store.appStatus == .recording || store.appStatus == .paused else {
             return

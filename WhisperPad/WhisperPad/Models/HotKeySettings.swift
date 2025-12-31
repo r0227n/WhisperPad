@@ -24,6 +24,9 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     /// ストリーミング文字起こしのホットキー
     var streamingHotKey: KeyComboSettings
 
+    /// 録音キャンセルのホットキー
+    var cancelHotKey: KeyComboSettings
+
     /// デフォルト設定
     static let `default` = HotKeySettings()
 
@@ -33,13 +36,15 @@ struct HotKeySettings: Codable, Equatable, Sendable {
         pasteHotKey: KeyComboSettings = .pasteDefault,
         openSettingsHotKey: KeyComboSettings = .openSettingsDefault,
         recordingMode: RecordingMode = .toggle,
-        streamingHotKey: KeyComboSettings = .streamingDefault
+        streamingHotKey: KeyComboSettings = .streamingDefault,
+        cancelHotKey: KeyComboSettings = .cancelDefault
     ) {
         self.recordingHotKey = recordingHotKey
         self.pasteHotKey = pasteHotKey
         self.openSettingsHotKey = openSettingsHotKey
         self.recordingMode = recordingMode
         self.streamingHotKey = streamingHotKey
+        self.cancelHotKey = cancelHotKey
     }
 }
 
@@ -78,6 +83,12 @@ extension HotKeySettings {
         static let streamingDefault = KeyComboSettings(
             carbonKeyCode: 15,
             carbonModifiers: 768
+        )
+
+        /// キャンセルホットキーのデフォルト（Escape）
+        static let cancelDefault = KeyComboSettings(
+            carbonKeyCode: 53,
+            carbonModifiers: 0
         )
     }
 }

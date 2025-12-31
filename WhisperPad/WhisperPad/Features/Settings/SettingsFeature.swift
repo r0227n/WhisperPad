@@ -12,6 +12,8 @@ import Foundation
 /// 設定タブ
 enum SettingsTab: String, CaseIterable, Sendable {
     case general = "一般"
+    case hotkey = "ホットキー"
+    case recording = "録音"
     case model = "モデル"
     case output = "出力"
 
@@ -20,12 +22,27 @@ enum SettingsTab: String, CaseIterable, Sendable {
         switch self {
         case .general:
             "gear"
+        case .hotkey:
+            "keyboard"
+        case .recording:
+            "waveform"
         case .model:
             "cpu"
         case .output:
             "doc.on.clipboard"
         }
     }
+}
+
+// MARK: - Hotkey Type
+
+/// ホットキータイプ（どのホットキーを編集中か）
+enum HotkeyType: String, CaseIterable, Sendable {
+    case recording
+    case paste
+    case openSettings
+    case streaming
+    case cancel
 }
 
 // MARK: - Delegate Action
@@ -79,6 +96,9 @@ struct SettingsFeature {
 
         /// 設定を保存中かどうか
         var isSaving: Bool = false
+
+        /// ホットキー録音中のタイプ（nil = 録音なし）
+        var recordingHotkeyType: HotkeyType?
     }
 
     // MARK: - Action
@@ -156,6 +176,13 @@ struct SettingsFeature {
 
         /// エラーをクリア
         case clearError
+
+        // MARK: - Hotkey Recording
+
+        /// ホットキー録音を開始
+        case startRecordingHotkey(HotkeyType)
+        /// ホットキー録音を停止
+        case stopRecordingHotkey
 
         // MARK: - Delegate
 
@@ -247,6 +274,11 @@ struct SettingsFeature {
                 state.isSaving = false
                 switch result {
                 case .success:
+                    // ホットキー設定変更を通知（AppDelegateでホットキーを再登録）
+                    NotificationCenter.default.post(
+                        name: .hotKeySettingsChanged,
+                        object: state.settings.hotKey
+                    )
                     return .send(.delegate(.settingsChanged(state.settings)))
                 case let .failure(error):
                     state.errorMessage = error.localizedDescription
@@ -412,6 +444,14 @@ struct SettingsFeature {
 
             case .clearError:
                 state.errorMessage = nil
+                return .none
+
+            case let .startRecordingHotkey(type):
+                state.recordingHotkeyType = type
+                return .none
+
+            case .stopRecordingHotkey:
+                state.recordingHotkeyType = nil
                 return .none
 
             case .delegate:
