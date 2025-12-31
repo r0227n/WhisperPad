@@ -19,6 +19,10 @@ enum AppStatus: Equatable, Sendable {
     case transcribing
     /// 完了
     case completed
+    /// ストリーミング文字起こし中
+    case streamingTranscribing
+    /// ストリーミング完了
+    case streamingCompleted
     /// エラー
     case error(String)
 }

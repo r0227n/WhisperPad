@@ -21,6 +21,9 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     /// 録音モード
     var recordingMode: RecordingMode
 
+    /// ストリーミング文字起こしのホットキー
+    var streamingHotKey: KeyComboSettings
+
     /// デフォルト設定
     static let `default` = HotKeySettings()
 
@@ -29,12 +32,14 @@ struct HotKeySettings: Codable, Equatable, Sendable {
         recordingHotKey: KeyComboSettings = .recordingDefault,
         pasteHotKey: KeyComboSettings = .pasteDefault,
         openSettingsHotKey: KeyComboSettings = .openSettingsDefault,
-        recordingMode: RecordingMode = .toggle
+        recordingMode: RecordingMode = .toggle,
+        streamingHotKey: KeyComboSettings = .streamingDefault
     ) {
         self.recordingHotKey = recordingHotKey
         self.pasteHotKey = pasteHotKey
         self.openSettingsHotKey = openSettingsHotKey
         self.recordingMode = recordingMode
+        self.streamingHotKey = streamingHotKey
     }
 }
 
@@ -66,6 +71,12 @@ extension HotKeySettings {
         /// 設定を開くホットキーのデフォルト（⌘⇧,）
         static let openSettingsDefault = KeyComboSettings(
             carbonKeyCode: 43,
+            carbonModifiers: 768
+        )
+
+        /// ストリーミングホットキーのデフォルト（⌘⇧R）
+        static let streamingDefault = KeyComboSettings(
+            carbonKeyCode: 15,
             carbonModifiers: 768
         )
     }
