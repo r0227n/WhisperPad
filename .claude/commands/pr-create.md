@@ -1,7 +1,7 @@
 ---
 description: develop との差分を整理し PR を作成・オープン
 argument-hint: [--skip-confirm] [--draft]
-allowed-tools: Bash(git status:*), Bash(git status -C *:*), Bash(git diff:*), Bash(git diff -C *:*), Bash(git log:*), Bash(git log -C *:*), Bash(git branch:*), Bash(git branch -C *:*), Bash(git push:*), Bash(git push -C *:*), Bash(gh pr create:*), Bash(gh pr create -C *:*), Read, Grep, Glob, TodoWrite, EnterPlanMode, ExitPlanMode
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git push:*), Bash(gh pr create:*), Read, Grep, Glob, TodoWrite, EnterPlanMode, ExitPlanMode
 ---
 
 # Create PR: develop との差分から PR 作成
