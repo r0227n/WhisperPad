@@ -333,7 +333,7 @@ enum RecordingStatus: Equatable {
 
 一時停止時にマイクを完全に解放するため、**複数セグメント方式**を採用しています：
 
-```
+```text
 録音開始  → セグメント0.wav を作成・録音
 一時停止  → stop() でマイク完全解放、セグメント0 を保持
 再開      → セグメント1.wav を新規作成・録音
@@ -343,7 +343,7 @@ enum RecordingStatus: Equatable {
 
 ##### 状態遷移
 
-```
+```text
         ┌──────────────┐
         │   recording  │
         │   (録音中)    │
