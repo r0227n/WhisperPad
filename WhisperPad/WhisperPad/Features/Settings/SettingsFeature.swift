@@ -100,6 +100,8 @@ struct SettingsFeature {
 
         /// 一般設定を更新
         case updateGeneralSettings(GeneralSettings)
+        /// 録音設定を更新
+        case updateRecordingSettings(RecordingSettings)
         /// 文字起こし設定を更新
         case updateTranscriptionSettings(TranscriptionSettings)
         /// 出力設定を更新
@@ -186,6 +188,10 @@ struct SettingsFeature {
 
             case let .updateGeneralSettings(general):
                 state.settings.general = general
+                return .send(.saveSettings)
+
+            case let .updateRecordingSettings(recording):
+                state.settings.recording = recording
                 return .send(.saveSettings)
 
             case let .updateTranscriptionSettings(transcription):
