@@ -83,6 +83,15 @@ struct HotKeyClient: Sendable {
         @escaping @Sendable () -> Void
     ) async -> Void
 
+    /// 動的キーコンボでキャンセルホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    var registerCancelWithCombo: @Sendable (
+        HotKeySettings.KeyComboSettings,
+        @escaping @Sendable () -> Void
+    ) async -> Void
+
     /// すべてのホットキーを解除
     var unregisterAll: @Sendable () async -> Void
 }
@@ -152,6 +161,9 @@ extension HotKeyClient: TestDependencyKey {
             registerOpenSettingsWithCombo: { _, _ in
                 clientLogger.debug("[PREVIEW] registerOpenSettingsWithCombo called")
             },
+            registerCancelWithCombo: { _, _ in
+                clientLogger.debug("[PREVIEW] registerCancelWithCombo called")
+            },
             unregisterAll: {
                 clientLogger.debug("[PREVIEW] unregisterAll called")
             }
@@ -199,6 +211,9 @@ extension HotKeyClient: TestDependencyKey {
             },
             registerOpenSettingsWithCombo: { _, _ in
                 clientLogger.debug("[TEST] registerOpenSettingsWithCombo called")
+            },
+            registerCancelWithCombo: { _, _ in
+                clientLogger.debug("[TEST] registerCancelWithCombo called")
             },
             unregisterAll: {
                 clientLogger.debug("[TEST] unregisterAll called")
