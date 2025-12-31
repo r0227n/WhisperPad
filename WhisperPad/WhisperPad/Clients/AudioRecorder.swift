@@ -164,10 +164,10 @@ actor AudioRecorder {
 
         // 複数セグメントを結合
         do {
-            let finalURL = try await mergeSegments()
+            let (finalURL, mergedCount) = try await mergeSegments()
             cleanupSegmentFiles()
             cleanup()
-            return StopResult(url: finalURL, isPartial: false, usedSegments: totalCount, totalSegments: totalCount)
+            return StopResult(url: finalURL, isPartial: false, usedSegments: mergedCount, totalSegments: totalCount)
         } catch {
             // 結合失敗時は最初のセグメントのみを使用
             logger.error("Segment merge failed: \(error.localizedDescription). Using first segment only.")
@@ -288,7 +288,8 @@ actor AudioRecorder {
     }
 
     /// 全セグメントを1つのファイルに結合
-    private func mergeSegments() async throws -> URL {
+    /// - Returns: 結合後のURL と実際にマージされたセグメント数のタプル
+    private func mergeSegments() async throws -> (url: URL, mergedCount: Int) {
         let composition = AVMutableComposition()
 
         guard let compositionTrack = composition.addMutableTrack(
@@ -299,6 +300,7 @@ actor AudioRecorder {
         }
 
         var insertTime = CMTime.zero
+        var mergedCount = 0
 
         for segmentURL in segmentURLs {
             let asset = AVURLAsset(url: segmentURL)
@@ -319,14 +321,20 @@ actor AudioRecorder {
             )
 
             insertTime = CMTimeAdd(insertTime, duration)
+            mergedCount += 1
+        }
+
+        // 全セグメントの読み込みに失敗した場合はエラー
+        guard mergedCount > 0 else {
+            throw RecordingError.segmentMergeFailed("No segments could be merged")
         }
 
         // 結合ファイルをエクスポート
         let outputURL = try AudioRecorderClient.generateRecordingURL(identifier: baseIdentifier)
         try await exportComposition(composition, to: outputURL)
 
-        logger.info("Merged \(self.segmentURLs.count) segments into \(outputURL.lastPathComponent)")
-        return outputURL
+        logger.info("Merged \(mergedCount) of \(self.segmentURLs.count) segments into \(outputURL.lastPathComponent)")
+        return (outputURL, mergedCount)
     }
 
     /// AVMutableComposition を WAV ファイルとしてエクスポート
