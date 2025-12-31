@@ -56,6 +56,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// ストリーミングポップアップウィンドウ
     private var streamingPopupWindow: StreamingPopupWindow?
 
+    // MARK: - Property Accessors (for extensions)
+
+    func getStatusItem() -> NSStatusItem? { statusItem }
+    func getStreamingPopupWindow() -> StreamingPopupWindow? { streamingPopupWindow }
+    func setStreamingPopupWindow(_ window: StreamingPopupWindow?) { streamingPopupWindow = window }
+
     // MARK: - Menu Item Tags
 
     /// メニュー項目を識別するためのタグ
@@ -156,84 +162,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - Menu Creation
-
-    /// ドロップダウンメニューを作成
-    /// - Returns: 設定済みの NSMenu
-    private func createMenu() -> NSMenu {
-        let menu = NSMenu()
-
-        // 録音項目
-        let recordingItem = NSMenuItem(
-            title: "録音開始",
-            action: #selector(startRecording),
-            keyEquivalent: ""
-        )
-        recordingItem.tag = MenuItemTag.recording.rawValue
-        recordingItem.target = self
-        recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
-        menu.addItem(recordingItem)
-
-        // 一時停止/再開項目（録音中/一時停止中のみ表示）
-        let pauseResumeItem = NSMenuItem(
-            title: "一時停止",
-            action: #selector(pauseRecording),
-            keyEquivalent: ""
-        )
-        pauseResumeItem.tag = MenuItemTag.pauseResume.rawValue
-        pauseResumeItem.target = self
-        pauseResumeItem.image = NSImage(systemSymbolName: "pause.fill", accessibilityDescription: nil)
-        pauseResumeItem.isHidden = true
-        menu.addItem(pauseResumeItem)
-
-        // ストリーミング項目
-        let streamingItem = NSMenuItem(
-            title: "リアルタイム文字起こし",
-            action: #selector(startStreaming),
-            keyEquivalent: "r"
-        )
-        streamingItem.keyEquivalentModifierMask = [.command, .shift]
-        streamingItem.tag = MenuItemTag.streaming.rawValue
-        streamingItem.target = self
-        streamingItem.image = NSImage(systemSymbolName: "waveform.badge.mic", accessibilityDescription: nil)
-        menu.addItem(streamingItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // 設定項目
-        let settingsItem = NSMenuItem(
-            title: "設定...",
-            action: #selector(openSettings),
-            keyEquivalent: ","
-        )
-        settingsItem.keyEquivalentModifierMask = .command
-        settingsItem.tag = MenuItemTag.settings.rawValue
-        settingsItem.target = self
-        settingsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
-        menu.addItem(settingsItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // デバッグメニュー（DEBUG ビルドのみ）
-        #if DEBUG
-        addDebugMenu(to: menu)
-        menu.addItem(NSMenuItem.separator())
-        #endif
-
-        // 終了項目
-        let quitItem = NSMenuItem(
-            title: "終了",
-            action: #selector(quitApplication),
-            keyEquivalent: "q"
-        )
-        quitItem.keyEquivalentModifierMask = .command
-        quitItem.tag = MenuItemTag.quit.rawValue
-        quitItem.target = self
-        menu.addItem(quitItem)
-
-        return menu
-    }
-
     // MARK: - State-based UI Updates
 
     /// 現在の状態に応じてメニューを更新
@@ -287,20 +215,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             pauseResumeItem.isHidden = true
             streamingItem.isEnabled = false
         }
-    }
-
-    private func configureMenuItem(
-        _ item: NSMenuItem,
-        title: String,
-        action: Selector?,
-        symbol: String,
-        isEnabled: Bool = true
-    ) {
-        item.title = title
-        item.action = action
-        item.target = action != nil ? self : nil
-        item.isEnabled = isEnabled
-        item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
     }
 
     /// 現在の状態に応じてアイコンを更新
@@ -436,50 +350,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // 録音中・文字起こし中は何もしない
             break
         }
-    }
-
-    // MARK: - Streaming Popup Management
-
-    /// ストリーミングポップアップ関連の通知を監視
-    private func setupStreamingPopupObserver() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleCloseStreamingPopup),
-            name: .closeStreamingPopup,
-            object: nil
-        )
-    }
-
-    @objc private func handleCloseStreamingPopup(_ notification: Notification) {
-        closeStreamingPopup()
-    }
-
-    /// ストリーミングポップアップを表示
-    private func showStreamingPopup() {
-        // 既存のポップアップがあれば閉じる
-        closeStreamingPopup()
-
-        // 新しいポップアップを作成
-        let popupStore = store.scope(
-            state: \.streamingTranscription,
-            action: \.streamingTranscription
-        )
-        let popup = StreamingPopupWindow(store: popupStore)
-
-        // メニューバーアイコンの下に表示
-        if let statusItem {
-            popup.showBelowMenuBarIcon(relativeTo: statusItem)
-        }
-
-        streamingPopupWindow = popup
-        logger.info("Streaming popup window shown")
-    }
-
-    /// ストリーミングポップアップを閉じる
-    private func closeStreamingPopup() {
-        streamingPopupWindow?.close()
-        streamingPopupWindow = nil
-        logger.info("Streaming popup window closed")
     }
 
     /// 設定画面を開く

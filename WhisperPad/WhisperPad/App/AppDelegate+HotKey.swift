@@ -53,72 +53,53 @@ extension AppDelegate {
 
     /// 設定からホットキーを登録
     func registerHotKeysFromSettings(_ hotKeySettings: HotKeySettings) async {
-        // すべて解除
         await hotKeyClient.unregisterAll()
 
-        let recordingMode = hotKeySettings.recordingMode
-
-        // 録音ホットキー（Push-to-Talk対応）
-        await hotKeyClient.registerRecordingWithCombo(
-            hotKeySettings.recordingHotKey,
-            { [weak self] in
-                Task { @MainActor in
-                    self?.handleRecordingKeyDown(mode: recordingMode)
-                }
-            },
-            { [weak self] in
-                Task { @MainActor in
-                    self?.handleRecordingKeyUp(mode: recordingMode)
-                }
-            }
-        )
-
-        // ペーストホットキー
-        await hotKeyClient.registerPasteWithCombo(
-            hotKeySettings.pasteHotKey,
-            { [weak self] in
-                Task { @MainActor in
-                    self?.pasteLastTranscription()
-                }
-            }
-        )
-
-        // 設定を開くホットキー
-        await hotKeyClient.registerOpenSettingsWithCombo(
-            hotKeySettings.openSettingsHotKey,
-            {
-                Task { @MainActor in
-                    NotificationCenter.default.post(name: .openSettingsRequest, object: nil)
-                }
-            }
-        )
-
-        // キャンセルホットキー
-        await hotKeyClient.registerCancelWithCombo(
-            hotKeySettings.cancelHotKey,
-            { [weak self] in
-                Task { @MainActor in
-                    self?.cancelRecording()
-                }
-            }
-        )
-
-        // ストリーミングホットキー (⌘⇧R)
-        await hotKeyClient.registerStreamingWithCombo(
-            hotKeySettings.streamingHotKey,
-            { [weak self] in
-                Task { @MainActor in
-                    self?.handleStreamingKeyDown()
-                }
-            },
-            { [weak self] in
-                Task { @MainActor in
-                    self?.handleStreamingKeyUp()
-                }
-            }
-        )
+        await registerRecordingHotKey(hotKeySettings)
+        await registerPasteHotKey(hotKeySettings)
+        await registerOpenSettingsHotKey(hotKeySettings)
+        await registerCancelHotKey(hotKeySettings)
+        await registerStreamingHotKey(hotKeySettings)
 
         logger.info("Hotkeys registered from settings")
+    }
+
+    private func registerRecordingHotKey(_ settings: HotKeySettings) async {
+        let mode = settings.recordingMode
+        await hotKeyClient.registerRecordingWithCombo(
+            settings.recordingHotKey,
+            { [weak self] in Task { @MainActor in self?.handleRecordingKeyDown(mode: mode) } },
+            { [weak self] in Task { @MainActor in self?.handleRecordingKeyUp(mode: mode) } }
+        )
+    }
+
+    private func registerPasteHotKey(_ settings: HotKeySettings) async {
+        await hotKeyClient.registerPasteWithCombo(
+            settings.pasteHotKey,
+            { [weak self] in Task { @MainActor in self?.pasteLastTranscription() } }
+        )
+    }
+
+    private func registerOpenSettingsHotKey(_ settings: HotKeySettings) async {
+        await hotKeyClient.registerOpenSettingsWithCombo(
+            settings.openSettingsHotKey,
+            { Task { @MainActor in NotificationCenter.default.post(name: .openSettingsRequest, object: nil) } }
+        )
+    }
+
+    private func registerCancelHotKey(_ settings: HotKeySettings) async {
+        await hotKeyClient.registerCancelWithCombo(
+            settings.cancelHotKey,
+            { [weak self] in Task { @MainActor in self?.cancelRecording() } }
+        )
+    }
+
+    private func registerStreamingHotKey(_ settings: HotKeySettings) async {
+        await hotKeyClient.registerStreamingWithCombo(
+            settings.streamingHotKey,
+            { [weak self] in Task { @MainActor in self?.handleStreamingKeyDown() } },
+            { [weak self] in Task { @MainActor in self?.handleStreamingKeyUp() } }
+        )
     }
 
     /// 録音キーダウンハンドラー（recordingMode対応）
