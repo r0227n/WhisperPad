@@ -27,7 +27,7 @@ extension TranscriptionClient: DependencyKey {
             },
             isModelDownloaded: { modelName in
                 logger.debug("liveValue.isModelDownloaded called for \(modelName)")
-                return transcriptionService.isModelDownloaded(modelName: modelName)
+                return await transcriptionService.isModelDownloaded(modelName: modelName)
             },
             downloadModel: { modelName, progressHandler in
                 logger.debug("liveValue.downloadModel called for \(modelName)")
@@ -54,6 +54,22 @@ extension TranscriptionClient: DependencyKey {
                     audioURL: audioURL,
                     language: language
                 )
+            },
+            getStorageUsage: {
+                logger.debug("liveValue.getStorageUsage called")
+                return await transcriptionService.getStorageUsage()
+            },
+            getModelStorageURL: {
+                logger.debug("liveValue.getModelStorageURL called")
+                return await transcriptionService.modelsDirectory
+            },
+            setStorageLocation: { url in
+                logger.debug("liveValue.setStorageLocation called: \(url?.path ?? "default")")
+                await transcriptionService.setStorageLocation(url)
+            },
+            deleteModel: { modelName in
+                logger.debug("liveValue.deleteModel called for \(modelName)")
+                try await transcriptionService.deleteModel(modelName)
             },
             unload: {
                 logger.debug("liveValue.unload called")

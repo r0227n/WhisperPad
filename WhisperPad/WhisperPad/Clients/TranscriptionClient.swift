@@ -63,6 +63,22 @@ struct TranscriptionClient: Sendable {
         _ language: String?
     ) async throws -> String
 
+    // MARK: - Storage Management
+
+    /// ストレージ使用量を取得（バイト）
+    var getStorageUsage: @Sendable () async -> Int64
+
+    /// モデル保存先 URL を取得
+    var getModelStorageURL: @Sendable () async -> URL
+
+    /// カスタムストレージ場所を設定
+    /// - Parameter url: カスタム URL（nil でデフォルトに戻す）
+    var setStorageLocation: @Sendable (URL?) async -> Void
+
+    /// モデルを削除
+    /// - Parameter modelName: 削除するモデル名
+    var deleteModel: @Sendable (String) async throws -> Void
+
     // MARK: - Cleanup
 
     /// リソースを解放
@@ -106,6 +122,21 @@ extension TranscriptionClient: TestDependencyKey {
                 clientLogger.debug("[PREVIEW] transcribe called for \(audioURL.lastPathComponent)")
                 return "（プレビュー用のサンプルテキスト）"
             },
+            getStorageUsage: {
+                clientLogger.debug("[PREVIEW] getStorageUsage called")
+                return 500_000_000 // 500MB
+            },
+            getModelStorageURL: {
+                clientLogger.debug("[PREVIEW] getModelStorageURL called")
+                return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+                    .first!.appendingPathComponent("WhisperPad/models")
+            },
+            setStorageLocation: { url in
+                clientLogger.debug("[PREVIEW] setStorageLocation called: \(url?.path ?? "default")")
+            },
+            deleteModel: { modelName in
+                clientLogger.debug("[PREVIEW] deleteModel called for \(modelName)")
+            },
             unload: {
                 clientLogger.debug("[PREVIEW] unload called")
             }
@@ -140,6 +171,20 @@ extension TranscriptionClient: TestDependencyKey {
             transcribe: { audioURL, _ in
                 clientLogger.debug("[TEST] transcribe called for \(audioURL.lastPathComponent)")
                 return "テスト用の文字起こし結果"
+            },
+            getStorageUsage: {
+                clientLogger.debug("[TEST] getStorageUsage called")
+                return 250_000_000 // 250MB
+            },
+            getModelStorageURL: {
+                clientLogger.debug("[TEST] getModelStorageURL called")
+                return URL(fileURLWithPath: "/tmp/models")
+            },
+            setStorageLocation: { url in
+                clientLogger.debug("[TEST] setStorageLocation called: \(url?.path ?? "default")")
+            },
+            deleteModel: { modelName in
+                clientLogger.debug("[TEST] deleteModel called for \(modelName)")
             },
             unload: {
                 clientLogger.debug("[TEST] unload called")
