@@ -91,7 +91,7 @@ final class AudioRecorderTests: XCTestCase {
         await recorder.stop()
     }
 
-    // MARK: - 録音停止テスト
+    // MARK: - 録音終了テスト
 
     func testStop_createsValidWAVFile() async throws {
         guard await AudioRecorder.requestPermission() else {

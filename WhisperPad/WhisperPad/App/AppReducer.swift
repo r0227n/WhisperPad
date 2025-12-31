@@ -56,8 +56,8 @@ struct AppReducer {
     enum Action {
         /// 録音を開始
         case startRecording
-        /// 録音を停止
-        case stopRecording
+        /// 録音を終了
+        case endRecording
         /// 文字起こしが完了
         case transcriptionCompleted(String)
         /// エラーが発生
@@ -86,9 +86,9 @@ struct AppReducer {
                 // 録音機能に委譲
                 return .send(.recording(.startRecordingButtonTapped))
 
-            case .stopRecording:
+            case .endRecording:
                 // 録音機能に委譲
-                return .send(.recording(.stopRecordingButtonTapped))
+                return .send(.recording(.endRecordingButtonTapped))
 
             // RecordingFeature のデリゲートアクションを処理
             case let .recording(.delegate(.recordingCompleted(url))):

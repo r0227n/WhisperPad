@@ -58,8 +58,8 @@ struct RecordingFeature {
         // ユーザー操作
         /// 録音開始ボタンがタップされた
         case startRecordingButtonTapped
-        /// 録音停止ボタンがタップされた
-        case stopRecordingButtonTapped
+        /// 録音終了ボタンがタップされた
+        case endRecordingButtonTapped
         /// 録音キャンセルボタンがタップされた
         case cancelRecordingButtonTapped
 
@@ -155,21 +155,21 @@ struct RecordingFeature {
                 if case let .recording(duration) = state.status {
                     let newDuration = duration + 1
                     state.status = .recording(duration: newDuration)
-                    // 最大録音時間に達した場合は自動停止
+                    // 最大録音時間に達した場合は自動終了
                     if newDuration >= RecordingConstants.maxRecordingDuration {
-                        return .send(.stopRecordingButtonTapped)
+                        return .send(.endRecordingButtonTapped)
                     }
                 }
                 return .none
 
-            case .stopRecordingButtonTapped:
+            case .endRecordingButtonTapped:
                 guard case .recording = state.status else { return .none }
-                state.status = .stopping
+                state.status = .ending
 
                 return .merge(
                     .cancel(id: "timer"),
                     .run { [url = state.recordingURL] send in
-                        await audioRecorder.stopRecording()
+                        await audioRecorder.endRecording()
                         if let url {
                             await send(.recordingFinished(.success(url)))
                         } else {
@@ -185,7 +185,7 @@ struct RecordingFeature {
                     .cancel(id: "recording"),
                     .cancel(id: "timer"),
                     .run { send in
-                        await audioRecorder.stopRecording()
+                        await audioRecorder.endRecording()
                         await send(.delegate(.recordingCancelled))
                     }
                 )
@@ -227,8 +227,8 @@ extension RecordingFeature {
         case preparing
         /// 録音中（経過時間）
         case recording(duration: TimeInterval)
-        /// 停止処理中
-        case stopping
+        /// 終了処理中
+        case ending
     }
 
     /// マイク権限ステータス

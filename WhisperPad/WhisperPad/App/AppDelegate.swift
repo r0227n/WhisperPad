@@ -190,8 +190,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
 
         case .recording:
-            recordingItem.title = "録音停止"
-            recordingItem.action = #selector(stopRecording)
+            recordingItem.title = "録音終了"
+            recordingItem.action = #selector(endRecording)
             recordingItem.target = self
             recordingItem.isEnabled = true
             recordingItem.image = NSImage(systemSymbolName: "stop.fill", accessibilityDescription: nil)
@@ -265,10 +265,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         store.send(.startRecording)
     }
 
-    /// 録音を停止
-    @objc private func stopRecording() {
-        logger.info("Stop recording requested")
-        store.send(.stopRecording)
+    /// 録音を終了
+    @objc private func endRecording() {
+        logger.info("End recording requested")
+        store.send(.endRecording)
     }
 
     /// 設定画面を開く

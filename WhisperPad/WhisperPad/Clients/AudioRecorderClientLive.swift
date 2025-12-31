@@ -33,7 +33,7 @@ extension AudioRecorderClient: DependencyKey {
                 try await audioRecorder.start(url: url)
                 return url
             },
-            stopRecording: {
+            endRecording: {
                 await audioRecorder.stop()
             },
             currentTime: {
