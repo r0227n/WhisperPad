@@ -134,7 +134,7 @@ struct AppReducer {
                 return .none
 
             // SettingsFeature のデリゲートアクションを処理
-            case let .settings(.delegate(.modelChanged(modelName))):
+            case .settings(.delegate(.modelChanged)):
                 // モデルが変更された場合、TranscriptionFeature を再初期化
                 state.transcription.isModelInitialized = false
                 return .none

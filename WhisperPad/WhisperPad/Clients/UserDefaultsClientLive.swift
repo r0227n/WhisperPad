@@ -56,6 +56,10 @@ extension UserDefaultsClient: DependencyKey {
                 }
                 return data
             },
+            // 注意: 返された URL のセキュリティスコープリソースは、アプリのライフサイクル全体で
+            // 使用されることを想定しています。アプリ終了時に自動的にリソースは解放されます。
+            // 異なるユースケースで使用する場合は、呼び出し側で url.stopAccessingSecurityScopedResource()
+            // を呼び出してリソースを解放する必要があります。
             resolveBookmark: { bookmarkData in
                 do {
                     var isStale = false

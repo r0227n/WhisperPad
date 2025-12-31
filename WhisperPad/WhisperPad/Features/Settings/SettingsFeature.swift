@@ -291,10 +291,10 @@ struct SettingsFeature {
                 state.downloadProgress[modelName] = 0
                 return .run { send in
                     do {
-                        _ = try await transcriptionClient.downloadModel(modelName) { progress in
+                        let downloadedURL = try await transcriptionClient.downloadModel(modelName) { progress in
                             Task { await send(.downloadProgress(modelName, progress)) }
                         }
-                        await send(.downloadCompleted(modelName, .success(URL(fileURLWithPath: ""))))
+                        await send(.downloadCompleted(modelName, .success(downloadedURL)))
                     } catch {
                         await send(.downloadCompleted(modelName, .failure(error)))
                     }
