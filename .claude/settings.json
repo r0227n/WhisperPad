@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "Edit",
+      "Write",
       "Bash(cat:*)",
       "Bash(ls:*)",
       "Bash(tree:*)",
@@ -26,7 +28,6 @@
       "Bash(open:*)",
       "Bash(codesign:*)"
     ],
-    "deny": ["Bash(git -C:*)"],
     "defaultMode": "plan"
   },
   "hooks": {
