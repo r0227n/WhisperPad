@@ -5,6 +5,7 @@
 
 import AppKit
 import ComposableArchitecture
+import Dependencies
 import os.log
 import UserNotifications
 
@@ -36,6 +37,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         category: "AppDelegate"
     )
 
+    /// ホットキークライアント
+    @Dependency(\.hotKeyClient) private var hotKeyClient
+
+    /// 出力クライアント
+    @Dependency(\.outputClient) private var outputClient
+
     // MARK: - Menu Item Tags
 
     /// メニュー項目を識別するためのタグ
@@ -64,12 +71,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusItem()
         setupObservation()
         requestNotificationPermission()
+        setupHotKeys()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         logger.info("Application will terminate")
         animationTimer?.invalidate()
         animationTimer = nil
+
+        // ホットキーを解除
+        Task {
+            await hotKeyClient.unregisterOpenSettings()
+            await hotKeyClient.unregisterRecordingToggle()
+            await hotKeyClient.unregisterPaste()
+            await hotKeyClient.unregisterCancel()
+        }
     }
 
     // MARK: - Setup
@@ -116,6 +132,47 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             } catch {
                 logger.error("Notification permission request failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// グローバルホットキーを設定
+    private func setupHotKeys() {
+        Task {
+            // アクセシビリティ権限をチェック
+            let hasPermission = await hotKeyClient.checkAccessibilityPermission()
+
+            if !hasPermission {
+                logger.warning("Accessibility permission not granted, requesting...")
+                await hotKeyClient.requestAccessibilityPermission()
+            }
+
+            // 設定画面を開くホットキーを登録 (⌘⇧,)
+            await hotKeyClient.registerOpenSettings {
+                Task { @MainActor in
+                    NotificationCenter.default.post(name: .openSettingsRequest, object: nil)
+                }
+            }
+
+            // 録音トグルホットキーを登録 (⌥⇧ Space)
+            await hotKeyClient.registerRecordingToggle { [weak self] in
+                Task { @MainActor in
+                    self?.toggleRecording()
+                }
+            }
+
+            // ペーストホットキーを登録 (⌘⇧V)
+            await hotKeyClient.registerPaste { [weak self] in
+                Task { @MainActor in
+                    self?.pasteLastTranscription()
+                }
+            }
+
+            // 録音キャンセルホットキーを登録 (Escape)
+            await hotKeyClient.registerCancel { [weak self] in
+                Task { @MainActor in
+                    self?.cancelRecording()
+                }
             }
         }
     }
@@ -300,6 +357,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func resumeRecording() {
         logger.info("Resume recording requested")
         store.send(.resumeRecording)
+    }
+
+    /// 録音をトグル（開始/停止）
+    private func toggleRecording() {
+        logger.info("Toggle recording hotkey triggered: ⌥␣")
+        switch store.appStatus {
+        case .idle, .completed, .error:
+            store.send(.startRecording)
+        case .recording, .paused:
+            store.send(.endRecording)
+        case .transcribing:
+            // 文字起こし中は何もしない
+            break
+        }
+    }
+
+    /// 最後の書き起こしをペースト
+    private func pasteLastTranscription() {
+        logger.info("Paste hotkey triggered: ⌘⇧V")
+        guard let text = store.lastTranscription, !text.isEmpty else {
+            logger.warning("No transcription to paste")
+            return
+        }
+        Task {
+            _ = await outputClient.copyToClipboard(text)
+            await outputClient.showNotification("WhisperPad", "クリップボードにコピーしました")
+        }
+    }
+
+    /// 録音をキャンセル
+    private func cancelRecording() {
+        // 録音中または一時停止中のみキャンセル可能
+        guard store.appStatus == .recording || store.appStatus == .paused else {
+            return
+        }
+        logger.info("Cancel recording hotkey triggered: Escape")
+        store.send(.cancelRecording)
     }
 
     /// 設定画面を開く

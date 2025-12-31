@@ -65,6 +65,8 @@ struct AppReducer {
         case pauseRecording
         /// 録音を再開
         case resumeRecording
+        /// 録音をキャンセル
+        case cancelRecording
         /// 文字起こしが完了
         case transcriptionCompleted(String)
         /// エラーが発生
@@ -104,6 +106,10 @@ struct AppReducer {
             case .resumeRecording:
                 // 録音機能に委譲
                 return .send(.recording(.resumeRecordingButtonTapped))
+
+            case .cancelRecording:
+                // 録音機能に委譲
+                return .send(.recording(.cancelRecordingButtonTapped))
 
             // RecordingFeature のデリゲートアクションを処理
             case let .recording(.delegate(.recordingCompleted(url))):
