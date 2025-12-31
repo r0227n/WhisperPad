@@ -253,7 +253,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         else { return }
 
         switch store.appStatus {
-        case .idle, .completed, .error:
+        case .idle, .completed, .error, .streamingCompleted:
             configureMenuItem(recordingItem, title: "録音開始", action: #selector(startRecording), symbol: "mic.fill")
             pauseResumeItem.isHidden = true
 
@@ -273,6 +273,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         case .transcribing:
             configureMenuItem(recordingItem, title: "文字起こし中...", action: nil, symbol: "gear", isEnabled: false)
+            pauseResumeItem.isHidden = true
+
+        case .streamingTranscribing:
+            configureMenuItem(
+                recordingItem,
+                title: "ストリーミング中...",
+                action: nil,
+                symbol: "waveform.badge.mic",
+                isEnabled: false
+            )
             pauseResumeItem.isHidden = true
         }
     }
@@ -312,6 +322,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             startGearAnimation()
 
         case .completed:
+            setStatusIcon(symbolName: "checkmark.circle", color: .systemGreen)
+
+        case .streamingTranscribing:
+            setStatusIcon(symbolName: "waveform.badge.mic", color: .systemPurple)
+
+        case .streamingCompleted:
             setStatusIcon(symbolName: "checkmark.circle", color: .systemGreen)
 
         case .error:
@@ -363,12 +379,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func toggleRecording() {
         logger.info("Toggle recording hotkey triggered: ⌥␣")
         switch store.appStatus {
-        case .idle, .completed, .error:
+        case .idle, .completed, .error, .streamingCompleted:
             store.send(.startRecording)
         case .recording, .paused:
             store.send(.endRecording)
-        case .transcribing:
-            // 文字起こし中は何もしない
+        case .transcribing, .streamingTranscribing:
+            // 文字起こし中・ストリーミング中は何もしない
             break
         }
     }
