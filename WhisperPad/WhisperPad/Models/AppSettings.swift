@@ -24,13 +24,17 @@ struct AppSettings: Codable, Equatable, Sendable {
     /// 出力設定
     var output: FileOutputSettings
 
+    /// ストリーミング設定
+    var streaming: StreamingSettings
+
     /// デフォルト設定
     static let `default` = AppSettings(
         general: .default,
         hotKey: .default,
         recording: .default,
         transcription: .default,
-        output: .default
+        output: .default,
+        streaming: .default
     )
 
     /// デフォルト初期化
@@ -39,13 +43,15 @@ struct AppSettings: Codable, Equatable, Sendable {
         hotKey: HotKeySettings = .default,
         recording: RecordingSettings = .default,
         transcription: TranscriptionSettings = .default,
-        output: FileOutputSettings = .default
+        output: FileOutputSettings = .default,
+        streaming: StreamingSettings = .default
     ) {
         self.general = general
         self.hotKey = hotKey
         self.recording = recording
         self.transcription = transcription
         self.output = output
+        self.streaming = streaming
     }
 }
 
