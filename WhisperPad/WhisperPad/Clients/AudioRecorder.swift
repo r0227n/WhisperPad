@@ -34,6 +34,7 @@ actor AudioRecorder {
 
     private var recorder: AVAudioRecorder?
     private var startTime: Date?
+    private var isPausedState: Bool = false
 
     /// ロガー
     private let logger = Logger(subsystem: "com.whisperpad", category: "AudioRecorder")
@@ -43,6 +44,11 @@ actor AudioRecorder {
     /// 録音中かどうか
     var isRecording: Bool {
         recorder?.isRecording ?? false
+    }
+
+    /// 一時停止中かどうか
+    var isPaused: Bool {
+        isPausedState
     }
 
     /// 現在の録音時間
@@ -100,6 +106,23 @@ actor AudioRecorder {
         recorder?.stop()
         recorder = nil
         startTime = nil
+        isPausedState = false
+    }
+
+    /// 録音を一時停止
+    func pause() {
+        guard let recorder, recorder.isRecording else { return }
+        recorder.pause()
+        isPausedState = true
+        logger.info("Recording paused")
+    }
+
+    /// 録音を再開
+    func resume() {
+        guard let recorder, isPausedState else { return }
+        recorder.record()
+        isPausedState = false
+        logger.info("Recording resumed")
     }
 
     // MARK: - Private Methods

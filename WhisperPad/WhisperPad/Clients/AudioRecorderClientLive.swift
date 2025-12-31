@@ -41,6 +41,15 @@ extension AudioRecorderClient: DependencyKey {
             },
             currentLevel: {
                 await audioRecorder.currentLevel
+            },
+            pauseRecording: {
+                await audioRecorder.pause()
+            },
+            resumeRecording: {
+                await audioRecorder.resume()
+            },
+            isPaused: {
+                await audioRecorder.isPaused
             }
         )
     }

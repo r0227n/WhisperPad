@@ -37,6 +37,16 @@ struct AudioRecorderClient: Sendable {
     /// 現在の音声レベルを取得
     /// - Returns: 音声レベル（dB）、録音していない場合は nil
     var currentLevel: @Sendable () async -> Float?
+
+    /// 録音を一時停止
+    var pauseRecording: @Sendable () async -> Void
+
+    /// 録音を再開
+    var resumeRecording: @Sendable () async -> Void
+
+    /// 一時停止中かどうか
+    /// - Returns: 一時停止中の場合は true
+    var isPaused: @Sendable () async -> Bool
 }
 
 // MARK: - TestDependencyKey
@@ -51,7 +61,10 @@ extension AudioRecorderClient: TestDependencyKey {
             },
             endRecording: {},
             currentTime: { nil },
-            currentLevel: { nil }
+            currentLevel: { nil },
+            pauseRecording: {},
+            resumeRecording: {},
+            isPaused: { false }
         )
     }
 
@@ -64,7 +77,10 @@ extension AudioRecorderClient: TestDependencyKey {
             },
             endRecording: {},
             currentTime: { nil },
-            currentLevel: { nil }
+            currentLevel: { nil },
+            pauseRecording: {},
+            resumeRecording: {},
+            isPaused: { false }
         )
     }
 }
