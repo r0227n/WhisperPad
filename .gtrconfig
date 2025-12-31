@@ -1,22 +1,21 @@
 [copy]
+    # Project configuration files
     include = .claude/**
-    include = **/.env.example
-    include = .mise.toml
-    include = .swiftformat
-    include = .swiftlint.yml
-    include = .prettierrc
-    include = .vscode/**
-    include = CLAUDE.md
+
+    # Exclude sensitive files
     exclude = **/.env
-    exclude = **/.claude/**
+    exclude = **/*.xcuserstate
+
+    # Exclude build artifacts and caches
     excludeDirs = .build
     excludeDirs = DerivedData
     excludeDirs = .swiftpm
     excludeDirs = Pods
+    excludeDirs = xcuserdata
 
 [hooks]
     postCreate = mise install
-    postCreate = swift package resolve
+    postCreate = nohup swift package resolve &
 
 [defaults]
     editor = cursor

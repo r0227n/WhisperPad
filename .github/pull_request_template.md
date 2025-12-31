@@ -20,26 +20,6 @@
 
 -
 
-## Files Changed
-
-<!-- レイヤーごとにファイルを整理 -->
-
-### Models
-
--
-
-### Clients
-
--
-
-### Features
-
--
-
-### App
-
--
-
 ## Test Plan
 
 <!-- テスト手順のチェックリスト -->

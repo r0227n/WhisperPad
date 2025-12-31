@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(tree:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh run view:*)",
+      "Bash(git push:*)",
+      "Skill(ui-ux-pro-max)",
+      "Bash(python3 .claude/skills/ui-ux-pro-max/scripts/*)",
+      "Bash(mise:*)",
+      "Bash(swift package:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(timeout 30 xcodebuild test:*)",
+      "Bash(timeout 60 xcodebuild test:*)",
+      "Bash(swift test:*)",
+      "Bash(swift -e:*)",
+      "Bash(log show:*)",
+      "Bash(xcrun xcresulttool:*)",
+      "Bash(pkill:*)",
+      "Bash(killall:*)",
+      "Bash(pgrep:*)",
+      "Bash(xargs:*)",
+      "Bash(open:*)",
+      "Bash(codesign:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/format-lint.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
