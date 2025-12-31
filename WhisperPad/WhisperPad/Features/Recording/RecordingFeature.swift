@@ -43,12 +43,22 @@ struct RecordingFeature {
             return false
         }
 
+        /// 一時停止中かどうか
+        var isPaused: Bool {
+            if case .paused = status { return true }
+            return false
+        }
+
         /// 現在の録音時間（秒）
         var currentDuration: TimeInterval {
-            if case let .recording(duration) = status {
-                return duration
+            switch status {
+            case let .recording(duration):
+                duration
+            case let .paused(duration):
+                duration
+            default:
+                0
             }
-            return 0
         }
     }
 
@@ -62,6 +72,10 @@ struct RecordingFeature {
         case endRecordingButtonTapped
         /// 録音キャンセルボタンがタップされた
         case cancelRecordingButtonTapped
+        /// 録音一時停止ボタンがタップされた
+        case pauseRecordingButtonTapped
+        /// 録音再開ボタンがタップされた
+        case resumeRecordingButtonTapped
 
         // 内部アクション
         /// 権限を要求
@@ -80,6 +94,10 @@ struct RecordingFeature {
         case audioLevelUpdated(Float)
         /// 録音が完了
         case recordingFinished(Result<URL, RecordingError>)
+        /// 録音が一時停止された
+        case recordingPaused
+        /// 録音が再開された
+        case recordingResumed
 
         // デリゲートアクション（親 Reducer への通知）
         /// デリゲートアクション
@@ -163,7 +181,13 @@ struct RecordingFeature {
                 return .none
 
             case .endRecordingButtonTapped:
-                guard case .recording = state.status else { return .none }
+                // recording または paused 状態で終了可能
+                switch state.status {
+                case .recording, .paused:
+                    break
+                default:
+                    return .none
+                }
                 state.status = .ending
 
                 return .merge(
@@ -177,6 +201,42 @@ struct RecordingFeature {
                         }
                     }
                 )
+
+            case .pauseRecordingButtonTapped:
+                guard case let .recording(duration) = state.status else { return .none }
+                return .merge(
+                    .cancel(id: "timer"),
+                    .run { [duration] send in
+                        await audioRecorder.pauseRecording()
+                        await send(.recordingPaused)
+                    }
+                )
+
+            case .recordingPaused:
+                if case let .recording(duration) = state.status {
+                    state.status = .paused(duration: duration)
+                }
+                return .none
+
+            case .resumeRecordingButtonTapped:
+                guard case .paused = state.status else { return .none }
+                return .run { send in
+                    await audioRecorder.resumeRecording()
+                    await send(.recordingResumed)
+                }
+
+            case .recordingResumed:
+                if case let .paused(duration) = state.status {
+                    state.status = .recording(duration: duration)
+                    // タイマー再開
+                    return .run { send in
+                        for await _ in await clock.timer(interval: .seconds(1)) {
+                            await send(.timerTick)
+                        }
+                    }
+                    .cancellable(id: "timer")
+                }
+                return .none
 
             case .cancelRecordingButtonTapped:
                 state.status = .idle
@@ -227,6 +287,8 @@ extension RecordingFeature {
         case preparing
         /// 録音中（経過時間）
         case recording(duration: TimeInterval)
+        /// 一時停止中（経過時間）
+        case paused(duration: TimeInterval)
         /// 終了処理中
         case ending
     }
