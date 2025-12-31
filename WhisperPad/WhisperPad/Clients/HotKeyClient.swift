@@ -94,6 +94,20 @@ struct HotKeyClient: Sendable {
 
     /// すべてのホットキーを解除
     var unregisterAll: @Sendable () async -> Void
+
+    /// 動的キーコンボでストリーミングホットキーを登録（Push-to-Talk対応）
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - keyDownHandler: キーが押されたときのハンドラー
+    ///   - keyUpHandler: キーが離されたときのハンドラー（Push-to-Talk用）
+    var registerStreamingWithCombo: @Sendable (
+        HotKeySettings.KeyComboSettings,
+        @escaping @Sendable () -> Void,
+        @escaping @Sendable () -> Void
+    ) async -> Void
+
+    /// ストリーミングホットキーを解除
+    var unregisterStreaming: @Sendable () async -> Void
 }
 
 // MARK: - HotKeyError
@@ -166,6 +180,12 @@ extension HotKeyClient: TestDependencyKey {
             },
             unregisterAll: {
                 clientLogger.debug("[PREVIEW] unregisterAll called")
+            },
+            registerStreamingWithCombo: { _, _, _ in
+                clientLogger.debug("[PREVIEW] registerStreamingWithCombo called")
+            },
+            unregisterStreaming: {
+                clientLogger.debug("[PREVIEW] unregisterStreaming called")
             }
         )
     }
@@ -217,6 +237,12 @@ extension HotKeyClient: TestDependencyKey {
             },
             unregisterAll: {
                 clientLogger.debug("[TEST] unregisterAll called")
+            },
+            registerStreamingWithCombo: { _, _, _ in
+                clientLogger.debug("[TEST] registerStreamingWithCombo called")
+            },
+            unregisterStreaming: {
+                clientLogger.debug("[TEST] unregisterStreaming called")
             }
         )
     }
