@@ -29,7 +29,9 @@ struct RecordingSettingsTab: View {
                     )
                 ) {
                     Text("システムデフォルト").tag(nil as String?)
-                    // 将来的に利用可能なデバイス一覧をここに表示
+                    ForEach(store.availableInputDevices) { device in
+                        Text(device.name).tag(device.id as String?)
+                    }
                 }
                 .help("録音に使用するマイクを選択します")
             } header: {

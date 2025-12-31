@@ -3,6 +3,7 @@
 //  WhisperPad
 //
 
+import AVFoundation
 import Dependencies
 import OSLog
 
@@ -48,6 +49,21 @@ extension AudioRecorderClient: DependencyKey {
             },
             isPaused: {
                 await audioRecorder.isPaused
+            },
+            fetchInputDevices: {
+                let discoverySession = AVCaptureDevice.DiscoverySession(
+                    deviceTypes: [.microphone, .builtInMicrophone],
+                    mediaType: .audio,
+                    position: .unspecified
+                )
+                let defaultDevice = AVCaptureDevice.default(for: .audio)
+                return discoverySession.devices.map { device in
+                    AudioInputDevice(
+                        id: device.uniqueID,
+                        name: device.localizedName,
+                        isDefault: device.uniqueID == defaultDevice?.uniqueID
+                    )
+                }
             }
         )
     }
