@@ -134,10 +134,10 @@ struct AppReducer {
                         alert.alertStyle = .warning
                         alert.messageText = "録音の一部が保存されました"
                         alert.informativeText = """
-                            音声ファイルの結合に失敗したため、\
-                            最初のセグメント（\(usedSegments)/\(totalSegments)）のみが保存されました。
-                            一時停止後の録音内容は失われています。
-                            """
+                        音声ファイルの結合に失敗したため、\
+                        最初のセグメント（\(usedSegments)/\(totalSegments)）のみが保存されました。
+                        一時停止後の録音内容は失われています。
+                        """
                         alert.addButton(withTitle: "OK")
                         alert.runModal()
                     }

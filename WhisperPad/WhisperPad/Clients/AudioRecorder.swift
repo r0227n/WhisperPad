@@ -171,7 +171,7 @@ actor AudioRecorder {
             try FileManager.default.moveItem(at: segmentURLs[0], to: finalURL)
 
             // 残りのセグメントを削除
-            for index in 1..<segmentURLs.count {
+            for index in 1 ..< segmentURLs.count {
                 try? FileManager.default.removeItem(at: segmentURLs[index])
             }
             cleanup()
