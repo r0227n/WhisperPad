@@ -41,11 +41,14 @@ actor StreamingAudioService {
 
         logger.info("Starting live recording...")
 
-        let processor = AudioProcessor()
-        self.audioProcessor = processor
+        // AudioProcessor と CoreAudio API はメインスレッドで初期化する必要がある
+        let (processor, stream, continuation) = await MainActor.run {
+            let processor = AudioProcessor()
+            let (stream, continuation) = processor.startStreamingRecordingLive(inputDeviceID: nil)
+            return (processor, stream, continuation)
+        }
 
-        // WhisperKit が AsyncThrowingStream を直接返す
-        let (stream, continuation) = processor.startStreamingRecordingLive(inputDeviceID: nil)
+        self.audioProcessor = processor
         self.streamContinuation = continuation
         self.isCurrentlyRecording = true
 
