@@ -103,6 +103,21 @@ extension AppDelegate {
             }
         )
 
+        // ストリーミングホットキー (⌘⇧R)
+        await hotKeyClient.registerStreamingWithCombo(
+            hotKeySettings.streamingHotKey,
+            { [weak self] in
+                Task { @MainActor in
+                    self?.handleStreamingKeyDown()
+                }
+            },
+            { [weak self] in
+                Task { @MainActor in
+                    self?.handleStreamingKeyUp()
+                }
+            }
+        )
+
         logger.info("Hotkeys registered from settings")
     }
 
@@ -131,5 +146,16 @@ extension AppDelegate {
             logger.info("Push-to-Talk: Key up, ending recording")
             store.send(.endRecording)
         }
+    }
+
+    /// ストリーミングキーダウンハンドラー
+    func handleStreamingKeyDown() {
+        logger.info("Streaming hotkey pressed: ⌘⇧R")
+        toggleStreaming()
+    }
+
+    /// ストリーミングキーアップハンドラー（将来のPush-to-Talk対応用）
+    func handleStreamingKeyUp() {
+        // 現在は何もしない（将来のPush-to-Talk対応用）
     }
 }

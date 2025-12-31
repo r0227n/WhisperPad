@@ -14,6 +14,9 @@ import UserNotifications
 extension Notification.Name {
     /// ホットキー設定が変更された通知
     static let hotKeySettingsChanged = Notification.Name("hotKeySettingsChanged")
+
+    /// ストリーミングポップアップを閉じる通知
+    static let closeStreamingPopup = Notification.Name("closeStreamingPopup")
 }
 
 /// メニューバーアプリケーションを管理する AppDelegate
@@ -50,6 +53,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// 出力クライアント
     @Dependency(\.outputClient) var outputClient
 
+    /// ストリーミングポップアップウィンドウ
+    private var streamingPopupWindow: StreamingPopupWindow?
+
     // MARK: - Menu Item Tags
 
     /// メニュー項目を識別するためのタグ
@@ -60,6 +66,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case quit = 300
         case micPermissionStatus = 400
         case notificationPermissionStatus = 500
+        case streaming = 600
     }
 
     // MARK: - Initialization
@@ -80,6 +87,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupHotKeyObserver()
         requestNotificationPermission()
         setupHotKeys()
+        setupStreamingPopupObserver()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -87,8 +95,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         animationTimer?.invalidate()
         animationTimer = nil
 
+        // ストリーミングポップアップを閉じる
+        closeStreamingPopup()
+
         // NotificationCenter オブザーバーを解除
         NotificationCenter.default.removeObserver(self, name: .hotKeySettingsChanged, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .closeStreamingPopup, object: nil)
 
         // ホットキーを解除
         Task {
@@ -174,6 +186,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         pauseResumeItem.isHidden = true
         menu.addItem(pauseResumeItem)
 
+        // ストリーミング項目
+        let streamingItem = NSMenuItem(
+            title: "リアルタイム文字起こし",
+            action: #selector(startStreaming),
+            keyEquivalent: "r"
+        )
+        streamingItem.keyEquivalentModifierMask = [.command, .shift]
+        streamingItem.tag = MenuItemTag.streaming.rawValue
+        streamingItem.target = self
+        streamingItem.image = NSImage(systemSymbolName: "waveform.badge.mic", accessibilityDescription: nil)
+        menu.addItem(streamingItem)
+
         menu.addItem(NSMenuItem.separator())
 
         // 設定項目
@@ -216,33 +240,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateMenuForCurrentState() {
         guard let menu = statusMenu,
               let recordingItem = menu.item(withTag: MenuItemTag.recording.rawValue),
-              let pauseResumeItem = menu.item(withTag: MenuItemTag.pauseResume.rawValue)
+              let pauseResumeItem = menu.item(withTag: MenuItemTag.pauseResume.rawValue),
+              let streamingItem = menu.item(withTag: MenuItemTag.streaming.rawValue)
         else { return }
 
         switch store.appStatus {
         case .idle, .completed, .error, .streamingCompleted:
+            // 録音・ストリーミングどちらも有効
             configureMenuItem(recordingItem, title: "録音開始", action: #selector(startRecording), symbol: "mic.fill")
+            streamingItem.isEnabled = true
             pauseResumeItem.isHidden = true
 
         case .recording:
+            // 録音中はストリーミング無効
             configureMenuItem(recordingItem, title: "録音終了", action: #selector(endRecording), symbol: "stop.fill")
             configureMenuItem(
                 pauseResumeItem, title: "一時停止", action: #selector(pauseRecording), symbol: "pause.fill"
             )
             pauseResumeItem.isHidden = false
+            streamingItem.isEnabled = false
 
         case .paused:
+            // 一時停止中もストリーミング無効
             configureMenuItem(recordingItem, title: "録音終了", action: #selector(endRecording), symbol: "stop.fill")
             configureMenuItem(
                 pauseResumeItem, title: "録音再開", action: #selector(resumeRecording), symbol: "play.fill"
             )
             pauseResumeItem.isHidden = false
+            streamingItem.isEnabled = false
 
         case .transcribing:
+            // 文字起こし中はストリーミング無効
             configureMenuItem(recordingItem, title: "文字起こし中...", action: nil, symbol: "gear", isEnabled: false)
             pauseResumeItem.isHidden = true
+            streamingItem.isEnabled = false
 
         case .streamingTranscribing:
+            // ストリーミング中は録音とストリーミング両方無効
             configureMenuItem(
                 recordingItem,
                 title: "ストリーミング中...",
@@ -251,6 +285,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 isEnabled: false
             )
             pauseResumeItem.isHidden = true
+            streamingItem.isEnabled = false
         }
     }
 
@@ -377,6 +412,74 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         logger.info("Cancel recording hotkey triggered: Escape")
         store.send(.cancelRecording)
+    }
+
+    // MARK: - Streaming Actions
+
+    /// ストリーミング文字起こしを開始
+    @objc private func startStreaming() {
+        logger.info("Start streaming transcription requested")
+        showStreamingPopup()
+        store.send(.startStreamingTranscription)
+    }
+
+    /// ストリーミングをトグル（ホットキー用）
+    func toggleStreaming() {
+        logger.info("Toggle streaming hotkey triggered: ⌘⇧R")
+        switch store.appStatus {
+        case .idle, .completed, .error, .streamingCompleted:
+            startStreaming()
+        case .streamingTranscribing:
+            // ストリーミング中は停止
+            store.send(.streamingTranscription(.stopButtonTapped))
+        case .recording, .paused, .transcribing:
+            // 録音中・文字起こし中は何もしない
+            break
+        }
+    }
+
+    // MARK: - Streaming Popup Management
+
+    /// ストリーミングポップアップ関連の通知を監視
+    private func setupStreamingPopupObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleCloseStreamingPopup),
+            name: .closeStreamingPopup,
+            object: nil
+        )
+    }
+
+    @objc private func handleCloseStreamingPopup(_ notification: Notification) {
+        closeStreamingPopup()
+    }
+
+    /// ストリーミングポップアップを表示
+    private func showStreamingPopup() {
+        // 既存のポップアップがあれば閉じる
+        closeStreamingPopup()
+
+        // 新しいポップアップを作成
+        let popupStore = store.scope(
+            state: \.streamingTranscription,
+            action: \.streamingTranscription
+        )
+        let popup = StreamingPopupWindow(store: popupStore)
+
+        // メニューバーアイコンの下に表示
+        if let statusItem {
+            popup.showBelowMenuBarIcon(relativeTo: statusItem)
+        }
+
+        streamingPopupWindow = popup
+        logger.info("Streaming popup window shown")
+    }
+
+    /// ストリーミングポップアップを閉じる
+    private func closeStreamingPopup() {
+        streamingPopupWindow?.close()
+        streamingPopupWindow = nil
+        logger.info("Streaming popup window closed")
     }
 
     /// 設定画面を開く
