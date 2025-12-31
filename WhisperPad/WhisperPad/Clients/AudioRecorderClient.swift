@@ -52,6 +52,10 @@ struct AudioRecorderClient: Sendable {
     /// 一時停止中かどうか
     /// - Returns: 一時停止中の場合は true
     var isPaused: @Sendable () async -> Bool
+
+    /// 利用可能な入力デバイスを取得
+    /// - Returns: 入力デバイスの一覧
+    var fetchInputDevices: @Sendable () async -> [AudioInputDevice]
 }
 
 // MARK: - TestDependencyKey
@@ -69,7 +73,8 @@ extension AudioRecorderClient: TestDependencyKey {
             currentLevel: { nil },
             pauseRecording: {},
             resumeRecording: {},
-            isPaused: { false }
+            isPaused: { false },
+            fetchInputDevices: { [.systemDefault] }
         )
     }
 
@@ -85,7 +90,8 @@ extension AudioRecorderClient: TestDependencyKey {
             currentLevel: { nil },
             pauseRecording: {},
             resumeRecording: {},
-            isPaused: { false }
+            isPaused: { false },
+            fetchInputDevices: { [.systemDefault] }
         )
     }
 }

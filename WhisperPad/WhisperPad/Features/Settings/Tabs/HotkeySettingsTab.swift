@@ -137,6 +137,15 @@ struct HotkeySettingsTab: View {
                 Text("キャンセル")
             }
 
+            // 競合警告セクション
+            if let conflict = store.hotkeyConflict {
+                Section {
+                    Label(conflict, systemImage: "exclamationmark.triangle.fill")
+                        .foregroundColor(.red)
+                        .font(.footnote)
+                }
+            }
+
             // 注意セクション
             Section {
                 Label(

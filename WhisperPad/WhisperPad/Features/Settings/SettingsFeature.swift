@@ -7,54 +7,6 @@ import AppKit
 import ComposableArchitecture
 import Foundation
 
-// MARK: - Settings Tab
-
-/// 設定タブ
-enum SettingsTab: String, CaseIterable, Sendable {
-    case general = "一般"
-    case hotkey = "ホットキー"
-    case recording = "録音"
-    case model = "モデル"
-    case output = "出力"
-
-    /// SF Symbol 名
-    var iconName: String {
-        switch self {
-        case .general:
-            "gear"
-        case .hotkey:
-            "keyboard"
-        case .recording:
-            "waveform"
-        case .model:
-            "cpu"
-        case .output:
-            "doc.on.clipboard"
-        }
-    }
-}
-
-// MARK: - Hotkey Type
-
-/// ホットキータイプ（どのホットキーを編集中か）
-enum HotkeyType: String, CaseIterable, Sendable {
-    case recording
-    case paste
-    case openSettings
-    case streaming
-    case cancel
-}
-
-// MARK: - Delegate Action
-
-/// 設定機能のデリゲートアクション
-enum SettingsDelegateAction: Sendable, Equatable {
-    /// 設定が変更された
-    case settingsChanged(AppSettings)
-    /// モデルが変更された
-    case modelChanged(String)
-}
-
 // MARK: - Settings Feature
 
 /// 設定機能の TCA Reducer
@@ -62,6 +14,7 @@ enum SettingsDelegateAction: Sendable, Equatable {
 /// アプリケーション設定の管理、WhisperKit モデルの管理、
 /// ストレージ場所の設定などを行います。
 @Reducer
+// swiftlint:disable:next type_body_length
 struct SettingsFeature {
     // MARK: - State
 
@@ -99,6 +52,12 @@ struct SettingsFeature {
 
         /// ホットキー録音中のタイプ（nil = 録音なし）
         var recordingHotkeyType: HotkeyType?
+
+        /// 利用可能な入力デバイス一覧
+        var availableInputDevices: [AudioInputDevice] = []
+
+        /// ホットキー競合警告メッセージ
+        var hotkeyConflict: String?
     }
 
     // MARK: - Action
@@ -184,6 +143,18 @@ struct SettingsFeature {
         /// ホットキー録音を停止
         case stopRecordingHotkey
 
+        // MARK: - Input Devices
+
+        /// 入力デバイス一覧を取得
+        case fetchInputDevices
+        /// 入力デバイス一覧取得完了
+        case inputDevicesResponse([AudioInputDevice])
+
+        // MARK: - Hotkey Conflict
+
+        /// ホットキー競合をチェック
+        case checkHotkeyConflict
+
         // MARK: - Delegate
 
         /// 親 Reducer へのデリゲートアクション
@@ -194,6 +165,7 @@ struct SettingsFeature {
 
     @Dependency(\.userDefaultsClient) var userDefaultsClient
     @Dependency(\.transcriptionClient) var transcriptionClient
+    @Dependency(\.audioRecorder) var audioRecorder
     @Dependency(\.continuousClock) var clock
 
     // MARK: - Reducer Body
@@ -205,7 +177,9 @@ struct SettingsFeature {
                 return .merge(
                     .send(.loadSettings),
                     .send(.fetchModels),
-                    .send(.calculateStorageUsage)
+                    .send(.calculateStorageUsage),
+                    .send(.fetchInputDevices),
+                    .send(.checkHotkeyConflict)
                 )
 
             case .onDisappear:
@@ -225,7 +199,10 @@ struct SettingsFeature {
 
             case let .updateHotKeySettings(hotKey):
                 state.settings.hotKey = hotKey
-                return .send(.saveSettings)
+                return .merge(
+                    .send(.saveSettings),
+                    .send(.checkHotkeyConflict)
+                )
 
             case let .updateTranscriptionSettings(transcription):
                 let previousModel = state.settings.transcription.modelName
@@ -452,6 +429,45 @@ struct SettingsFeature {
 
             case .stopRecordingHotkey:
                 state.recordingHotkeyType = nil
+                return .none
+
+            case .fetchInputDevices:
+                return .run { send in
+                    let devices = await audioRecorder.fetchInputDevices()
+                    await send(.inputDevicesResponse(devices))
+                }
+
+            case let .inputDevicesResponse(devices):
+                state.availableInputDevices = devices
+                return .none
+
+            case .checkHotkeyConflict:
+                let hotKey = state.settings.hotKey
+                let combos: [(String, HotKeySettings.KeyComboSettings)] = [
+                    ("録音", hotKey.recordingHotKey),
+                    ("ペースト", hotKey.pasteHotKey),
+                    ("設定を開く", hotKey.openSettingsHotKey),
+                    ("ストリーミング", hotKey.streamingHotKey),
+                    ("キャンセル", hotKey.cancelHotKey)
+                ]
+
+                var conflicts: [String] = []
+                for index in 0 ..< combos.count {
+                    for otherIndex in (index + 1) ..< combos.count {
+                        let (name1, combo1) = combos[index]
+                        let (name2, combo2) = combos[otherIndex]
+                        if combo1.carbonKeyCode == combo2.carbonKeyCode,
+                           combo1.carbonModifiers == combo2.carbonModifiers {
+                            conflicts.append("\(name1)と\(name2)")
+                        }
+                    }
+                }
+
+                if conflicts.isEmpty {
+                    state.hotkeyConflict = nil
+                } else {
+                    state.hotkeyConflict = "競合: \(conflicts.joined(separator: ", "))"
+                }
                 return .none
 
             case .delegate:
