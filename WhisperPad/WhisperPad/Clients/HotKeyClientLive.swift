@@ -23,20 +23,21 @@ private final class HotKeyManager {
     static let shared = HotKeyManager()
 
     private var openSettingsHotKey: HotKey?
+    private var recordingToggleHotKey: HotKey?
+    private var pasteHotKey: HotKey?
+    private var cancelHotKey: HotKey?
 
     private init() {}
+
+    // MARK: - Open Settings (⌘⇧,)
 
     /// 設定画面を開くホットキーを登録
     /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
     func registerOpenSettings(handler: @escaping () -> Void) {
-        // 既存のホットキーを解除
         openSettingsHotKey = nil
-
-        // 新しいホットキーを登録 (Command + Shift + ,)
         let hotKey = HotKey(key: .comma, modifiers: [.command, .shift])
         hotKey.keyDownHandler = handler
         openSettingsHotKey = hotKey
-
         logger.info("Open settings hotkey registered: ⌘⇧,")
     }
 
@@ -44,6 +45,60 @@ private final class HotKeyManager {
     func unregisterOpenSettings() {
         openSettingsHotKey = nil
         logger.info("Open settings hotkey unregistered")
+    }
+
+    // MARK: - Recording Toggle (⌥⇧ Space)
+
+    /// 録音トグルホットキーを登録
+    /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
+    func registerRecordingToggle(handler: @escaping () -> Void) {
+        recordingToggleHotKey = nil
+        let hotKey = HotKey(key: .space, modifiers: [.option, .shift])
+        hotKey.keyDownHandler = handler
+        recordingToggleHotKey = hotKey
+        logger.info("Recording toggle hotkey registered: ⌥⇧␣")
+    }
+
+    /// 録音トグルホットキーを解除
+    func unregisterRecordingToggle() {
+        recordingToggleHotKey = nil
+        logger.info("Recording toggle hotkey unregistered")
+    }
+
+    // MARK: - Paste (⌘⇧V)
+
+    /// ペーストホットキーを登録
+    /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
+    func registerPaste(handler: @escaping () -> Void) {
+        pasteHotKey = nil
+        let hotKey = HotKey(key: .v, modifiers: [.command, .shift])
+        hotKey.keyDownHandler = handler
+        pasteHotKey = hotKey
+        logger.info("Paste hotkey registered: ⌘⇧V")
+    }
+
+    /// ペーストホットキーを解除
+    func unregisterPaste() {
+        pasteHotKey = nil
+        logger.info("Paste hotkey unregistered")
+    }
+
+    // MARK: - Cancel (Escape)
+
+    /// 録音キャンセルホットキーを登録
+    /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
+    func registerCancel(handler: @escaping () -> Void) {
+        cancelHotKey = nil
+        let hotKey = HotKey(key: .escape, modifiers: [])
+        hotKey.keyDownHandler = handler
+        cancelHotKey = hotKey
+        logger.info("Cancel hotkey registered: Escape")
+    }
+
+    /// 録音キャンセルホットキーを解除
+    func unregisterCancel() {
+        cancelHotKey = nil
+        logger.info("Cancel hotkey unregistered")
     }
 }
 
@@ -63,16 +118,44 @@ extension HotKeyClient: DependencyKey {
                 }
             },
             checkAccessibilityPermission: {
-                // AXIsProcessTrusted() はアクセシビリティ権限をチェック
                 let trusted = AXIsProcessTrusted()
                 logger.info("Accessibility permission: \(trusted ? "granted" : "denied")")
                 return trusted
             },
             requestAccessibilityPermission: {
-                // アクセシビリティ権限を要求するダイアログを表示
                 let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
                 let trusted = AXIsProcessTrustedWithOptions(options as CFDictionary)
                 logger.info("Accessibility permission requested, current status: \(trusted)")
+            },
+            registerRecordingToggle: { handler in
+                await MainActor.run {
+                    HotKeyManager.shared.registerRecordingToggle(handler: handler)
+                }
+            },
+            unregisterRecordingToggle: {
+                await MainActor.run {
+                    HotKeyManager.shared.unregisterRecordingToggle()
+                }
+            },
+            registerPaste: { handler in
+                await MainActor.run {
+                    HotKeyManager.shared.registerPaste(handler: handler)
+                }
+            },
+            unregisterPaste: {
+                await MainActor.run {
+                    HotKeyManager.shared.unregisterPaste()
+                }
+            },
+            registerCancel: { handler in
+                await MainActor.run {
+                    HotKeyManager.shared.registerCancel(handler: handler)
+                }
+            },
+            unregisterCancel: {
+                await MainActor.run {
+                    HotKeyManager.shared.unregisterCancel()
+                }
             }
         )
     }
