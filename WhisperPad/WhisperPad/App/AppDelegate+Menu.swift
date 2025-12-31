@@ -58,7 +58,7 @@ extension AppDelegate {
             action: #selector(startStreaming),
             keyEquivalent: "r"
         )
-        streamingItem.keyEquivalentModifierMask = [.command, .shift]
+        streamingItem.keyEquivalentModifierMask = NSEvent.ModifierFlags([.command, .shift])
         streamingItem.tag = MenuItemTag.streaming.rawValue
         streamingItem.target = self
         streamingItem.image = NSImage(systemSymbolName: "waveform.badge.mic", accessibilityDescription: nil)
@@ -71,7 +71,7 @@ extension AppDelegate {
             action: #selector(openSettings),
             keyEquivalent: ","
         )
-        settingsItem.keyEquivalentModifierMask = .command
+        settingsItem.keyEquivalentModifierMask = NSEvent.ModifierFlags.command
         settingsItem.tag = MenuItemTag.settings.rawValue
         settingsItem.target = self
         settingsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
@@ -84,7 +84,7 @@ extension AppDelegate {
             action: #selector(quitApplication),
             keyEquivalent: "q"
         )
-        quitItem.keyEquivalentModifierMask = .command
+        quitItem.keyEquivalentModifierMask = NSEvent.ModifierFlags.command
         quitItem.tag = MenuItemTag.quit.rawValue
         quitItem.target = self
         menu.addItem(quitItem)

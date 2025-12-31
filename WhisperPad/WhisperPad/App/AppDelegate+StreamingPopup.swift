@@ -6,6 +6,7 @@
 import AppKit
 import ComposableArchitecture
 import Foundation
+import os.log
 
 // MARK: - Streaming Popup Management
 
