@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(tree:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh run view:*)",
+      "Bash(git push:*)",
+      "Bash(mise:*)",
+      "Bash(swift package:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(timeout * xcodebuild test:*)",
+      "Bash(swift test:*)",
+      "Bash(swift -e:*)",
+
+      // プロセス・ログ
+      "Bash(log show:*)",
+      "Bash(xcrun xcresulttool:*)",
+      "Bash(pkill:*)",
+      "Bash(killall:*)",
+      "Bash(pgrep:*)",
+
+      // その他
+      "Bash(xargs:*)",
+      "Bash(open:*)",
+      "Bash(codesign:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/format-lint.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
