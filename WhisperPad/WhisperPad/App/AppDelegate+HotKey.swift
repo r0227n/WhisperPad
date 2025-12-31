@@ -154,8 +154,12 @@ extension AppDelegate {
         toggleStreaming()
     }
 
-    /// ストリーミングキーアップハンドラー（将来のPush-to-Talk対応用）
+    /// ストリーミングキーアップハンドラー（Push-to-Talk）
     func handleStreamingKeyUp() {
-        // 現在は何もしない（将来のPush-to-Talk対応用）
+        // Push-to-Talk: ストリーミング中ならキーを離したときに停止
+        if store.appStatus == .streamingTranscribing {
+            logger.info("Streaming Push-to-Talk: Key up, stopping streaming")
+            store.send(.streamingTranscription(.stopButtonTapped))
+        }
     }
 }
