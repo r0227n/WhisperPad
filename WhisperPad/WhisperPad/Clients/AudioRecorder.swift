@@ -153,6 +153,10 @@ actor AudioRecorder {
         // セグメントが1つだけの場合は結合不要
         if segmentURLs.count == 1 {
             let finalURL = try AudioRecorderClient.generateRecordingURL(identifier: baseIdentifier)
+            // 既存ファイルがあれば削除
+            if FileManager.default.fileExists(atPath: finalURL.path) {
+                try FileManager.default.removeItem(at: finalURL)
+            }
             try FileManager.default.moveItem(at: segmentURLs[0], to: finalURL)
             cleanup()
             return StopResult(url: finalURL, isPartial: false, usedSegments: 1, totalSegments: 1)
