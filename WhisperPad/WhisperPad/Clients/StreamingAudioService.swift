@@ -7,13 +7,16 @@ import Foundation
 import OSLog
 import WhisperKit
 
-/// リアルタイム音声ストリーミング actor
+/// リアルタイム音声ストリーミングサービス
 ///
 /// WhisperKit の AudioProcessor を使用してマイク入力をストリーミングで取得します。
-actor StreamingAudioService {
+/// AudioProcessor と CoreAudio API はメインスレッドで操作する必要があるため、
+/// @MainActor で実行します。
+@MainActor
+final class StreamingAudioService {
     // MARK: - Constants
 
-    nonisolated(unsafe) private let logger = Logger(
+    private let logger = Logger(
         subsystem: "com.whisperpad",
         category: "StreamingAudioService"
     )
@@ -33,7 +36,7 @@ actor StreamingAudioService {
     // MARK: - Recording
 
     /// マイク入力のリアルタイムストリーミングを開始
-    func startLiveRecording() async throws -> AsyncThrowingStream<[Float], Error> {
+    func startLiveRecording() throws -> AsyncThrowingStream<[Float], Error> {
         guard !isCurrentlyRecording else {
             logger.warning("Recording already in progress")
             throw StreamingTranscriptionError.initializationFailed("Already recording")
@@ -41,12 +44,8 @@ actor StreamingAudioService {
 
         logger.info("Starting live recording...")
 
-        // AudioProcessor と CoreAudio API はメインスレッドで初期化する必要がある
-        let (processor, stream, continuation) = await MainActor.run {
-            let processor = AudioProcessor()
-            let (stream, continuation) = processor.startStreamingRecordingLive(inputDeviceID: nil)
-            return (processor, stream, continuation)
-        }
+        let processor = AudioProcessor()
+        let (stream, continuation) = processor.startStreamingRecordingLive(inputDeviceID: nil)
 
         self.audioProcessor = processor
         self.streamContinuation = continuation
@@ -57,7 +56,7 @@ actor StreamingAudioService {
     }
 
     /// 録音を停止
-    func stopRecording() async {
+    func stopRecording() {
         guard isCurrentlyRecording else {
             logger.warning("No recording in progress")
             return
