@@ -51,6 +51,40 @@ struct HotKeyClient: Sendable {
 
     /// 録音キャンセルホットキーを解除
     var unregisterCancel: @Sendable () async -> Void
+
+    // MARK: - 動的キーコンボ対応
+
+    /// 動的キーコンボで録音ホットキーを登録（Push-to-Talk対応）
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - keyDownHandler: キーが押されたときのハンドラー
+    ///   - keyUpHandler: キーが離されたときのハンドラー（Push-to-Talk用）
+    var registerRecordingWithCombo: @Sendable (
+        HotKeySettings.KeyComboSettings,
+        @escaping @Sendable () -> Void,
+        @escaping @Sendable () -> Void
+    ) async -> Void
+
+    /// 動的キーコンボでペーストホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    var registerPasteWithCombo: @Sendable (
+        HotKeySettings.KeyComboSettings,
+        @escaping @Sendable () -> Void
+    ) async -> Void
+
+    /// 動的キーコンボで設定を開くホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    var registerOpenSettingsWithCombo: @Sendable (
+        HotKeySettings.KeyComboSettings,
+        @escaping @Sendable () -> Void
+    ) async -> Void
+
+    /// すべてのホットキーを解除
+    var unregisterAll: @Sendable () async -> Void
 }
 
 // MARK: - HotKeyError
@@ -108,6 +142,18 @@ extension HotKeyClient: TestDependencyKey {
             },
             unregisterCancel: {
                 clientLogger.debug("[PREVIEW] unregisterCancel called")
+            },
+            registerRecordingWithCombo: { _, _, _ in
+                clientLogger.debug("[PREVIEW] registerRecordingWithCombo called")
+            },
+            registerPasteWithCombo: { _, _ in
+                clientLogger.debug("[PREVIEW] registerPasteWithCombo called")
+            },
+            registerOpenSettingsWithCombo: { _, _ in
+                clientLogger.debug("[PREVIEW] registerOpenSettingsWithCombo called")
+            },
+            unregisterAll: {
+                clientLogger.debug("[PREVIEW] unregisterAll called")
             }
         )
     }
@@ -144,6 +190,18 @@ extension HotKeyClient: TestDependencyKey {
             },
             unregisterCancel: {
                 clientLogger.debug("[TEST] unregisterCancel called")
+            },
+            registerRecordingWithCombo: { _, _, _ in
+                clientLogger.debug("[TEST] registerRecordingWithCombo called")
+            },
+            registerPasteWithCombo: { _, _ in
+                clientLogger.debug("[TEST] registerPasteWithCombo called")
+            },
+            registerOpenSettingsWithCombo: { _, _ in
+                clientLogger.debug("[TEST] registerOpenSettingsWithCombo called")
+            },
+            unregisterAll: {
+                clientLogger.debug("[TEST] unregisterAll called")
             }
         )
     }
