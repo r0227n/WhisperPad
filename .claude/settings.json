@@ -26,7 +26,7 @@
       "Bash(open:*)",
       "Bash(codesign:*)"
     ],
-    "deny": [],
+    "deny": ["Bash(git -C:*)"],
     "defaultMode": "plan"
   },
   "hooks": {

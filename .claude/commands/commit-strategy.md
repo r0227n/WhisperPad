@@ -1,7 +1,7 @@
 ---
 description: 複数変更ファイルを論理的なコミットに分割して実行
 argument-hint: [--skip-confirm]
-allowed-tools: Bash(git status:*), Bash(git status -C *:*), Bash(git diff:*), Bash(git diff -C *:*), Bash(git log:*), Bash(git log -C *:*), Bash(git add:*), Bash(git commit:*), Read, Grep, Glob, TodoWrite, EnterPlanMode, ExitPlanMode
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Read, Grep, Glob, TodoWrite, EnterPlanMode, ExitPlanMode
 ---
 
 # Commit Strategy: 論理的コミット分割
