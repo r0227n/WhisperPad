@@ -292,6 +292,12 @@ struct AppReducer {
 
             case .resetToIdle:
                 state.appStatus = .idle
+                state.streamingTranscription.status = .idle
+                state.streamingTranscription.confirmedText = ""
+                state.streamingTranscription.pendingText = ""
+                state.streamingTranscription.decodingText = ""
+                state.streamingTranscription.duration = 0
+                state.streamingTranscription.tokensPerSecond = 0
                 return .none
             }
         }
