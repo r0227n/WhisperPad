@@ -14,6 +14,9 @@ import UserNotifications
 extension Notification.Name {
     /// ホットキー設定が変更された通知
     static let hotKeySettingsChanged = Notification.Name("hotKeySettingsChanged")
+
+    /// ストリーミングポップアップを閉じる通知
+    static let closeStreamingPopup = Notification.Name("closeStreamingPopup")
 }
 
 /// メニューバーアプリケーションを管理する AppDelegate
@@ -50,6 +53,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// 出力クライアント
     @Dependency(\.outputClient) var outputClient
 
+    /// ストリーミングポップアップウィンドウ
+    private var streamingPopupWindow: StreamingPopupWindow?
+
+    // MARK: - Property Accessors (for extensions)
+
+    func getStatusItem() -> NSStatusItem? { statusItem }
+    func getStreamingPopupWindow() -> StreamingPopupWindow? { streamingPopupWindow }
+    func setStreamingPopupWindow(_ window: StreamingPopupWindow?) { streamingPopupWindow = window }
+
     // MARK: - Menu Item Tags
 
     /// メニュー項目を識別するためのタグ
@@ -60,6 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case quit = 300
         case micPermissionStatus = 400
         case notificationPermissionStatus = 500
+        case streaming = 600
     }
 
     // MARK: - Initialization
@@ -80,6 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupHotKeyObserver()
         requestNotificationPermission()
         setupHotKeys()
+        setupStreamingPopupObserver()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -87,8 +101,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         animationTimer?.invalidate()
         animationTimer = nil
 
+        // ストリーミングポップアップを閉じる
+        closeStreamingPopup()
+
         // NotificationCenter オブザーバーを解除
         NotificationCenter.default.removeObserver(self, name: .hotKeySettingsChanged, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .closeStreamingPopup, object: nil)
 
         // ホットキーを解除
         Task {
@@ -144,105 +162,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - Menu Creation
-
-    /// ドロップダウンメニューを作成
-    /// - Returns: 設定済みの NSMenu
-    private func createMenu() -> NSMenu {
-        let menu = NSMenu()
-
-        // 録音項目
-        let recordingItem = NSMenuItem(
-            title: "録音開始",
-            action: #selector(startRecording),
-            keyEquivalent: ""
-        )
-        recordingItem.tag = MenuItemTag.recording.rawValue
-        recordingItem.target = self
-        recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
-        menu.addItem(recordingItem)
-
-        // 一時停止/再開項目（録音中/一時停止中のみ表示）
-        let pauseResumeItem = NSMenuItem(
-            title: "一時停止",
-            action: #selector(pauseRecording),
-            keyEquivalent: ""
-        )
-        pauseResumeItem.tag = MenuItemTag.pauseResume.rawValue
-        pauseResumeItem.target = self
-        pauseResumeItem.image = NSImage(systemSymbolName: "pause.fill", accessibilityDescription: nil)
-        pauseResumeItem.isHidden = true
-        menu.addItem(pauseResumeItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // 設定項目
-        let settingsItem = NSMenuItem(
-            title: "設定...",
-            action: #selector(openSettings),
-            keyEquivalent: ","
-        )
-        settingsItem.keyEquivalentModifierMask = .command
-        settingsItem.tag = MenuItemTag.settings.rawValue
-        settingsItem.target = self
-        settingsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
-        menu.addItem(settingsItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // デバッグメニュー（DEBUG ビルドのみ）
-        #if DEBUG
-        addDebugMenu(to: menu)
-        menu.addItem(NSMenuItem.separator())
-        #endif
-
-        // 終了項目
-        let quitItem = NSMenuItem(
-            title: "終了",
-            action: #selector(quitApplication),
-            keyEquivalent: "q"
-        )
-        quitItem.keyEquivalentModifierMask = .command
-        quitItem.tag = MenuItemTag.quit.rawValue
-        quitItem.target = self
-        menu.addItem(quitItem)
-
-        return menu
-    }
-
     // MARK: - State-based UI Updates
 
     /// 現在の状態に応じてメニューを更新
     private func updateMenuForCurrentState() {
         guard let menu = statusMenu,
               let recordingItem = menu.item(withTag: MenuItemTag.recording.rawValue),
-              let pauseResumeItem = menu.item(withTag: MenuItemTag.pauseResume.rawValue)
+              let pauseResumeItem = menu.item(withTag: MenuItemTag.pauseResume.rawValue),
+              let streamingItem = menu.item(withTag: MenuItemTag.streaming.rawValue)
         else { return }
 
         switch store.appStatus {
         case .idle, .completed, .error, .streamingCompleted:
+            // 録音・ストリーミングどちらも有効
             configureMenuItem(recordingItem, title: "録音開始", action: #selector(startRecording), symbol: "mic.fill")
+            streamingItem.isEnabled = true
             pauseResumeItem.isHidden = true
 
         case .recording:
+            // 録音中はストリーミング無効
             configureMenuItem(recordingItem, title: "録音終了", action: #selector(endRecording), symbol: "stop.fill")
             configureMenuItem(
                 pauseResumeItem, title: "一時停止", action: #selector(pauseRecording), symbol: "pause.fill"
             )
             pauseResumeItem.isHidden = false
+            streamingItem.isEnabled = false
 
         case .paused:
+            // 一時停止中もストリーミング無効
             configureMenuItem(recordingItem, title: "録音終了", action: #selector(endRecording), symbol: "stop.fill")
             configureMenuItem(
                 pauseResumeItem, title: "録音再開", action: #selector(resumeRecording), symbol: "play.fill"
             )
             pauseResumeItem.isHidden = false
+            streamingItem.isEnabled = false
 
         case .transcribing:
+            // 文字起こし中はストリーミング無効
             configureMenuItem(recordingItem, title: "文字起こし中...", action: nil, symbol: "gear", isEnabled: false)
             pauseResumeItem.isHidden = true
+            streamingItem.isEnabled = false
 
         case .streamingTranscribing:
+            // ストリーミング中は録音とストリーミング両方無効
             configureMenuItem(
                 recordingItem,
                 title: "ストリーミング中...",
@@ -251,21 +213,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 isEnabled: false
             )
             pauseResumeItem.isHidden = true
+            streamingItem.isEnabled = false
         }
-    }
-
-    private func configureMenuItem(
-        _ item: NSMenuItem,
-        title: String,
-        action: Selector?,
-        symbol: String,
-        isEnabled: Bool = true
-    ) {
-        item.title = title
-        item.action = action
-        item.target = action != nil ? self : nil
-        item.isEnabled = isEnabled
-        item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
     }
 
     /// 現在の状態に応じてアイコンを更新
@@ -377,6 +326,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         logger.info("Cancel recording hotkey triggered: Escape")
         store.send(.cancelRecording)
+    }
+
+    // MARK: - Streaming Actions
+
+    /// ストリーミング文字起こしを開始
+    @objc private func startStreaming() {
+        logger.info("Start streaming transcription requested")
+        showStreamingPopup()
+        store.send(.startStreamingTranscription)
+    }
+
+    /// ストリーミングをトグル（ホットキー用）
+    func toggleStreaming() {
+        logger.info("Toggle streaming hotkey triggered: ⌘⇧R")
+        switch store.appStatus {
+        case .idle, .completed, .error, .streamingCompleted:
+            startStreaming()
+        case .streamingTranscribing:
+            // ストリーミング中は停止
+            store.send(.streamingTranscription(.stopButtonTapped))
+        case .recording, .paused, .transcribing:
+            // 録音中・文字起こし中は何もしない
+            break
+        }
     }
 
     /// 設定画面を開く

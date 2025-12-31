@@ -14,12 +14,23 @@ import WhisperKit
 actor StreamingTranscriptionService {
     // MARK: - Constants
 
-    nonisolated(unsafe) private let logger = Logger(
+    private let logger = Logger(
         subsystem: "com.whisperpad",
         category: "StreamingTranscriptionService"
     )
 
     private static let defaultModelRepo = "argmaxinc/whisperkit-coreml"
+
+    /// デフォルトのモデル保存先ディレクトリ（TranscriptionServiceと同じパス）
+    private static var modelsDirectory: URL {
+        guard let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first else {
+            fatalError("Application Support directory not found")
+        }
+        return appSupport.appendingPathComponent("WhisperPad/models", isDirectory: true)
+    }
 
     // MARK: - State
 
@@ -37,28 +48,43 @@ actor StreamingTranscriptionService {
     func initialize(modelName: String?, confirmationCount: Int = 2, language: String? = "ja") async throws {
         logger.info("Initializing StreamingTranscriptionService with model: \(modelName ?? "default")")
 
+        // テキスト状態をリセット（モデルは保持）
+        confirmedSegments.removeAll()
+        pendingSegment = ""
+        previousResults.removeAll()
+        accumulatedSamples.removeAll()
+
         self.confirmationCount = confirmationCount
         self.language = language
+
+        // WhisperKit が既に初期化されている場合はスキップ
+        if whisperKit != nil {
+            logger.info("WhisperKit already initialized, reusing existing instance")
+            return
+        }
 
         let targetModel: String
         if let modelName {
             targetModel = modelName
         } else {
-            let modelSupport = await WhisperKit.recommendedModels()
+            let modelSupport = WhisperKit.recommendedModels()
             targetModel = modelSupport.default
         }
 
         do {
             let config = WhisperKitConfig(
                 model: targetModel,
+                downloadBase: Self.modelsDirectory,
                 modelRepo: Self.defaultModelRepo,
-                verbose: false,
-                logLevel: .error,
+                verbose: true,
+                logLevel: .info,
                 prewarm: true,
                 load: true,
                 download: true
             )
 
+            logger
+                .info("WhisperKit initializing with model: \(targetModel), downloadBase: \(Self.modelsDirectory.path)")
             whisperKit = try await WhisperKit(config)
             logger.info("WhisperKit initialized successfully")
         } catch {

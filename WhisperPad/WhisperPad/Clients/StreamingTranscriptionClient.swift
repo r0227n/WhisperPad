@@ -29,20 +29,37 @@ struct StreamingTranscriptionClient: Sendable {
 // MARK: - DependencyKey
 
 extension StreamingTranscriptionClient: DependencyKey {
-    private static let service = StreamingTranscriptionService()
+    private actor ServiceHolder {
+        static let shared = ServiceHolder()
+        private var _service: StreamingTranscriptionService?
+
+        func getService() -> StreamingTranscriptionService {
+            if _service == nil {
+                _service = StreamingTranscriptionService()
+            }
+            guard let service = _service else {
+                fatalError("StreamingTranscriptionService was unexpectedly nil after initialization")
+            }
+            return service
+        }
+    }
 
     static var liveValue: Self {
         Self(
             initialize: { modelName in
+                let service = await ServiceHolder.shared.getService()
                 try await service.initialize(modelName: modelName)
             },
             processChunk: { samples in
-                try await service.processAudioChunk(samples)
+                let service = await ServiceHolder.shared.getService()
+                return try await service.processAudioChunk(samples)
             },
             finalize: {
-                try await service.finalize()
+                let service = await ServiceHolder.shared.getService()
+                return try await service.finalize()
             },
             reset: {
+                let service = await ServiceHolder.shared.getService()
                 await service.reset()
             }
         )

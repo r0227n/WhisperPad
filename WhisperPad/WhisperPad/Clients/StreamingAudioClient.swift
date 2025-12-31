@@ -26,18 +26,40 @@ struct StreamingAudioClient: Sendable {
 // MARK: - DependencyKey
 
 extension StreamingAudioClient: DependencyKey {
-    private static let service = StreamingAudioService()
+    /// @MainActor 上でサービスを保持するホルダー
+    @MainActor
+    private final class ServiceHolder {
+        static let shared = ServiceHolder()
+        private var _service: StreamingAudioService?
+
+        func getService() -> StreamingAudioService {
+            if _service == nil {
+                _service = StreamingAudioService()
+            }
+            guard let service = _service else {
+                fatalError("StreamingAudioService was unexpectedly nil after initialization")
+            }
+            return service
+        }
+    }
 
     static var liveValue: Self {
         Self(
             startRecording: {
-                try await service.startLiveRecording()
+                try await MainActor.run {
+                    let service = ServiceHolder.shared.getService()
+                    return try service.startLiveRecording()
+                }
             },
             stopRecording: {
-                await service.stopRecording()
+                await MainActor.run {
+                    ServiceHolder.shared.getService().stopRecording()
+                }
             },
             isRecording: {
-                await service.isRecording
+                await MainActor.run {
+                    ServiceHolder.shared.getService().isRecording
+                }
             }
         )
     }
