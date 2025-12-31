@@ -164,82 +164,46 @@ struct HotkeyRecorderView: View {
 
     /// Carbon キーコードを表示名に変換
     private func keyName(_ keyCode: UInt32) -> String {
-        switch keyCode {
-        case 0: "A"
-        case 1: "S"
-        case 2: "D"
-        case 3: "F"
-        case 4: "H"
-        case 5: "G"
-        case 6: "Z"
-        case 7: "X"
-        case 8: "C"
-        case 9: "V"
-        case 11: "B"
-        case 12: "Q"
-        case 13: "W"
-        case 14: "E"
-        case 15: "R"
-        case 16: "Y"
-        case 17: "T"
-        case 18: "1"
-        case 19: "2"
-        case 20: "3"
-        case 21: "4"
-        case 22: "6"
-        case 23: "5"
-        case 24: "="
-        case 25: "9"
-        case 26: "7"
-        case 27: "-"
-        case 28: "8"
-        case 29: "0"
-        case 30: "]"
-        case 31: "O"
-        case 32: "U"
-        case 33: "["
-        case 34: "I"
-        case 35: "P"
-        case 36: "↩"
-        case 37: "L"
-        case 38: "J"
-        case 39: "'"
-        case 40: "K"
-        case 41: ";"
-        case 42: "\\"
-        case 43: ","
-        case 44: "/"
-        case 45: "N"
-        case 46: "M"
-        case 47: "."
-        case 48: "⇥"
-        case 49: "Space"
-        case 50: "`"
-        case 51: "⌫"
-        case 53: "⎋"
-        case 96: "F5"
-        case 97: "F6"
-        case 98: "F7"
-        case 99: "F3"
-        case 100: "F8"
-        case 101: "F9"
-        case 103: "F11"
-        case 105: "F13"
-        case 107: "F14"
-        case 109: "F10"
-        case 111: "F12"
-        case 113: "F15"
-        case 118: "F4"
-        case 119: "End"
-        case 120: "F2"
-        case 121: "PgDn"
-        case 122: "F1"
-        case 123: "←"
-        case 124: "→"
-        case 125: "↓"
-        case 126: "↑"
-        default: "Key\(keyCode)"
-        }
+        KeyCodeMapper.keyName(for: keyCode)
+    }
+}
+
+// MARK: - KeyCodeMapper
+
+/// Carbon キーコードを表示名にマップするユーティリティ
+private enum KeyCodeMapper {
+    /// キーコードから表示名へのマッピング
+    static let keyNames: [UInt32: String] = [
+        // アルファベットキー
+        0: "A", 1: "S", 2: "D", 3: "F", 4: "H", 5: "G", 6: "Z", 7: "X", 8: "C", 9: "V",
+        11: "B", 12: "Q", 13: "W", 14: "E", 15: "R", 16: "Y", 17: "T",
+        31: "O", 32: "U", 34: "I", 35: "P", 37: "L", 38: "J", 40: "K", 45: "N", 46: "M",
+        // 数字キー
+        18: "1", 19: "2", 20: "3", 21: "4", 22: "6", 23: "5", 24: "=", 25: "9", 26: "7", 27: "-", 28: "8", 29: "0",
+        // 記号キー
+        30: "]", 33: "[", 39: "'", 41: ";", 42: "\\", 43: ",", 44: "/", 47: ".", 50: "`",
+        // 特殊キー
+        36: "\u{21A9}", // ↩
+        48: "\u{21E5}", // ⇥
+        49: "Space",
+        51: "\u{232B}", // ⌫
+        53: "\u{238B}", // ⎋
+        // 矢印キー
+        123: "\u{2190}", // ←
+        124: "\u{2192}", // →
+        125: "\u{2193}", // ↓
+        126: "\u{2191}", // ↑
+        // ファンクションキー
+        96: "F5", 97: "F6", 98: "F7", 99: "F3", 100: "F8", 101: "F9",
+        103: "F11", 105: "F13", 107: "F14", 109: "F10", 111: "F12", 113: "F15",
+        118: "F4", 120: "F2", 122: "F1",
+        // その他
+        119: "End", 121: "PgDn"
+    ]
+
+    /// キーコードから表示名を取得
+    static func keyName(for keyCode: UInt32) -> String {
+        keyNames[keyCode] ?? "Key\(keyCode)"
     }
 }
 

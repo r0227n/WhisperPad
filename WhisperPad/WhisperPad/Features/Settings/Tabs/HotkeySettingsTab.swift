@@ -115,39 +115,46 @@ struct HotkeySettingsTab: View {
 
     /// Carbon キーコードを表示名に変換
     private func keyName(_ keyCode: UInt32) -> String {
-        switch keyCode {
-        case 0: return "A"
-        case 1: return "S"
-        case 2: return "D"
-        case 3: return "F"
-        case 4: return "H"
-        case 5: return "G"
-        case 6: return "Z"
-        case 7: return "X"
-        case 8: return "C"
-        case 9: return "V"
-        case 11: return "B"
-        case 12: return "Q"
-        case 13: return "W"
-        case 14: return "E"
-        case 15: return "R"
-        case 16: return "Y"
-        case 17: return "T"
-        case 36: return "↩"
-        case 37: return "L"
-        case 38: return "J"
-        case 40: return "K"
-        case 43: return ","
-        case 48: return "⇥"
-        case 49: return "Space"
-        case 51: return "⌫"
-        case 53: return "⎋"
-        default:
-            if keyCode <= 25 {
-                return String(Character(UnicodeScalar(65 + Int(keyCode))!))
-            }
-            return "Key\(keyCode)"
-        }
+        HotkeyKeyCodeMapper.keyName(for: keyCode)
+    }
+}
+
+// MARK: - KeyCodeMapper
+
+/// Carbon キーコードを表示名にマップするユーティリティ
+private enum HotkeyKeyCodeMapper {
+    /// キーコードから表示名へのマッピング
+    static let keyNames: [UInt32: String] = [
+        // アルファベットキー
+        0: "A", 1: "S", 2: "D", 3: "F", 4: "H", 5: "G", 6: "Z", 7: "X", 8: "C", 9: "V",
+        11: "B", 12: "Q", 13: "W", 14: "E", 15: "R", 16: "Y", 17: "T",
+        31: "O", 32: "U", 34: "I", 35: "P", 37: "L", 38: "J", 40: "K", 45: "N", 46: "M",
+        // 数字キー
+        18: "1", 19: "2", 20: "3", 21: "4", 22: "6", 23: "5", 24: "=", 25: "9", 26: "7", 27: "-", 28: "8", 29: "0",
+        // 記号キー
+        30: "]", 33: "[", 39: "'", 41: ";", 42: "\\", 43: ",", 44: "/", 47: ".", 50: "`",
+        // 特殊キー
+        36: "\u{21A9}", // ↩
+        48: "\u{21E5}", // ⇥
+        49: "Space",
+        51: "\u{232B}", // ⌫
+        53: "\u{238B}", // ⎋
+        // 矢印キー
+        123: "\u{2190}", // ←
+        124: "\u{2192}", // →
+        125: "\u{2193}", // ↓
+        126: "\u{2191}", // ↑
+        // ファンクションキー
+        96: "F5", 97: "F6", 98: "F7", 99: "F3", 100: "F8", 101: "F9",
+        103: "F11", 105: "F13", 107: "F14", 109: "F10", 111: "F12", 113: "F15",
+        118: "F4", 120: "F2", 122: "F1",
+        // その他
+        119: "End", 121: "PgDn"
+    ]
+
+    /// キーコードから表示名を取得
+    static func keyName(for keyCode: UInt32) -> String {
+        keyNames[keyCode] ?? "Key\(keyCode)"
     }
 }
 
