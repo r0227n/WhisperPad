@@ -9,7 +9,7 @@ import SwiftUI
 /// 録音設定タブ
 ///
 /// 音声録音の設定を行います。
-/// 入力デバイス、録音時間、無音検出などを設定できます。
+/// 入力デバイス、無音検出などを設定できます。
 struct RecordingSettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
 
@@ -38,50 +38,6 @@ struct RecordingSettingsTab: View {
                 .accessibilityHint("録音に使用するマイクを選択します")
             } header: {
                 Text("入力デバイス")
-            }
-
-            // 録音時間セクション
-            Section {
-                Toggle(
-                    "無制限",
-                    isOn: Binding(
-                        get: { store.settings.recording.maxDuration == nil },
-                        set: { isUnlimited in
-                            var recording = store.settings.recording
-                            recording.maxDuration = isUnlimited ? nil : 60.0
-                            store.send(.updateRecordingSettings(recording))
-                        }
-                    )
-                )
-                .help("録音時間の制限を設けない")
-                .accessibilityLabel("録音時間無制限")
-                .accessibilityHint("録音時間の制限を設けません")
-
-                if let maxDuration = store.settings.recording.maxDuration {
-                    HStack {
-                        Text("最大録音時間")
-                        Spacer()
-                        TextField(
-                            "秒",
-                            value: Binding(
-                                get: { Int(maxDuration) },
-                                set: { newValue in
-                                    var recording = store.settings.recording
-                                    recording.maxDuration = TimeInterval(newValue)
-                                    store.send(.updateRecordingSettings(recording))
-                                }
-                            ),
-                            format: .number
-                        )
-                        .frame(width: 80)
-                        .textFieldStyle(.roundedBorder)
-                        .accessibilityLabel("最大録音時間")
-                        .accessibilityHint("最大録音時間を秒単位で入力します")
-                        Text("秒")
-                    }
-                }
-            } header: {
-                Text("録音時間")
             }
 
             // 無音検出セクション

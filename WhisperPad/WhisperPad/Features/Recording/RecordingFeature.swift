@@ -9,16 +9,6 @@ import OSLog
 
 private let logger = Logger(subsystem: "com.whisperpad", category: "RecordingFeature")
 
-// MARK: - Constants
-
-/// 録音機能の定数
-enum RecordingConstants {
-    /// 最大録音時間（秒）
-    ///
-    /// - Note: 将来的に設定画面から変更可能にする予定
-    static let maxRecordingDuration: TimeInterval = 60
-}
-
 /// 録音機能の TCA Reducer
 ///
 /// 音声録音のライフサイクル（権限要求、録音開始/停止、タイマー管理）を管理します。
@@ -175,12 +165,7 @@ struct RecordingFeature {
 
             case .timerTick:
                 if case let .recording(duration) = state.status {
-                    let newDuration = duration + 1
-                    state.status = .recording(duration: newDuration)
-                    // 最大録音時間に達した場合は自動終了
-                    if newDuration >= RecordingConstants.maxRecordingDuration {
-                        return .send(.endRecordingButtonTapped)
-                    }
+                    state.status = .recording(duration: duration + 1)
                 }
                 return .none
 
