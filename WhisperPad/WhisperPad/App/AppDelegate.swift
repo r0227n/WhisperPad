@@ -71,6 +71,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func getStreamingPopupWindow() -> StreamingPopupWindow? { streamingPopupWindow }
     func setStreamingPopupWindow(_ window: StreamingPopupWindow?) { streamingPopupWindow = window }
 
+    // Animation accessors
+    func getAnimationTimer() -> Timer? { animationTimer }
+    func setAnimationTimer(_ timer: Timer?) { animationTimer = timer }
+    func getAnimationFrame() -> Int { animationFrame }
+    func setAnimationFrame(_ frame: Int) { animationFrame = frame }
+    func getAnimationIconConfig() -> StatusIconConfig? { animationIconConfig }
+    func setAnimationIconConfig(_ config: StatusIconConfig?) { animationIconConfig = config }
+    func getPulseTimer() -> Timer? { pulseTimer }
+    func setPulseTimer(_ timer: Timer?) { pulseTimer = timer }
+    func getPulsePhase() -> Double { pulsePhase }
+    func setPulsePhase(_ phase: Double) { pulsePhase = phase }
+
     // MARK: - Menu Item Tags
 
     /// メニュー項目を識別するためのタグ
@@ -391,116 +403,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func quitApplication() {
         logger.info("Quit application requested")
         NSApp.terminate(nil)
-    }
-}
-
-// MARK: - Animation
-
-private extension AppDelegate {
-    /// アイコンアニメーションを開始
-    /// - Parameter iconConfig: アニメーションに使用するアイコン設定
-    func startGearAnimation(with iconConfig: StatusIconConfig) {
-        guard animationTimer == nil else { return }
-
-        animationFrame = 0
-        animationIconConfig = iconConfig
-        setStatusIcon(symbolName: iconConfig.symbolName, color: iconConfig.color)
-
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            self?.updateGearAnimationFrame()
-        }
-    }
-
-    /// ギアアニメーションを停止
-    func stopGearAnimation() {
-        animationTimer?.invalidate()
-        animationTimer = nil
-        animationIconConfig = nil
-    }
-
-    /// アイコンアニメーションのフレームを更新
-    func updateGearAnimationFrame() {
-        guard let button = statusItem?.button,
-              let iconConfig = animationIconConfig else { return }
-
-        animationFrame = (animationFrame + 1) % 8
-
-        // ベースカラーのHSB値を取得して色相を変化させる
-        let baseColor = iconConfig.color
-        var hue: CGFloat = 0
-        var saturation: CGFloat = 0
-        var brightness: CGFloat = 0
-        var alpha: CGFloat = 0
-
-        if let convertedColor = baseColor.usingColorSpace(.deviceRGB) {
-            convertedColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
-        } else {
-            // フォールバック: デフォルトの青系
-            hue = 0.6
-            saturation = 0.8
-            brightness = 0.9
-            alpha = 1.0
-        }
-
-        // 色相を少し変化させてアニメーション効果を出す
-        let animatedHue = hue + (CGFloat(animationFrame) / 8.0) * 0.1
-        let color = NSColor(
-            hue: animatedHue.truncatingRemainder(dividingBy: 1.0),
-            saturation: saturation,
-            brightness: brightness,
-            alpha: alpha
-        )
-
-        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
-            .applying(NSImage.SymbolConfiguration(hierarchicalColor: color))
-
-        let image = NSImage(systemSymbolName: iconConfig.symbolName, accessibilityDescription: "Processing")
-        button.image = image?.withSymbolConfiguration(config)
-    }
-
-    // MARK: - Pulse Animation
-
-    /// パルスアニメーションを開始
-    /// - Parameter iconConfig: アニメーションに使用するアイコン設定
-    func startPulseAnimation(with iconConfig: StatusIconConfig) {
-        guard pulseTimer == nil else { return }
-
-        // Reduce Motion チェック
-        if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
-            setStatusIcon(symbolName: iconConfig.symbolName, color: iconConfig.color)
-            return
-        }
-
-        pulsePhase = 0
-        setStatusIcon(symbolName: iconConfig.symbolName, color: iconConfig.color)
-
-        // 0.8s cycle / 20 frames = 0.04s interval
-        pulseTimer = Timer.scheduledTimer(withTimeInterval: 0.04, repeats: true) { [weak self] _ in
-            self?.updatePulseAnimationFrame()
-        }
-    }
-
-    /// パルスアニメーションのフレームを更新
-    func updatePulseAnimationFrame() {
-        guard let button = statusItem?.button else { return }
-
-        // Sine wave: 0.5 to 1.0
-        pulsePhase += 0.04 / 0.8 * 2 * .pi  // Complete cycle in 0.8s
-        let opacity = 0.75 + 0.25 * sin(pulsePhase)  // Range: 0.5 to 1.0
-        button.alphaValue = CGFloat(opacity)
-    }
-
-    /// パルスアニメーションを停止
-    func stopPulseAnimation() {
-        pulseTimer?.invalidate()
-        pulseTimer = nil
-        statusItem?.button?.alphaValue = 1.0
-    }
-
-    /// すべてのアニメーションを停止
-    func stopAllAnimations() {
-        stopGearAnimation()
-        stopPulseAnimation()
     }
 }
 
