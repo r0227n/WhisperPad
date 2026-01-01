@@ -8,155 +8,229 @@ import SwiftUI
 
 /// ホットキー設定タブ
 ///
-/// グローバルホットキーの設定を行います。
-/// 録音、ペースト、設定を開くホットキーを変更できます。
+/// マスター・ディテール形式でグローバルホットキーの設定を行います。
+/// 左パネル：カテゴリ別ショートカット一覧
+/// 右パネル：選択したショートカットの詳細と編集
 struct HotkeySettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
 
     var body: some View {
-        Form {
-            // 録音セクション
-            Section {
-                HotkeyRecorderView(
-                    label: "録音開始/停止",
-                    keyCombo: Binding(
-                        get: { store.settings.hotKey.recordingHotKey },
-                        set: { newValue in
-                            var hotKey = store.settings.hotKey
-                            hotKey.recordingHotKey = newValue
-                            store.send(.updateHotKeySettings(hotKey))
-                        }
-                    ),
-                    isRecording: store.recordingHotkeyType == .recording,
-                    onStartRecording: { store.send(.startRecordingHotkey(.recording)) },
-                    onStopRecording: { store.send(.stopRecordingHotkey) },
-                    onClear: {
-                        var hotKey = store.settings.hotKey
-                        hotKey.recordingHotKey = .recordingDefault
-                        store.send(.updateHotKeySettings(hotKey))
-                    }
-                )
-                .help("録音を開始または停止するホットキー")
+        HSplitView {
+            // 左パネル: ショートカット一覧
+            shortcutListPanel
+                .frame(minWidth: 200, idealWidth: 220)
 
-                HotkeyRecorderView(
-                    label: "録音開始/終了",
-                    keyCombo: Binding(
-                        get: { store.settings.hotKey.recordingToggleHotKey },
-                        set: { newValue in
-                            var hotKey = store.settings.hotKey
-                            hotKey.recordingToggleHotKey = newValue
-                            store.send(.updateHotKeySettings(hotKey))
-                        }
-                    ),
-                    isRecording: store.recordingHotkeyType == .recordingToggle,
-                    onStartRecording: { store.send(.startRecordingHotkey(.recordingToggle)) },
-                    onStopRecording: { store.send(.stopRecordingHotkey) },
-                    onClear: {
-                        var hotKey = store.settings.hotKey
-                        hotKey.recordingToggleHotKey = .recordingToggleDefault
-                        store.send(.updateHotKeySettings(hotKey))
-                    }
-                )
-                .help("録音を開始または終了するホットキー（トグル動作）")
-
-                HotkeyRecorderView(
-                    label: "録音一時停止/再開",
-                    keyCombo: Binding(
-                        get: { store.settings.hotKey.recordingPauseHotKey },
-                        set: { newValue in
-                            var hotKey = store.settings.hotKey
-                            hotKey.recordingPauseHotKey = newValue
-                            store.send(.updateHotKeySettings(hotKey))
-                        }
-                    ),
-                    isRecording: store.recordingHotkeyType == .recordingPause,
-                    onStartRecording: { store.send(.startRecordingHotkey(.recordingPause)) },
-                    onStopRecording: { store.send(.stopRecordingHotkey) },
-                    onClear: {
-                        var hotKey = store.settings.hotKey
-                        hotKey.recordingPauseHotKey = .recordingPauseDefault
-                        store.send(.updateHotKeySettings(hotKey))
-                    }
-                )
-                .help("録音を一時停止または再開するホットキー")
-            } header: {
-                Text("録音")
-            }
-
-            // アプリセクション
-            Section {
-                HotkeyRecorderView(
-                    label: "設定を開く",
-                    keyCombo: Binding(
-                        get: { store.settings.hotKey.openSettingsHotKey },
-                        set: { newValue in
-                            var hotKey = store.settings.hotKey
-                            hotKey.openSettingsHotKey = newValue
-                            store.send(.updateHotKeySettings(hotKey))
-                        }
-                    ),
-                    isRecording: store.recordingHotkeyType == .openSettings,
-                    onStartRecording: { store.send(.startRecordingHotkey(.openSettings)) },
-                    onStopRecording: { store.send(.stopRecordingHotkey) },
-                    onClear: {
-                        var hotKey = store.settings.hotKey
-                        hotKey.openSettingsHotKey = .openSettingsDefault
-                        store.send(.updateHotKeySettings(hotKey))
-                    }
-                )
-                .help("設定画面を開くホットキー")
-            } header: {
-                Text("アプリ")
-            }
-
-            // キャンセルセクション
-            Section {
-                HotkeyRecorderView(
-                    label: "録音キャンセル",
-                    keyCombo: Binding(
-                        get: { store.settings.hotKey.cancelHotKey },
-                        set: { newValue in
-                            var hotKey = store.settings.hotKey
-                            hotKey.cancelHotKey = newValue
-                            store.send(.updateHotKeySettings(hotKey))
-                        }
-                    ),
-                    isRecording: store.recordingHotkeyType == .cancel,
-                    onStartRecording: { store.send(.startRecordingHotkey(.cancel)) },
-                    onStopRecording: { store.send(.stopRecordingHotkey) },
-                    onClear: {
-                        var hotKey = store.settings.hotKey
-                        hotKey.cancelHotKey = .cancelDefault
-                        store.send(.updateHotKeySettings(hotKey))
-                    }
-                )
-                .help("録音をキャンセルするホットキー")
-            } header: {
-                Text("キャンセル")
-            }
-
-            // 競合警告セクション
-            if let conflict = store.hotkeyConflict {
-                Section {
-                    Label(conflict, systemImage: "exclamationmark.triangle.fill")
-                        .foregroundColor(.red)
-                        .font(.footnote)
-                        .accessibilityLabel("ホットキー競合警告: \(conflict)")
-                }
-            }
-
-            // 注意セクション
-            Section {
-                Label(
-                    "他のアプリと競合する場合は変更してください",
-                    systemImage: "exclamationmark.triangle"
-                )
-                .foregroundColor(.secondary)
-                .font(.footnote)
+            // 右パネル: 詳細
+            detailPanel
+                .frame(minWidth: 250)
+        }
+        .onAppear {
+            // 初期選択
+            if store.selectedShortcut == nil {
+                store.send(.selectShortcut(.recording))
             }
         }
-        .formStyle(.grouped)
+    }
+
+    // MARK: - Left Panel
+
+    /// ショートカット一覧パネル
+    private var shortcutListPanel: some View {
+        List(selection: Binding(
+            get: { store.selectedShortcut },
+            set: { store.send(.selectShortcut($0)) }
+        )) {
+            ForEach(HotkeyType.Category.allCases) { category in
+                Section {
+                    ForEach(category.hotkeyTypes) { hotkeyType in
+                        ShortcutListRow(
+                            hotkeyType: hotkeyType,
+                            keyCombo: keyCombo(for: hotkeyType)
+                        )
+                        .tag(hotkeyType)
+                    }
+                } header: {
+                    Text(category.rawValue)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .listStyle(.sidebar)
+    }
+
+    // MARK: - Right Panel
+
+    /// 詳細パネル
+    @ViewBuilder
+    private var detailPanel: some View {
+        if let selected = store.selectedShortcut {
+            ShortcutDetailPanel(
+                hotkeyType: selected,
+                keyCombo: keyComboBinding(for: selected),
+                isRecording: store.recordingHotkeyType == selected,
+                onStartRecording: { store.send(.startRecordingHotkey(selected)) },
+                onStopRecording: { store.send(.stopRecordingHotkey) },
+                onResetToDefault: { resetToDefault(selected) },
+                hotkeyConflict: store.hotkeyConflict
+            )
+        } else {
+            placeholderView
+        }
+    }
+
+    /// プレースホルダービュー
+    private var placeholderView: some View {
+        VStack {
+            Spacer()
+            Text("ショートカットを選択してください")
+                .foregroundColor(.secondary)
+            Spacer()
+        }
+    }
+
+    // MARK: - Helpers
+
+    /// 指定されたホットキータイプのキーコンボを取得
+    private func keyCombo(for type: HotkeyType) -> HotKeySettings.KeyComboSettings {
+        switch type {
+        case .recording:
+            store.settings.hotKey.recordingHotKey
+        case .recordingToggle:
+            store.settings.hotKey.recordingToggleHotKey
+        case .recordingPause:
+            store.settings.hotKey.recordingPauseHotKey
+        case .openSettings:
+            store.settings.hotKey.openSettingsHotKey
+        case .cancel:
+            store.settings.hotKey.cancelHotKey
+        case .streaming:
+            store.settings.hotKey.streamingHotKey
+        }
+    }
+
+    /// 指定されたホットキータイプのキーコンボBindingを取得
+    private func keyComboBinding(for type: HotkeyType) -> Binding<HotKeySettings.KeyComboSettings> {
+        Binding(
+            get: { keyCombo(for: type) },
+            set: { newValue in
+                var hotKey = store.settings.hotKey
+                switch type {
+                case .recording:
+                    hotKey.recordingHotKey = newValue
+                case .recordingToggle:
+                    hotKey.recordingToggleHotKey = newValue
+                case .recordingPause:
+                    hotKey.recordingPauseHotKey = newValue
+                case .openSettings:
+                    hotKey.openSettingsHotKey = newValue
+                case .cancel:
+                    hotKey.cancelHotKey = newValue
+                case .streaming:
+                    hotKey.streamingHotKey = newValue
+                }
+                store.send(.updateHotKeySettings(hotKey))
+            }
+        )
+    }
+
+    /// デフォルトにリセット
+    private func resetToDefault(_ type: HotkeyType) {
+        var hotKey = store.settings.hotKey
+        switch type {
+        case .recording:
+            hotKey.recordingHotKey = .recordingDefault
+        case .recordingToggle:
+            hotKey.recordingToggleHotKey = .recordingToggleDefault
+        case .recordingPause:
+            hotKey.recordingPauseHotKey = .recordingPauseDefault
+        case .openSettings:
+            hotKey.openSettingsHotKey = .openSettingsDefault
+        case .cancel:
+            hotKey.cancelHotKey = .cancelDefault
+        case .streaming:
+            hotKey.streamingHotKey = .streamingDefault
+        }
+        store.send(.updateHotKeySettings(hotKey))
+    }
+}
+
+// MARK: - ShortcutListRow
+
+/// ショートカット一覧の行
+private struct ShortcutListRow: View {
+    let hotkeyType: HotkeyType
+    let keyCombo: HotKeySettings.KeyComboSettings
+
+    var body: some View {
+        HStack {
+            Text(hotkeyType.displayName)
+                .lineLimit(1)
+
+            Spacer()
+
+            Text(keyCombo.displayString)
+                .font(.system(.body, design: .monospaced))
+                .foregroundColor(.secondary)
+        }
+        .contentShape(Rectangle())
+        .accessibilityLabel("\(hotkeyType.displayName)、ショートカット: \(keyCombo.displayString)")
+    }
+}
+
+// MARK: - ShortcutDetailPanel
+
+/// ショートカット詳細パネル
+private struct ShortcutDetailPanel: View {
+    let hotkeyType: HotkeyType
+    @Binding var keyCombo: HotKeySettings.KeyComboSettings
+    let isRecording: Bool
+    let onStartRecording: () -> Void
+    let onStopRecording: () -> Void
+    let onResetToDefault: () -> Void
+    let hotkeyConflict: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // タイトル
+            Text(hotkeyType.displayName)
+                .font(.title2)
+                .fontWeight(.bold)
+
+            // 説明
+            Text(hotkeyType.hotkeyDescription)
+                .foregroundColor(.secondary)
+
+            // キー設定ボタン
+            ShortcutKeyButton(
+                keyCombo: $keyCombo,
+                defaultKeyCombo: hotkeyType.defaultKeyCombo,
+                isRecording: isRecording,
+                onStartRecording: onStartRecording,
+                onStopRecording: onStopRecording,
+                onResetToDefault: onResetToDefault
+            )
+
+            // 競合警告
+            if let conflict = hotkeyConflict {
+                Label(conflict, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundColor(.red)
+                    .font(.footnote)
+                    .accessibilityLabel("ホットキー競合警告: \(conflict)")
+            }
+
+            Spacer()
+
+            // 注意メッセージ
+            Label(
+                "他のアプリと競合する場合は変更してください",
+                systemImage: "exclamationmark.triangle"
+            )
+            .foregroundColor(.secondary)
+            .font(.footnote)
+        }
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
@@ -168,5 +242,5 @@ struct HotkeySettingsTab: View {
             SettingsFeature()
         }
     )
-    .frame(width: 500, height: 400)
+    .frame(width: 520, height: 400)
 }
