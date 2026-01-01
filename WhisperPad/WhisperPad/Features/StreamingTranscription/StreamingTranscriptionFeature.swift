@@ -207,7 +207,6 @@ struct StreamingTranscriptionFeature {
 
                 return .run { send in
                     _ = await outputClient.copyToClipboard(text)
-                    await outputClient.showNotification("WhisperPad", "クリップボードにコピーしました")
                     await send(.delegate(.streamingCompleted(text)))
                     await send(.delegate(.closePopup))
                 }
@@ -298,6 +297,15 @@ struct StreamingTranscriptionFeature {
 
                 return .run { [userDefaultsClient, outputClient] send in
                     await streamingTranscription.reset()
+
+                    // 完了通知を表示
+                    await outputClient.showNotification(
+                        "WhisperPad",
+                        "リアルタイム文字起こしが完了しました"
+                    )
+
+                    // 完了音を再生
+                    await outputClient.playCompletionSound()
 
                     // ユーザー設定を読み込み
                     let appSettings = await userDefaultsClient.loadSettings()
