@@ -37,7 +37,6 @@ enum SettingsTab: String, CaseIterable, Sendable {
 /// ホットキータイプ（どのホットキーを編集中か）
 enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
     case recording
-    case openSettings
     case streaming
     case cancel
     case recordingToggle
@@ -52,7 +51,6 @@ extension HotkeyType {
     /// ホットキーのカテゴリ
     enum Category: String, CaseIterable, Identifiable {
         case recording = "録音"
-        case app = "アプリ"
         case cancel = "キャンセル"
 
         var id: String { rawValue }
@@ -62,8 +60,6 @@ extension HotkeyType {
             switch self {
             case .recording:
                 [.recording, .recordingToggle, .recordingPause, .streaming]
-            case .app:
-                [.openSettings]
             case .cancel:
                 [.cancel]
             }
@@ -75,8 +71,6 @@ extension HotkeyType {
         switch self {
         case .recording, .recordingToggle, .recordingPause, .streaming:
             .recording
-        case .openSettings:
-            .app
         case .cancel:
             .cancel
         }
@@ -91,8 +85,6 @@ extension HotkeyType {
             "録音開始/終了"
         case .recordingPause:
             "一時停止/再開"
-        case .openSettings:
-            "設定を開く"
         case .cancel:
             "録音キャンセル"
         case .streaming:
@@ -109,8 +101,6 @@ extension HotkeyType {
             "録音を開始または終了します（トグル動作）"
         case .recordingPause:
             "録音を一時停止または再開します"
-        case .openSettings:
-            "設定画面を表示します"
         case .cancel:
             "進行中の録音をキャンセルします"
         case .streaming:
@@ -127,8 +117,6 @@ extension HotkeyType {
             .recordingToggleDefault
         case .recordingPause:
             .recordingPauseDefault
-        case .openSettings:
-            .openSettingsDefault
         case .cancel:
             .cancelDefault
         case .streaming:

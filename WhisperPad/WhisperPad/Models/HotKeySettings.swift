@@ -13,9 +13,6 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     /// 録音開始/停止のホットキー
     var recordingHotKey: KeyComboSettings
 
-    /// 設定を開くホットキー
-    var openSettingsHotKey: KeyComboSettings
-
     /// ストリーミング文字起こしのホットキー
     var streamingHotKey: KeyComboSettings
 
@@ -34,14 +31,12 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     /// デフォルト初期化
     init(
         recordingHotKey: KeyComboSettings = .recordingDefault,
-        openSettingsHotKey: KeyComboSettings = .openSettingsDefault,
         streamingHotKey: KeyComboSettings = .streamingDefault,
         cancelHotKey: KeyComboSettings = .cancelDefault,
         recordingToggleHotKey: KeyComboSettings = .recordingToggleDefault,
         recordingPauseHotKey: KeyComboSettings = .recordingPauseDefault
     ) {
         self.recordingHotKey = recordingHotKey
-        self.openSettingsHotKey = openSettingsHotKey
         self.streamingHotKey = streamingHotKey
         self.cancelHotKey = cancelHotKey
         self.recordingToggleHotKey = recordingToggleHotKey
@@ -51,7 +46,7 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     // MARK: - Codable (Migration Support)
 
     private enum CodingKeys: String, CodingKey {
-        case recordingHotKey, openSettingsHotKey
+        case recordingHotKey
         case streamingHotKey, cancelHotKey, recordingPauseHotKey
         case recordingToggleHotKey
         // Legacy keys for migration
@@ -63,8 +58,6 @@ struct HotKeySettings: Codable, Equatable, Sendable {
 
         recordingHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .recordingHotKey)
             ?? .recordingDefault
-        openSettingsHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .openSettingsHotKey)
-            ?? .openSettingsDefault
         streamingHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .streamingHotKey)
             ?? .streamingDefault
         cancelHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .cancelHotKey)
@@ -85,7 +78,6 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(recordingHotKey, forKey: .recordingHotKey)
-        try container.encode(openSettingsHotKey, forKey: .openSettingsHotKey)
         try container.encode(streamingHotKey, forKey: .streamingHotKey)
         try container.encode(cancelHotKey, forKey: .cancelHotKey)
         try container.encode(recordingToggleHotKey, forKey: .recordingToggleHotKey)
@@ -110,12 +102,6 @@ extension HotKeySettings {
         static let recordingDefault = KeyComboSettings(
             carbonKeyCode: 49,
             carbonModifiers: 2048
-        )
-
-        /// 設定を開くホットキーのデフォルト（⌘⇧,）
-        static let openSettingsDefault = KeyComboSettings(
-            carbonKeyCode: 43,
-            carbonModifiers: 768
         )
 
         /// ストリーミングホットキーのデフォルト（⌘⇧R）

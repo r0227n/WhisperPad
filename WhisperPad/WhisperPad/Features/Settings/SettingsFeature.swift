@@ -570,7 +570,6 @@ struct SettingsFeature {
                 let hotKey = state.settings.hotKey
                 let combos: [(String, HotKeySettings.KeyComboSettings)] = [
                     ("録音", hotKey.recordingHotKey),
-                    ("設定を開く", hotKey.openSettingsHotKey),
                     ("ストリーミング", hotKey.streamingHotKey),
                     ("キャンセル", hotKey.cancelHotKey),
                     ("録音開始/終了", hotKey.recordingToggleHotKey),
