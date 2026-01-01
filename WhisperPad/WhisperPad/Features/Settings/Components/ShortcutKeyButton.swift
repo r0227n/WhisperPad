@@ -166,8 +166,8 @@ struct ShortcutKeyButton: View {
         )
 
         ShortcutKeyButton(
-            keyCombo: .constant(.openSettingsDefault),
-            defaultKeyCombo: .openSettingsDefault,
+            keyCombo: .constant(.streamingDefault),
+            defaultKeyCombo: .streamingDefault,
             isRecording: false,
             onStartRecording: {},
             onStopRecording: {},
