@@ -139,6 +139,20 @@ extension HotkeyType {
             "waveform"
         }
     }
+
+    /// 対応するアイコン設定ステータス
+    var correspondingIconStatus: IconConfigStatus {
+        switch self {
+        case .recording, .recordingToggle:
+            .recording
+        case .recordingPause:
+            .paused
+        case .cancel:
+            .cancel
+        case .streaming:
+            .streamingTranscribing
+        }
+    }
 }
 
 // MARK: - Delegate Action

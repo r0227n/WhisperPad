@@ -76,6 +76,9 @@ struct MenuBarIconSettings: Codable, Equatable, Sendable {
     /// エラー時のアイコン設定
     var error: StatusIconConfig
 
+    /// キャンセル時のアイコン設定
+    var cancel: StatusIconConfig
+
     /// デフォルト設定
     static let `default` = MenuBarIconSettings(
         idle: StatusIconConfig(symbolName: "mic", color: .systemGray),
@@ -85,7 +88,8 @@ struct MenuBarIconSettings: Codable, Equatable, Sendable {
         completed: StatusIconConfig(symbolName: "checkmark.circle", color: .systemGreen),
         streamingTranscribing: StatusIconConfig(symbolName: "waveform.badge.mic", color: .systemPurple),
         streamingCompleted: StatusIconConfig(symbolName: "checkmark.circle", color: .systemGreen),
-        error: StatusIconConfig(symbolName: "exclamationmark.triangle", color: .systemYellow)
+        error: StatusIconConfig(symbolName: "exclamationmark.triangle", color: .systemYellow),
+        cancel: StatusIconConfig(symbolName: "xmark.circle", color: .systemGray)
     )
 }
 
@@ -103,6 +107,7 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
     case streamingTranscribing = "ストリーミング中"
     case streamingCompleted = "ストリーミング完了"
     case error = "エラー"
+    case cancel = "キャンセル"
 
     var id: String { rawValue }
 
@@ -117,6 +122,7 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
         case .streamingTranscribing: "waveform.badge.mic"
         case .streamingCompleted: "checkmark.circle"
         case .error: "exclamationmark.triangle"
+        case .cancel: "xmark.circle"
         }
     }
 }
@@ -137,6 +143,7 @@ extension MenuBarIconSettings {
         case .streamingTranscribing: streamingTranscribing
         case .streamingCompleted: streamingCompleted
         case .error: error
+        case .cancel: cancel
         }
     }
 
@@ -154,6 +161,7 @@ extension MenuBarIconSettings {
         case .streamingTranscribing: streamingTranscribing = config
         case .streamingCompleted: streamingCompleted = config
         case .error: error = config
+        case .cancel: cancel = config
         }
     }
 }
