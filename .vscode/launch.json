@@ -1,4 +1,18 @@
 {
+  // VSCode Debug Configuration for WhisperPad
+  // ==========================================
+  // このファイルは VSCode でのデバッグ設定を定義します。
+  //
+  // [重要] initCommands について:
+  // WhisperPad は WhisperKit を使用しており、WhisperKit は内部で CoreML/Metal を使用しています。
+  // これらの Apple フレームワークは C++ で実装されており、正常な処理フローの一部として
+  // C++ 例外を投げることがあります（エラーではなく内部制御フローとして）。
+  //
+  // デフォルトでは LLDB デバッガーは C++ 例外で停止するため、デバッグセッション中に
+  // 頻繁に中断されてしまいます。initCommands で例外ブレークポイントを無効化することで、
+  // アプリケーションレベルのデバッグに集中できるようになります。
+  //
+  // 参考: https://github.com/vadimcn/codelldb/blob/master/MANUAL.md#exception-breakpoints
   "version": "0.2.0",
   "configurations": [
     {
@@ -8,13 +22,17 @@
       "program": "${workspaceFolder}/.build/DerivedData/Build/Products/Debug/WhisperPad.app/Contents/MacOS/WhisperPad",
       "preLaunchTask": "Build WhisperPad (Debug)",
       "cwd": "${workspaceFolder}",
-      "terminal": "console"
+      "terminal": "console",
+      "initCommands": [
+        "breakpoint name configure --disable cpp_exception",
+        "breakpoint name configure --disable objc_exception"
+      ]
     },
     {
       "type": "swift",
       "request": "launch",
       "args": [],
-      "cwd": "${workspaceFolder:feature-record-time}",
+      "cwd": "${workspaceFolder}",
       "name": "Release WhisperPad",
       "target": "WhisperPad",
       "configuration": "release",
