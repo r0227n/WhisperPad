@@ -68,6 +68,7 @@ struct HotkeySettingsTab: View {
             ShortcutDetailPanel(
                 hotkeyType: selected,
                 keyCombo: keyComboBinding(for: selected),
+                menuBarIconSettings: store.settings.general.menuBarIconSettings,
                 isRecording: store.recordingHotkeyType == selected,
                 onStartRecording: { store.send(.startRecordingHotkey(selected)) },
                 onStopRecording: { store.send(.stopRecordingHotkey) },
@@ -184,11 +185,17 @@ private struct ShortcutListRow: View {
 private struct ShortcutDetailPanel: View {
     let hotkeyType: HotkeyType
     @Binding var keyCombo: HotKeySettings.KeyComboSettings
+    let menuBarIconSettings: MenuBarIconSettings
     let isRecording: Bool
     let onStartRecording: () -> Void
     let onStopRecording: () -> Void
     let onResetToDefault: () -> Void
     let hotkeyConflict: String?
+
+    /// アイコン設定
+    private var iconConfig: StatusIconConfig {
+        menuBarIconSettings.config(for: hotkeyType.correspondingIconStatus)
+    }
 
     var body: some View {
         ScrollView {
@@ -214,11 +221,11 @@ private struct ShortcutDetailPanel: View {
     /// ヘッダーセクション
     private var headerSection: some View {
         HStack(spacing: 12) {
-            Image(systemName: hotkeyType.iconName)
+            Image(systemName: iconConfig.symbolName)
                 .font(.title2)
-                .foregroundColor(.accentColor)
+                .foregroundColor(Color(iconConfig.color))
                 .frame(width: 32, height: 32)
-                .background(Color.accentColor.opacity(0.1))
+                .background(Color(iconConfig.color).opacity(0.1))
                 .cornerRadius(8)
 
             VStack(alignment: .leading, spacing: 2) {
