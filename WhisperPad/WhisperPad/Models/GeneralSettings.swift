@@ -21,6 +21,9 @@ struct GeneralSettings: Codable, Equatable, Sendable {
     /// メニューバーアイコンのスタイル
     var menuBarIconStyle: MenuBarIconStyle = .standard
 
+    /// メニューバーアイコンのカスタム設定
+    var menuBarIconSettings: MenuBarIconSettings = .default
+
     /// デフォルト設定
     static let `default` = GeneralSettings()
 }
