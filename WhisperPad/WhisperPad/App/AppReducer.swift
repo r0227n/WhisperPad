@@ -27,6 +27,18 @@ enum AppStatus: Equatable, Sendable {
     case error(String)
 }
 
+/// WhisperKit の初期化ステータス
+enum WhisperKitInitStatus: Equatable, Sendable {
+    /// 未開始
+    case notStarted
+    /// 初期化中
+    case initializing
+    /// 準備完了
+    case ready
+    /// 失敗
+    case failed(String)
+}
+
 /// アプリケーション全体の状態を管理する TCA Reducer
 ///
 /// アプリのステータス（idle, recording, transcribing, completed, error）を管理し、
@@ -40,6 +52,9 @@ struct AppReducer {
     struct State: Equatable {
         /// 現在のアプリステータス
         var appStatus: AppStatus = .idle
+
+        /// WhisperKit の初期化ステータス
+        var whisperKitStatus: WhisperKitInitStatus = .notStarted
 
         /// 最後の文字起こし結果
         var lastTranscription: String?
@@ -90,12 +105,20 @@ struct AppReducer {
         case startStreamingTranscription
         /// ストリーミング文字起こし機能のアクション
         case streamingTranscription(StreamingTranscriptionFeature.Action)
+        /// WhisperKit を初期化
+        case initializeWhisperKit
+        /// WhisperKit 初期化完了
+        case whisperKitInitCompleted
+        /// WhisperKit 初期化失敗
+        case whisperKitInitFailed(String)
     }
 
     // MARK: - Dependencies
 
     @Dependency(\.continuousClock) var clock
     @Dependency(\.outputClient) var outputClient
+    @Dependency(\.whisperKitClient) var whisperKitClient
+    @Dependency(\.userDefaultsClient) var userDefaultsClient
 
     // MARK: - Reducer Body
 
@@ -197,9 +220,10 @@ struct AppReducer {
 
             // SettingsFeature のデリゲートアクションを処理
             case .settings(.delegate(.modelChanged)):
-                // モデルが変更された場合、TranscriptionFeature を再初期化
+                // モデルが変更された場合、WhisperKit を再初期化
+                state.whisperKitStatus = .notStarted
                 state.transcription.isModelInitialized = false
-                return .none
+                return .send(.initializeWhisperKit)
 
             case .settings(.delegate(.settingsChanged)):
                 // 設定が変更された場合の処理（必要に応じて）
@@ -219,7 +243,8 @@ struct AppReducer {
             case let .streamingTranscription(.delegate(.streamingCompleted(text))):
                 // appStatusはfinalizationCompletedで既に.streamingCompletedに設定済み
                 state.lastTranscription = text
-                return .run { [outputClient] _ in
+
+                return .run { [outputClient, clock] send in
                     // 通知を表示
                     await outputClient.showNotification(
                         "WhisperPad",
@@ -228,6 +253,13 @@ struct AppReducer {
 
                     // 完了音を再生
                     await outputClient.playCompletionSound()
+
+                    // クリップボードにコピー
+                    _ = await outputClient.copyToClipboard(text)
+
+                    // 自動リセット
+                    try await clock.sleep(for: .seconds(3))
+                    await send(.resetToIdle)
                 }
 
             case .streamingTranscription(.delegate(.streamingCancelled)):
@@ -289,6 +321,8 @@ struct AppReducer {
                 state.appStatus = .completed
                 state.lastTranscription = text
                 let outputSettings = state.settings.settings.output
+                let notificationTitle = state.settings.settings.general.notificationTitle
+                let transcriptionCompleteMessage = state.settings.settings.general.transcriptionCompleteMessage
 
                 return .run { [outputClient] send in
                     // クリップボードにコピー
@@ -310,8 +344,8 @@ struct AppReducer {
                         }
                     } else {
                         await outputClient.showNotification(
-                            "WhisperPad",
-                            "文字起こしが完了しました"
+                            notificationTitle,
+                            transcriptionCompleteMessage
                         )
                     }
 
@@ -340,6 +374,40 @@ struct AppReducer {
                 state.streamingTranscription.decodingText = ""
                 state.streamingTranscription.duration = 0
                 state.streamingTranscription.tokensPerSecond = 0
+                return .none
+
+            // MARK: - WhisperKit Initialization
+
+            case .initializeWhisperKit:
+                // 既に初期化中または完了済みの場合はスキップ
+                guard state.whisperKitStatus == .notStarted
+                    || state.whisperKitStatus != .initializing
+                else {
+                    return .none
+                }
+                state.whisperKitStatus = .initializing
+
+                return .run { [userDefaultsClient, whisperKitClient] send in
+                    do {
+                        // 設定からモデル名を取得
+                        let settings = await userDefaultsClient.loadSettings()
+                        let modelName = settings.transcription.modelName
+
+                        try await whisperKitClient.initialize(modelName)
+                        await send(.whisperKitInitCompleted)
+                    } catch {
+                        await send(.whisperKitInitFailed(error.localizedDescription))
+                    }
+                }
+                .cancellable(id: "whisperKitInit")
+
+            case .whisperKitInitCompleted:
+                state.whisperKitStatus = .ready
+                state.transcription.isModelInitialized = true
+                return .none
+
+            case let .whisperKitInitFailed(message):
+                state.whisperKitStatus = .failed(message)
                 return .none
             }
         }

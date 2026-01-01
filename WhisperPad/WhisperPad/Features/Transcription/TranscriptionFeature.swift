@@ -59,6 +59,7 @@ struct TranscriptionFeature {
     // MARK: - Dependencies
 
     @Dependency(\.transcriptionClient) var transcriptionClient
+    @Dependency(\.whisperKitClient) var whisperKitClient
 
     // MARK: - Reducer Body
 
@@ -71,10 +72,15 @@ struct TranscriptionFeature {
                 state.currentAudioURL = audioURL
                 state.currentLanguage = language
 
-                if state.isModelInitialized {
-                    return .send(.performTranscription)
-                } else {
-                    return .send(.initializeModelIfNeeded)
+                // WhisperKitClient の状態をチェック
+                return .run { [isModelInitialized = state.isModelInitialized, whisperKitClient] send in
+                    // WhisperKitManager が ready なら直接文字起こし開始
+                    let isReady = await whisperKitClient.isReady()
+                    if isReady || isModelInitialized {
+                        await send(.performTranscription)
+                    } else {
+                        await send(.initializeModelIfNeeded)
+                    }
                 }
 
             case .initializeModelIfNeeded:
