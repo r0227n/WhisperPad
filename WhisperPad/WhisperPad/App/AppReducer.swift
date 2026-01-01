@@ -252,16 +252,21 @@ struct AppReducer {
                 // appStatusはfinalizationCompletedで既に.streamingCompletedに設定済み
                 state.lastTranscription = text
                 let copyToClipboard = state.settings.settings.output.copyToClipboard
+                let generalSettings = state.settings.settings.general
 
                 return .run { [outputClient, clock] send in
-                    // 通知を表示
-                    await outputClient.showNotification(
-                        "WhisperPad",
-                        "リアルタイム文字起こしが完了しました"
-                    )
+                    // 通知を表示（設定が有効な場合）
+                    if generalSettings.showNotificationOnComplete {
+                        await outputClient.showNotification(
+                            "WhisperPad",
+                            "リアルタイム文字起こしが完了しました"
+                        )
+                    }
 
-                    // 完了音を再生
-                    await outputClient.playCompletionSound()
+                    // 完了音を再生（設定が有効な場合）
+                    if generalSettings.playSoundOnComplete {
+                        await outputClient.playCompletionSound()
+                    }
 
                     // クリップボードにコピー（設定が有効な場合）
                     if copyToClipboard {
@@ -340,8 +345,9 @@ struct AppReducer {
                 state.appStatus = .completed
                 state.lastTranscription = text
                 let outputSettings = state.settings.settings.output
-                let notificationTitle = state.settings.settings.general.notificationTitle
-                let transcriptionCompleteMessage = state.settings.settings.general.transcriptionCompleteMessage
+                let generalSettings = state.settings.settings.general
+                let notificationTitle = generalSettings.notificationTitle
+                let transcriptionCompleteMessage = generalSettings.transcriptionCompleteMessage
 
                 return .run { [outputClient, userDefaultsClient] send in
                     // クリップボードにコピー（設定が有効な場合）
@@ -361,25 +367,33 @@ struct AppReducer {
 
                         do {
                             let url = try await outputClient.saveToFile(text, resolvedOutputSettings)
-                            await outputClient.showNotification(
-                                "WhisperPad",
-                                "保存完了: \(url.lastPathComponent)"
-                            )
+                            if generalSettings.showNotificationOnComplete {
+                                await outputClient.showNotification(
+                                    "WhisperPad",
+                                    "保存完了: \(url.lastPathComponent)"
+                                )
+                            }
                         } catch {
-                            await outputClient.showNotification(
-                                "WhisperPad",
-                                "ファイル保存に失敗: \(error.localizedDescription)"
-                            )
+                            if generalSettings.showNotificationOnComplete {
+                                await outputClient.showNotification(
+                                    "WhisperPad",
+                                    "ファイル保存に失敗: \(error.localizedDescription)"
+                                )
+                            }
                         }
                     } else {
-                        await outputClient.showNotification(
-                            notificationTitle,
-                            transcriptionCompleteMessage
-                        )
+                        if generalSettings.showNotificationOnComplete {
+                            await outputClient.showNotification(
+                                notificationTitle,
+                                transcriptionCompleteMessage
+                            )
+                        }
                     }
 
-                    // 完了音を再生
-                    await outputClient.playCompletionSound()
+                    // 完了音を再生（設定が有効な場合）
+                    if generalSettings.playSoundOnComplete {
+                        await outputClient.playCompletionSound()
+                    }
 
                     // 自動リセット
                     try await clock.sleep(for: .seconds(3))

@@ -347,17 +347,22 @@ struct StreamingTranscriptionFeature {
                 return .run { [userDefaultsClient, outputClient] send in
                     await streamingTranscription.reset()
 
-                    // 完了通知を表示
-                    await outputClient.showNotification(
-                        "WhisperPad",
-                        "リアルタイム文字起こしが完了しました"
-                    )
-
-                    // 完了音を再生
-                    await outputClient.playCompletionSound()
-
                     // ユーザー設定を読み込み
                     let appSettings = await userDefaultsClient.loadSettings()
+                    let generalSettings = appSettings.general
+
+                    // 完了通知を表示（設定が有効な場合）
+                    if generalSettings.showNotificationOnComplete {
+                        await outputClient.showNotification(
+                            "WhisperPad",
+                            "リアルタイム文字起こしが完了しました"
+                        )
+                    }
+
+                    // 完了音を再生（設定が有効な場合）
+                    if generalSettings.playSoundOnComplete {
+                        await outputClient.playCompletionSound()
+                    }
 
                     // 自動ファイル出力が有効な場合
                     if appSettings.output.isEnabled {
