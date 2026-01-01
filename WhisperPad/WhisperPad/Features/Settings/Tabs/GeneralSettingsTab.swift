@@ -114,28 +114,6 @@ struct GeneralSettingsTab: View {
             } header: {
                 Text("通知")
             }
-
-            Section {
-                Picker(
-                    "メニューバーアイコン",
-                    selection: Binding(
-                        get: { store.settings.general.menuBarIconStyle },
-                        set: { newValue in
-                            var general = store.settings.general
-                            general.menuBarIconStyle = newValue
-                            store.send(.updateGeneralSettings(general))
-                        }
-                    )
-                ) {
-                    ForEach(GeneralSettings.MenuBarIconStyle.allCases, id: \.self) { style in
-                        Text(style.displayName).tag(style)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .help("メニューバーに表示するアイコンのスタイルを選択します")
-            } header: {
-                Text("外観")
-            }
         }
         .formStyle(.grouped)
         .padding()
