@@ -76,6 +76,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case micPermissionStatus = 400
         case notificationPermissionStatus = 500
         case streaming = 600
+        case cancel = 700
     }
 
     // MARK: - Initialization
@@ -318,7 +319,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// 録音をキャンセル
+    /// 録音をキャンセル（ホットキー用）
     func cancelRecording() {
         // 録音中または一時停止中のみキャンセル可能
         guard store.appStatus == .recording || store.appStatus == .paused else {
@@ -326,6 +327,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         logger.info("Cancel recording hotkey triggered: Escape")
         store.send(.cancelRecording)
+    }
+
+    /// キャンセルメニュー項目がタップされた
+    @objc func cancelMenuItemTapped() {
+        logger.info("Cancel menu item tapped")
+        switch store.appStatus {
+        case .recording, .paused:
+            store.send(.cancelRecording)
+        case .streamingTranscribing:
+            store.send(.streamingTranscription(.cancelButtonTapped))
+        default:
+            break
+        }
     }
 
     // MARK: - Streaming Actions
