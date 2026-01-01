@@ -44,6 +44,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// アニメーション中のアイコン設定
     private var animationIconConfig: StatusIconConfig?
 
+    /// パルスアニメーション用タイマー
+    private var pulseTimer: Timer?
+
+    /// パルスアニメーションのフェーズ（ラジアン）
+    private var pulsePhase: Double = 0
+
     /// ロガー
     let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.example.WhisperPad",
@@ -107,6 +113,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         logger.info("Application will terminate")
         animationTimer?.invalidate()
         animationTimer = nil
+        pulseTimer?.invalidate()
+        pulseTimer = nil
 
         // ストリーミングポップアップを閉じる
         closeStreamingPopup()
@@ -174,51 +182,54 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// 現在の状態に応じてアイコンを更新
     private func updateIconForCurrentState() {
-        // transcribing 以外の状態ではアニメーションを停止
-        if store.appStatus != .transcribing {
-            stopGearAnimation()
-        }
-
         // カスタムアイコン設定を取得
         let iconSettings = store.settings.settings.general.menuBarIconSettings
 
         switch store.appStatus {
         case .idle:
+            stopAllAnimations()
             let config = iconSettings.idle
             setStatusIcon(symbolName: config.symbolName, color: config.color)
             clearRecordingTimeDisplay()
 
         case .recording:
+            stopGearAnimation()
             let config = iconSettings.recording
-            setStatusIcon(symbolName: config.symbolName, color: config.color)
+            startPulseAnimation(with: config)
             setRecordingTimeDisplay(store.recording.currentDuration)
 
         case .paused:
+            stopAllAnimations()
             let config = iconSettings.paused
             setStatusIcon(symbolName: config.symbolName, color: config.color)
             setRecordingTimeDisplay(store.recording.currentDuration)
 
         case .transcribing:
+            stopPulseAnimation()
             let config = iconSettings.transcribing
             startGearAnimation(with: config)
             clearRecordingTimeDisplay()
 
         case .completed:
+            stopAllAnimations()
             let config = iconSettings.completed
             setStatusIcon(symbolName: config.symbolName, color: config.color)
             clearRecordingTimeDisplay()
 
         case .streamingTranscribing:
+            stopGearAnimation()
             let config = iconSettings.streamingTranscribing
-            setStatusIcon(symbolName: config.symbolName, color: config.color)
+            startPulseAnimation(with: config)
             setRecordingTimeDisplay(store.streamingTranscription.duration)
 
         case .streamingCompleted:
+            stopAllAnimations()
             let config = iconSettings.streamingCompleted
             setStatusIcon(symbolName: config.symbolName, color: config.color)
             clearRecordingTimeDisplay()
 
         case .error:
+            stopAllAnimations()
             let config = iconSettings.error
             setStatusIcon(symbolName: config.symbolName, color: config.color)
             clearRecordingTimeDisplay()
@@ -445,6 +456,51 @@ private extension AppDelegate {
 
         let image = NSImage(systemSymbolName: iconConfig.symbolName, accessibilityDescription: "Processing")
         button.image = image?.withSymbolConfiguration(config)
+    }
+
+    // MARK: - Pulse Animation
+
+    /// パルスアニメーションを開始
+    /// - Parameter iconConfig: アニメーションに使用するアイコン設定
+    func startPulseAnimation(with iconConfig: StatusIconConfig) {
+        guard pulseTimer == nil else { return }
+
+        // Reduce Motion チェック
+        if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+            setStatusIcon(symbolName: iconConfig.symbolName, color: iconConfig.color)
+            return
+        }
+
+        pulsePhase = 0
+        setStatusIcon(symbolName: iconConfig.symbolName, color: iconConfig.color)
+
+        // 0.8s cycle / 20 frames = 0.04s interval
+        pulseTimer = Timer.scheduledTimer(withTimeInterval: 0.04, repeats: true) { [weak self] _ in
+            self?.updatePulseAnimationFrame()
+        }
+    }
+
+    /// パルスアニメーションのフレームを更新
+    func updatePulseAnimationFrame() {
+        guard let button = statusItem?.button else { return }
+
+        // Sine wave: 0.5 to 1.0
+        pulsePhase += 0.04 / 0.8 * 2 * .pi  // Complete cycle in 0.8s
+        let opacity = 0.75 + 0.25 * sin(pulsePhase)  // Range: 0.5 to 1.0
+        button.alphaValue = CGFloat(opacity)
+    }
+
+    /// パルスアニメーションを停止
+    func stopPulseAnimation() {
+        pulseTimer?.invalidate()
+        pulseTimer = nil
+        statusItem?.button?.alphaValue = 1.0
+    }
+
+    /// すべてのアニメーションを停止
+    func stopAllAnimations() {
+        stopGearAnimation()
+        stopPulseAnimation()
     }
 }
 
