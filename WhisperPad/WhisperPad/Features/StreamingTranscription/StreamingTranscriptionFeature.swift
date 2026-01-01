@@ -127,6 +127,7 @@ struct StreamingTranscriptionFeature {
     @Dependency(\.continuousClock) var clock
     @Dependency(\.outputClient) var outputClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
+    @Dependency(\.whisperKitClient) var whisperKitClient
 
     // MARK: - Reducer Body
 
@@ -144,11 +145,19 @@ struct StreamingTranscriptionFeature {
                 state.duration = 0
                 state.tokensPerSecond = 0
 
-                return .run { send in
+                return .run { [whisperKitClient, streamingTranscription] send in
                     do {
-                        // WhisperKitを初期化
-                        try await streamingTranscription.initialize(nil)
-                        await send(.initializationCompleted)
+                        // WhisperKitManager が ready なら即座に初期化完了
+                        let isReady = await whisperKitClient.isReady()
+                        if isReady {
+                            // 状態リセットのみ行う
+                            try await streamingTranscription.initialize(nil)
+                            await send(.initializationCompleted)
+                        } else {
+                            // フォールバック: WhisperKit の初期化を実行
+                            try await streamingTranscription.initialize(nil)
+                            await send(.initializationCompleted)
+                        }
                     } catch {
                         let message = (error as? StreamingTranscriptionError)?.errorDescription
                             ?? error.localizedDescription
