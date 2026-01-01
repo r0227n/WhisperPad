@@ -286,7 +286,7 @@ struct SettingsFeature {
                         await send(.storageUsageResponse(transcriptionClient.getStorageUsage()))
                     })
                 }
-// 出力ディレクトリのブックマークを解決
+                // 出力ディレクトリのブックマークを解決
                 if let outputBookmark = settings.output.outputBookmarkData {
                     effects.append(.run { send in
                         if let url = await userDefaultsClient.resolveBookmark(outputBookmark) {
