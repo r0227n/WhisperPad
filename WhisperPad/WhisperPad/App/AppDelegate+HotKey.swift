@@ -56,7 +56,6 @@ extension AppDelegate {
         await hotKeyClient.unregisterAll()
 
         await registerRecordingHotKey(hotKeySettings)
-        await registerPasteHotKey(hotKeySettings)
         await registerOpenSettingsHotKey(hotKeySettings)
         await registerCancelHotKey(hotKeySettings)
         await registerStreamingHotKey(hotKeySettings)
@@ -67,18 +66,9 @@ extension AppDelegate {
     }
 
     private func registerRecordingHotKey(_ settings: HotKeySettings) async {
-        let mode = settings.recordingMode
         await hotKeyClient.registerRecordingWithCombo(
             settings.recordingHotKey,
-            { [weak self] in Task { @MainActor in self?.handleRecordingKeyDown(mode: mode) } },
-            { [weak self] in Task { @MainActor in self?.handleRecordingKeyUp(mode: mode) } }
-        )
-    }
-
-    private func registerPasteHotKey(_ settings: HotKeySettings) async {
-        await hotKeyClient.registerPasteWithCombo(
-            settings.pasteHotKey,
-            { [weak self] in Task { @MainActor in self?.pasteLastTranscription() } }
+            { [weak self] in Task { @MainActor in self?.toggleRecording() } }
         )
     }
 

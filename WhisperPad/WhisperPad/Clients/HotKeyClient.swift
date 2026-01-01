@@ -38,13 +38,6 @@ struct HotKeyClient: Sendable {
     /// 録音トグルホットキーを解除
     var unregisterRecordingToggle: @Sendable () async -> Void
 
-    /// ペーストホットキーを登録 (⌘⇧V)
-    /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
-    var registerPaste: @Sendable (@escaping @Sendable () -> Void) async -> Void
-
-    /// ペーストホットキーを解除
-    var unregisterPaste: @Sendable () async -> Void
-
     /// 録音キャンセルホットキーを登録 (Escape)
     /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
     var registerCancel: @Sendable (@escaping @Sendable () -> Void) async -> Void
@@ -54,22 +47,11 @@ struct HotKeyClient: Sendable {
 
     // MARK: - 動的キーコンボ対応
 
-    /// 動的キーコンボで録音ホットキーを登録（Push-to-Talk対応）
-    /// - Parameters:
-    ///   - combo: キーコンボ設定
-    ///   - keyDownHandler: キーが押されたときのハンドラー
-    ///   - keyUpHandler: キーが離されたときのハンドラー（Push-to-Talk用）
-    var registerRecordingWithCombo: @Sendable (
-        HotKeySettings.KeyComboSettings,
-        @escaping @Sendable () -> Void,
-        @escaping @Sendable () -> Void
-    ) async -> Void
-
-    /// 動的キーコンボでペーストホットキーを登録
+    /// 動的キーコンボで録音ホットキーを登録
     /// - Parameters:
     ///   - combo: キーコンボ設定
     ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
-    var registerPasteWithCombo: @Sendable (
+    var registerRecordingWithCombo: @Sendable (
         HotKeySettings.KeyComboSettings,
         @escaping @Sendable () -> Void
     ) async -> Void
@@ -172,23 +154,14 @@ extension HotKeyClient: TestDependencyKey {
             unregisterRecordingToggle: {
                 clientLogger.debug("[PREVIEW] unregisterRecordingToggle called")
             },
-            registerPaste: { _ in
-                clientLogger.debug("[PREVIEW] registerPaste called")
-            },
-            unregisterPaste: {
-                clientLogger.debug("[PREVIEW] unregisterPaste called")
-            },
             registerCancel: { _ in
                 clientLogger.debug("[PREVIEW] registerCancel called")
             },
             unregisterCancel: {
                 clientLogger.debug("[PREVIEW] unregisterCancel called")
             },
-            registerRecordingWithCombo: { _, _, _ in
+            registerRecordingWithCombo: { _, _ in
                 clientLogger.debug("[PREVIEW] registerRecordingWithCombo called")
-            },
-            registerPasteWithCombo: { _, _ in
-                clientLogger.debug("[PREVIEW] registerPasteWithCombo called")
             },
             registerOpenSettingsWithCombo: { _, _ in
                 clientLogger.debug("[PREVIEW] registerOpenSettingsWithCombo called")
@@ -235,23 +208,14 @@ extension HotKeyClient: TestDependencyKey {
             unregisterRecordingToggle: {
                 clientLogger.debug("[TEST] unregisterRecordingToggle called")
             },
-            registerPaste: { _ in
-                clientLogger.debug("[TEST] registerPaste called")
-            },
-            unregisterPaste: {
-                clientLogger.debug("[TEST] unregisterPaste called")
-            },
             registerCancel: { _ in
                 clientLogger.debug("[TEST] registerCancel called")
             },
             unregisterCancel: {
                 clientLogger.debug("[TEST] unregisterCancel called")
             },
-            registerRecordingWithCombo: { _, _, _ in
+            registerRecordingWithCombo: { _, _ in
                 clientLogger.debug("[TEST] registerRecordingWithCombo called")
-            },
-            registerPasteWithCombo: { _, _ in
-                clientLogger.debug("[TEST] registerPasteWithCombo called")
             },
             registerOpenSettingsWithCombo: { _, _ in
                 clientLogger.debug("[TEST] registerOpenSettingsWithCombo called")

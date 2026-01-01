@@ -24,7 +24,6 @@ private final class HotKeyManager {
 
     private var openSettingsHotKey: HotKey?
     private var recordingToggleHotKey: HotKey?
-    private var pasteHotKey: HotKey?
     private var cancelHotKey: HotKey?
     private var streamingHotKey: HotKey?
     private var recordingToggleKey: HotKey?
@@ -68,24 +67,6 @@ private final class HotKeyManager {
         logger.info("Recording toggle hotkey unregistered")
     }
 
-    // MARK: - Paste (⌘⇧V)
-
-    /// ペーストホットキーを登録
-    /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
-    func registerPaste(handler: @escaping () -> Void) {
-        pasteHotKey = nil
-        let hotKey = HotKey(key: .v, modifiers: [.command, .shift])
-        hotKey.keyDownHandler = handler
-        pasteHotKey = hotKey
-        logger.info("Paste hotkey registered: ⌘⇧V")
-    }
-
-    /// ペーストホットキーを解除
-    func unregisterPaste() {
-        pasteHotKey = nil
-        logger.info("Paste hotkey unregistered")
-    }
-
     // MARK: - Cancel (Escape)
 
     /// 録音キャンセルホットキーを登録
@@ -106,46 +87,25 @@ private final class HotKeyManager {
 
     // MARK: - 動的キーコンボ対応
 
-    /// 動的キーコンボで録音ホットキーを登録（Push-to-Talk対応）
+    /// 動的キーコンボで録音ホットキーを登録
     /// - Parameters:
     ///   - combo: キーコンボ設定
-    ///   - keyDownHandler: キーが押されたときのハンドラー
-    ///   - keyUpHandler: キーが離されたときのハンドラー（Push-to-Talk用）
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
     func registerRecordingWithCombo(
         _ combo: HotKeySettings.KeyComboSettings,
-        keyDownHandler: @escaping () -> Void,
-        keyUpHandler: @escaping () -> Void
+        handler: @escaping () -> Void
     ) {
         recordingToggleHotKey = nil
         let hotKey = HotKey(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
         )
-        hotKey.keyDownHandler = keyDownHandler
-        hotKey.keyUpHandler = keyUpHandler
+        hotKey.keyDownHandler = handler
         recordingToggleHotKey = hotKey
         logger
             .info(
                 "Recording hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
             )
-    }
-
-    /// 動的キーコンボでペーストホットキーを登録
-    /// - Parameters:
-    ///   - combo: キーコンボ設定
-    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
-    func registerPasteWithCombo(
-        _ combo: HotKeySettings.KeyComboSettings,
-        handler: @escaping () -> Void
-    ) {
-        pasteHotKey = nil
-        let hotKey = HotKey(
-            carbonKeyCode: combo.carbonKeyCode,
-            carbonModifiers: combo.carbonModifiers
-        )
-        hotKey.keyDownHandler = handler
-        pasteHotKey = hotKey
-        logger.info("Paste hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)")
     }
 
     /// 動的キーコンボで設定を開くホットキーを登録
@@ -267,7 +227,6 @@ private final class HotKeyManager {
     func unregisterAll() {
         openSettingsHotKey = nil
         recordingToggleHotKey = nil
-        pasteHotKey = nil
         cancelHotKey = nil
         streamingHotKey = nil
         recordingToggleKey = nil
@@ -311,16 +270,6 @@ extension HotKeyClient: DependencyKey {
                     HotKeyManager.shared.unregisterRecordingToggle()
                 }
             },
-            registerPaste: { handler in
-                await MainActor.run {
-                    HotKeyManager.shared.registerPaste(handler: handler)
-                }
-            },
-            unregisterPaste: {
-                await MainActor.run {
-                    HotKeyManager.shared.unregisterPaste()
-                }
-            },
             registerCancel: { handler in
                 await MainActor.run {
                     HotKeyManager.shared.registerCancel(handler: handler)
@@ -331,18 +280,9 @@ extension HotKeyClient: DependencyKey {
                     HotKeyManager.shared.unregisterCancel()
                 }
             },
-            registerRecordingWithCombo: { combo, keyDownHandler, keyUpHandler in
+            registerRecordingWithCombo: { combo, handler in
                 await MainActor.run {
-                    HotKeyManager.shared.registerRecordingWithCombo(
-                        combo,
-                        keyDownHandler: keyDownHandler,
-                        keyUpHandler: keyUpHandler
-                    )
-                }
-            },
-            registerPasteWithCombo: { combo, handler in
-                await MainActor.run {
-                    HotKeyManager.shared.registerPasteWithCombo(combo, handler: handler)
+                    HotKeyManager.shared.registerRecordingWithCombo(combo, handler: handler)
                 }
             },
             registerOpenSettingsWithCombo: { combo, handler in

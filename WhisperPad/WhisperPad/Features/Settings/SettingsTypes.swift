@@ -40,7 +40,6 @@ enum SettingsTab: String, CaseIterable, Sendable {
 /// ホットキータイプ（どのホットキーを編集中か）
 enum HotkeyType: String, CaseIterable, Sendable {
     case recording
-    case paste
     case openSettings
     case streaming
     case cancel

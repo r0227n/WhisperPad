@@ -82,17 +82,18 @@ struct HotkeyRecorderView: View {
     /// 通常の表示
     private var displayView: some View {
         HStack(spacing: 8) {
-            Text(displayString(keyCombo))
-                .frame(minWidth: 80)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(6)
-
-            Button("変更") {
+            Button {
                 onStartRecording()
+            } label: {
+                Text(displayString(keyCombo))
+                    .frame(minWidth: 80)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(6)
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(label)のホットキー: \(displayString(keyCombo))。クリックして変更")
 
             Button("クリア") {
                 onClear()

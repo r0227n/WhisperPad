@@ -101,32 +101,6 @@ struct HotkeySettingsTab: View {
                 Text("録音")
             }
 
-            // 出力セクション
-            Section {
-                HotkeyRecorderView(
-                    label: "最後の書き起こしをペースト",
-                    keyCombo: Binding(
-                        get: { store.settings.hotKey.pasteHotKey },
-                        set: { newValue in
-                            var hotKey = store.settings.hotKey
-                            hotKey.pasteHotKey = newValue
-                            store.send(.updateHotKeySettings(hotKey))
-                        }
-                    ),
-                    isRecording: store.recordingHotkeyType == .paste,
-                    onStartRecording: { store.send(.startRecordingHotkey(.paste)) },
-                    onStopRecording: { store.send(.stopRecordingHotkey) },
-                    onClear: {
-                        var hotKey = store.settings.hotKey
-                        hotKey.pasteHotKey = .pasteDefault
-                        store.send(.updateHotKeySettings(hotKey))
-                    }
-                )
-                .help("最後に文字起こしした内容をペーストするホットキー")
-            } header: {
-                Text("出力")
-            }
-
             // アプリセクション
             Section {
                 HotkeyRecorderView(
