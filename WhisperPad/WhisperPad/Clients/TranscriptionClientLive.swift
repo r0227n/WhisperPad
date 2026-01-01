@@ -29,6 +29,10 @@ extension TranscriptionClient: DependencyKey {
                 logger.debug("liveValue.isModelDownloaded called for \(modelName)")
                 return await transcriptionService.isModelDownloaded(modelName: modelName)
             },
+            fetchDownloadedModels: {
+                logger.debug("liveValue.fetchDownloadedModels called")
+                return await transcriptionService.fetchDownloadedModels()
+            },
             downloadModel: { modelName, progressHandler in
                 logger.debug("liveValue.downloadModel called for \(modelName)")
                 return try await transcriptionService.downloadModel(

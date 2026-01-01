@@ -155,6 +155,31 @@ actor TranscriptionService {
         return exists
     }
 
+    /// ローカルにダウンロード済みのモデル一覧を取得
+    func fetchDownloadedModels() -> [String] {
+        let directory = modelsDirectory
+        guard FileManager.default.fileExists(atPath: directory.path) else {
+            logger.info("Models directory does not exist: \(directory.path)")
+            return []
+        }
+
+        do {
+            let contents = try FileManager.default.contentsOfDirectory(
+                at: directory,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            )
+            let models = contents
+                .filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
+                .map(\.lastPathComponent)
+            logger.info("Found \(models.count) downloaded models in \(directory.path)")
+            return models
+        } catch {
+            logger.error("Failed to scan models directory: \(error.localizedDescription)")
+            return []
+        }
+    }
+
     /// モデルをダウンロード
     func downloadModel(
         modelName: String,

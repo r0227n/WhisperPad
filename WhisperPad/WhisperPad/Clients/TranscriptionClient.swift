@@ -29,6 +29,10 @@ struct TranscriptionClient: Sendable {
     /// - Returns: ダウンロード済みの場合は true
     var isModelDownloaded: @Sendable (_ modelName: String) async -> Bool
 
+    /// ローカルにダウンロード済みのモデル一覧を取得
+    /// - Returns: ダウンロード済みモデル名の配列
+    var fetchDownloadedModels: @Sendable () async -> [String]
+
     /// モデルをダウンロード
     /// - Parameters:
     ///   - modelName: ダウンロードするモデル名
@@ -100,6 +104,10 @@ extension TranscriptionClient: TestDependencyKey {
             isModelDownloaded: { _ in
                 false
             },
+            fetchDownloadedModels: {
+                clientLogger.debug("[PREVIEW] fetchDownloadedModels called")
+                return ["openai_whisper-tiny", "openai_whisper-base"]
+            },
             downloadModel: { modelName, progressHandler in
                 clientLogger.debug("[PREVIEW] downloadModel called for \(modelName)")
                 // Simulate download progress
@@ -154,6 +162,10 @@ extension TranscriptionClient: TestDependencyKey {
             },
             isModelDownloaded: { _ in
                 true
+            },
+            fetchDownloadedModels: {
+                clientLogger.debug("[TEST] fetchDownloadedModels called")
+                return ["openai_whisper-tiny", "openai_whisper-base"]
             },
             downloadModel: { modelName, _ in
                 clientLogger.debug("[TEST] downloadModel called for \(modelName)")
