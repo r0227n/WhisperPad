@@ -102,7 +102,7 @@ struct ModelDownloadRow: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel(
             "\(model.displayName)\(model.isRecommended ? "、推奨" : "")" +
-            "\(model.isDownloaded ? "、ダウンロード済み" : "")"
+                "\(model.isDownloaded ? "、ダウンロード済み" : "")"
         )
     }
 }
