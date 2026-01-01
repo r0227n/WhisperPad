@@ -10,6 +10,7 @@ import Foundation
 /// 設定タブ
 enum SettingsTab: String, CaseIterable, Sendable {
     case general = "一般"
+    case icon = "アイコン"
     case hotkey = "ホットキー"
     case recording = "録音"
     case model = "モデル"
@@ -20,6 +21,8 @@ enum SettingsTab: String, CaseIterable, Sendable {
         switch self {
         case .general:
             "gear"
+        case .icon:
+            "paintbrush"
         case .hotkey:
             "keyboard"
         case .recording:

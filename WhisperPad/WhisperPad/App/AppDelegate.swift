@@ -41,6 +41,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// アニメーションフレーム番号
     private var animationFrame: Int = 0
 
+    /// アニメーション中のアイコン設定
+    private var animationIconConfig: StatusIconConfig?
+
     /// ロガー
     let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.example.WhisperPad",
@@ -228,37 +231,48 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             stopGearAnimation()
         }
 
+        // カスタムアイコン設定を取得
+        let iconSettings = store.settings.settings.general.menuBarIconSettings
+
         switch store.appStatus {
         case .idle:
-            setStatusIcon(symbolName: "mic", color: .systemGray)
+            let config = iconSettings.idle
+            setStatusIcon(symbolName: config.symbolName, color: config.color)
             clearRecordingTimeDisplay()
 
         case .recording:
-            setStatusIcon(symbolName: "mic.fill", color: .systemRed)
+            let config = iconSettings.recording
+            setStatusIcon(symbolName: config.symbolName, color: config.color)
             setRecordingTimeDisplay(store.recording.currentDuration)
 
         case .paused:
-            setStatusIcon(symbolName: "pause.fill", color: .systemOrange)
+            let config = iconSettings.paused
+            setStatusIcon(symbolName: config.symbolName, color: config.color)
             setRecordingTimeDisplay(store.recording.currentDuration)
 
         case .transcribing:
-            startGearAnimation()
+            let config = iconSettings.transcribing
+            startGearAnimation(with: config)
             clearRecordingTimeDisplay()
 
         case .completed:
-            setStatusIcon(symbolName: "checkmark.circle", color: .systemGreen)
+            let config = iconSettings.completed
+            setStatusIcon(symbolName: config.symbolName, color: config.color)
             clearRecordingTimeDisplay()
 
         case .streamingTranscribing:
-            setStatusIcon(symbolName: "waveform.badge.mic", color: .systemPurple)
+            let config = iconSettings.streamingTranscribing
+            setStatusIcon(symbolName: config.symbolName, color: config.color)
             setRecordingTimeDisplay(store.streamingTranscription.duration)
 
         case .streamingCompleted:
-            setStatusIcon(symbolName: "checkmark.circle", color: .systemGreen)
+            let config = iconSettings.streamingCompleted
+            setStatusIcon(symbolName: config.symbolName, color: config.color)
             clearRecordingTimeDisplay()
 
         case .error:
-            setStatusIcon(symbolName: "exclamationmark.triangle", color: .systemYellow)
+            let config = iconSettings.error
+            setStatusIcon(symbolName: config.symbolName, color: config.color)
             clearRecordingTimeDisplay()
         }
     }
@@ -411,12 +425,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 // MARK: - Animation
 
 private extension AppDelegate {
-    /// ギアアニメーションを開始
-    func startGearAnimation() {
+    /// アイコンアニメーションを開始
+    /// - Parameter iconConfig: アニメーションに使用するアイコン設定
+    func startGearAnimation(with iconConfig: StatusIconConfig) {
         guard animationTimer == nil else { return }
 
         animationFrame = 0
-        setStatusIcon(symbolName: "gear", color: .systemBlue)
+        animationIconConfig = iconConfig
+        setStatusIcon(symbolName: iconConfig.symbolName, color: iconConfig.color)
 
         animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             self?.updateGearAnimationFrame()
@@ -427,27 +443,46 @@ private extension AppDelegate {
     func stopGearAnimation() {
         animationTimer?.invalidate()
         animationTimer = nil
+        animationIconConfig = nil
     }
 
-    /// ギアアニメーションのフレームを更新
+    /// アイコンアニメーションのフレームを更新
     func updateGearAnimationFrame() {
-        guard let button = statusItem?.button else { return }
+        guard let button = statusItem?.button,
+              let iconConfig = animationIconConfig else { return }
 
         animationFrame = (animationFrame + 1) % 8
 
-        // 色を少し変化させてアニメーション効果を出す
-        let hue = CGFloat(animationFrame) / 8.0
+        // ベースカラーのHSB値を取得して色相を変化させる
+        let baseColor = iconConfig.color
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        if let convertedColor = baseColor.usingColorSpace(.deviceRGB) {
+            convertedColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+        } else {
+            // フォールバック: デフォルトの青系
+            hue = 0.6
+            saturation = 0.8
+            brightness = 0.9
+            alpha = 1.0
+        }
+
+        // 色相を少し変化させてアニメーション効果を出す
+        let animatedHue = hue + (CGFloat(animationFrame) / 8.0) * 0.1
         let color = NSColor(
-            hue: 0.6 + hue * 0.1,
-            saturation: 0.8,
-            brightness: 0.9,
-            alpha: 1.0
+            hue: animatedHue.truncatingRemainder(dividingBy: 1.0),
+            saturation: saturation,
+            brightness: brightness,
+            alpha: alpha
         )
 
         let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
             .applying(NSImage.SymbolConfiguration(hierarchicalColor: color))
 
-        let image = NSImage(systemSymbolName: "gear", accessibilityDescription: "Processing")
+        let image = NSImage(systemSymbolName: iconConfig.symbolName, accessibilityDescription: "Processing")
         button.image = image?.withSymbolConfiguration(config)
     }
 }

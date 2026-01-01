@@ -21,6 +21,9 @@ struct GeneralSettings: Equatable, Sendable {
     /// メニューバーアイコンのスタイル
     var menuBarIconStyle: MenuBarIconStyle = .standard
 
+    /// メニューバーアイコンのカスタム設定
+    var menuBarIconSettings: MenuBarIconSettings = .default
+
     /// 通知のタイトル
     var notificationTitle: String = "WhisperPad"
 
@@ -42,6 +45,7 @@ extension GeneralSettings: Codable {
         case showNotificationOnComplete
         case playSoundOnComplete
         case menuBarIconStyle
+        case menuBarIconSettings
         case notificationTitle
         case transcriptionCompleteMessage
         case streamingCompleteMessage
@@ -57,6 +61,9 @@ extension GeneralSettings: Codable {
         menuBarIconStyle = try container.decodeIfPresent(
             MenuBarIconStyle.self, forKey: .menuBarIconStyle
         ) ?? .standard
+        menuBarIconSettings = try container.decodeIfPresent(
+            MenuBarIconSettings.self, forKey: .menuBarIconSettings
+        ) ?? .default
         notificationTitle = try container.decodeIfPresent(String.self, forKey: .notificationTitle) ?? "WhisperPad"
         transcriptionCompleteMessage = try container.decodeIfPresent(
             String.self, forKey: .transcriptionCompleteMessage
