@@ -219,21 +219,10 @@ struct AppReducer {
             case let .streamingTranscription(.delegate(.streamingCompleted(text))):
                 state.appStatus = .streamingCompleted
                 state.lastTranscription = text
-                let notificationTitle = state.settings.settings.general.notificationTitle
-                let streamingCompleteMessage = state.settings.settings.general.streamingCompleteMessage
 
                 return .run { [outputClient, clock] send in
                     // クリップボードにコピー
                     _ = await outputClient.copyToClipboard(text)
-
-                    // 通知を表示
-                    await outputClient.showNotification(
-                        notificationTitle,
-                        streamingCompleteMessage
-                    )
-
-                    // 完了音を再生
-                    await outputClient.playCompletionSound()
 
                     // 自動リセット
                     try await clock.sleep(for: .seconds(3))
