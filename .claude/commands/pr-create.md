@@ -1,7 +1,7 @@
 ---
 description: 未コミット変更のコミット分割 + develop との差分から PR 作成
 argument-hint: [--skip-confirm] [--draft]
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git push:*), Bash(git add:*), Bash(git commit:*), Bash(gh pr create:*), Read, Grep, Glob, TodoWrite, AskUserQuestion
+allowed-tools: Bash(gh pr create:*), Bash(git -C add:*), Bash(git -C branch:*), Bash(git -C commit:*), Bash(git -C diff:*), Bash(git -C log:*), Bash(git -C push:*), Bash(git -C status:*), Read, Grep, Glob, TodoWrite, AskUserQuestion
 ---
 
 # Create PR: コミット分割 & PR 作成

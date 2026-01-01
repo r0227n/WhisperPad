@@ -1,7 +1,7 @@
 ---
 description: セッション情報を整理し、develop から新規ブランチで PR 作成
 argument-hint: <branch-name>
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git worktree:*), Bash(git push:*), Bash(git add:*), Bash(git commit:*), Bash(gh pr create:*), Bash(cp:*), Bash(mkdir:*), Read, Grep, Glob, TodoWrite, AskUserQuestion
+allowed-tools: Bash(cp:*), Bash(gh pr create:*), Bash(git -C add:*), Bash(git -C branch:*), Bash(git -C commit:*), Bash(git -C diff:*), Bash(git -C log:*), Bash(git -C push:*), Bash(git -C status:*), Bash(git -C worktree:*), Bash(mkdir:*), Read, Grep, Glob, TodoWrite, AskUserQuestion
 ---
 
 # Update Claude Session: セッション情報から PR 作成
