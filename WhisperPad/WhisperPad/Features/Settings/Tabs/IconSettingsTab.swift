@@ -34,6 +34,8 @@ struct IconSettingsTab: View {
                     store.send(.resetMenuBarIconSettings)
                 }
                 .help("すべてのアイコン設定を初期値に戻します")
+                .accessibilityLabel("デフォルトに戻す")
+                .accessibilityHint("すべてのアイコン設定を初期値に戻します")
             }
 
             Section {
@@ -63,12 +65,14 @@ struct IconSettingsTab: View {
                             .foregroundStyle(Color(nsColor: config.color))
                             .font(.system(size: 18))
                             .frame(width: 24, height: 24)
+                            .accessibilityLabel("\(status.rawValue)のアイコン: \(config.symbolName)")
 
                         Text(status.rawValue)
                             .font(.system(size: 8))
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
+                    .accessibilityElement(children: .combine)
                 }
             }
             .padding(.vertical, 8)

@@ -46,6 +46,7 @@ struct IconConfigurationView: View {
                 .font(.system(size: 20))
                 .frame(width: 30, height: 30)
                 .help("現在のアイコン: \(config.symbolName)")
+                .accessibilityLabel("\(status.rawValue)のアイコン: \(config.symbolName)")
 
             // アイコン変更ボタン
             Button("変更...") {
@@ -57,6 +58,8 @@ struct IconConfigurationView: View {
                     isPresented: $showSymbolPicker
                 )
             }
+            .accessibilityLabel("\(status.rawValue)のアイコンを変更")
+            .accessibilityHint("アイコン選択画面を開きます")
 
             // 色選択
             ColorPicker("", selection: $selectedColor)
@@ -66,10 +69,14 @@ struct IconConfigurationView: View {
                     config.color = NSColor(newColor)
                 }
                 .help("アイコンの色を選択")
+                .accessibilityLabel("\(status.rawValue)のアイコンの色")
+                .accessibilityHint("アイコンの色を選択します")
 
             Spacer()
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(status.rawValue)のアイコン設定: \(config.symbolName)")
     }
 }
 
