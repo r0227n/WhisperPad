@@ -158,7 +158,7 @@ private struct PulseModifier: ViewModifier {
                 value: isPulsing
             )
             .onAppear {
-                if isActive && !reduceMotion { isPulsing = true }
+                if isActive, !reduceMotion { isPulsing = true }
             }
             .onChange(of: isActive) { _, newValue in
                 isPulsing = newValue && !reduceMotion
