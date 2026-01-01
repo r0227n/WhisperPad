@@ -94,6 +94,10 @@ struct SettingsFeature {
         case updateTranscriptionSettings(TranscriptionSettings)
         /// 出力設定を更新
         case updateOutputSettings(FileOutputSettings)
+        /// 出力ディレクトリのブックマークが作成された
+        case outputBookmarkCreated(Data)
+        /// 出力ディレクトリのブックマークが解決された
+        case outputDirectoryResolved(URL)
 
         // MARK: - Persistence
 
@@ -234,7 +238,24 @@ struct SettingsFeature {
                 return .merge(effects)
 
             case let .updateOutputSettings(output):
+                let previousDirectory = state.settings.output.outputDirectory
                 state.settings.output = output
+
+                // 出力ディレクトリが変更された場合、ブックマークを作成
+                if output.outputDirectory != previousDirectory {
+                    return .run { [userDefaultsClient] send in
+                        do {
+                            let bookmarkData = try await userDefaultsClient.createBookmark(
+                                output.outputDirectory
+                            )
+                            await send(.outputBookmarkCreated(bookmarkData))
+                        } catch {
+                            // ブックマーク作成失敗（ログのみ、デフォルトパスでは不要）
+                        }
+                        await send(.saveSettings)
+                    }
+                }
+
                 return .send(.saveSettings)
 
             case .loadSettings:
@@ -245,14 +266,36 @@ struct SettingsFeature {
 
             case let .settingsLoaded(settings):
                 state.settings = settings
+
+                var effects: [Effect<Action>] = []
+
+                // モデル保存先のブックマークを解決
                 if let bookmarkData = settings.transcription.storageBookmarkData {
-                    return .run { send in
+                    effects.append(.run { [transcriptionClient] send in
                         if let url = await userDefaultsClient.resolveBookmark(bookmarkData) {
                             await transcriptionClient.setStorageLocation(url)
                         }
                         await send(.storageUsageResponse(transcriptionClient.getStorageUsage()))
-                    }
+                    })
                 }
+
+                // 出力ディレクトリのブックマークを解決
+                if let outputBookmark = settings.output.outputBookmarkData {
+                    effects.append(.run { send in
+                        if let url = await userDefaultsClient.resolveBookmark(outputBookmark) {
+                            await send(.outputDirectoryResolved(url))
+                        }
+                    })
+                }
+
+                return effects.isEmpty ? .none : .merge(effects)
+
+            case let .outputBookmarkCreated(bookmarkData):
+                state.settings.output.outputBookmarkData = bookmarkData
+                return .none
+
+            case let .outputDirectoryResolved(url):
+                state.settings.output.outputDirectory = url
                 return .none
 
             case .saveSettings:

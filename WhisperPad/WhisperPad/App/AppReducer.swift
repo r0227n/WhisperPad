@@ -343,7 +343,7 @@ struct AppReducer {
                 let notificationTitle = state.settings.settings.general.notificationTitle
                 let transcriptionCompleteMessage = state.settings.settings.general.transcriptionCompleteMessage
 
-                return .run { [outputClient] send in
+                return .run { [outputClient, userDefaultsClient] send in
                     // クリップボードにコピー（設定が有効な場合）
                     if outputSettings.copyToClipboard {
                         _ = await outputClient.copyToClipboard(text)
@@ -351,8 +351,16 @@ struct AppReducer {
 
                     // 自動ファイル出力が有効な場合
                     if outputSettings.isEnabled {
+                        var resolvedOutputSettings = outputSettings
+
+                        // ブックマークを解決してアクセス権を取得
+                        if let bookmarkData = outputSettings.outputBookmarkData,
+                           let resolvedURL = await userDefaultsClient.resolveBookmark(bookmarkData) {
+                            resolvedOutputSettings.outputDirectory = resolvedURL
+                        }
+
                         do {
-                            let url = try await outputClient.saveToFile(text, outputSettings)
+                            let url = try await outputClient.saveToFile(text, resolvedOutputSettings)
                             await outputClient.showNotification(
                                 "WhisperPad",
                                 "保存完了: \(url.lastPathComponent)"

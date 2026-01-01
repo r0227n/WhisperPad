@@ -258,7 +258,15 @@ struct StreamingTranscriptionFeature {
                 return .run { [userDefaultsClient, outputClient] send in
                     do {
                         let appSettings = await userDefaultsClient.loadSettings()
-                        let url = try await outputClient.saveToFile(text, appSettings.output)
+                        var outputSettings = appSettings.output
+
+                        // ブックマークを解決してアクセス権を取得
+                        if let bookmarkData = outputSettings.outputBookmarkData,
+                           let resolvedURL = await userDefaultsClient.resolveBookmark(bookmarkData) {
+                            outputSettings.outputDirectory = resolvedURL
+                        }
+
+                        let url = try await outputClient.saveToFile(text, outputSettings)
                         await send(.fileSaveCompleted(url))
                     } catch {
                         await send(.fileSaveFailed(error.localizedDescription))
@@ -353,8 +361,16 @@ struct StreamingTranscriptionFeature {
 
                     // 自動ファイル出力が有効な場合
                     if appSettings.output.isEnabled {
+                        var outputSettings = appSettings.output
+
+                        // ブックマークを解決してアクセス権を取得
+                        if let bookmarkData = outputSettings.outputBookmarkData,
+                           let resolvedURL = await userDefaultsClient.resolveBookmark(bookmarkData) {
+                            outputSettings.outputDirectory = resolvedURL
+                        }
+
                         do {
-                            let url = try await outputClient.saveToFile(text, appSettings.output)
+                            let url = try await outputClient.saveToFile(text, outputSettings)
                             await send(.fileSaveCompleted(url))
                         } catch {
                             await send(.fileSaveFailed(error.localizedDescription))
