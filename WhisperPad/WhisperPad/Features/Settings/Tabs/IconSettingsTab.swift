@@ -24,24 +24,27 @@ struct IconSettingsTab: View {
                 ForEach(IconConfigStatus.allCases) { status in
                     IconConfigurationView(
                         status: status,
-                        config: binding(for: status)
+                        config: binding(for: status),
+                        onReset: { store.send(.resetIconSetting(status)) }
                     )
                 }
             } header: {
-                Text("状態ごとのアイコン設定")
+                HStack {
+                    Text("状態ごとのアイコン設定")
+                    Spacer()
+                    Button("デフォルトに戻す") {
+                        store.send(.resetMenuBarIconSettings)
+                    }
+                    .font(.caption)
+                    .buttonStyle(.link)
+                    .help("すべてのアイコン設定を初期値に戻します")
+                    .accessibilityLabel("デフォルトに戻す")
+                    .accessibilityHint("すべてのアイコン設定を初期値に戻します")
+                }
             } footer: {
                 Text("各状態でメニューバーに表示されるアイコンと色を設定できます。")
                     .font(.caption)
                     .foregroundColor(.secondary)
-            }
-
-            Section {
-                Button("デフォルトに戻す") {
-                    store.send(.resetMenuBarIconSettings)
-                }
-                .help("すべてのアイコン設定を初期値に戻します")
-                .accessibilityLabel("デフォルトに戻す")
-                .accessibilityHint("すべてのアイコン設定を初期値に戻します")
             }
         }
         .formStyle(.grouped)
