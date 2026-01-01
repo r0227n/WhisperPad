@@ -99,9 +99,9 @@ extension AppDelegate {
         guard let button = getStatusItem()?.button else { return }
 
         // Sine wave: 0.5 to 1.0
-        let newPhase = getPulsePhase() + 0.04 / 0.8 * 2 * .pi  // Complete cycle in 0.8s
+        let newPhase = getPulsePhase() + 0.04 / 0.8 * 2 * .pi // Complete cycle in 0.8s
         setPulsePhase(newPhase)
-        let opacity = 0.75 + 0.25 * sin(newPhase)  // Range: 0.5 to 1.0
+        let opacity = 0.75 + 0.25 * sin(newPhase) // Range: 0.5 to 1.0
         button.alphaValue = CGFloat(opacity)
     }
 
