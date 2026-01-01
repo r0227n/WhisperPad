@@ -19,12 +19,18 @@ struct OutputSettingsTab: View {
             Section {
                 Toggle(
                     "クリップボードにコピー",
-                    isOn: .constant(true)
+                    isOn: Binding(
+                        get: { store.settings.output.copyToClipboard },
+                        set: { newValue in
+                            var output = store.settings.output
+                            output.copyToClipboard = newValue
+                            store.send(.updateOutputSettings(output))
+                        }
+                    )
                 )
-                .disabled(true)
-                .help("文字起こし結果は常にクリップボードにコピーされます")
-                .accessibilityLabel("クリップボードにコピー（常に有効）")
-                .accessibilityHint("文字起こし結果は常にクリップボードにコピーされます")
+                .help("文字起こし結果をクリップボードにコピーします")
+                .accessibilityLabel("クリップボードにコピー")
+                .accessibilityHint("オンにすると文字起こし結果をクリップボードにコピーします")
             } header: {
                 Text("クリップボード")
             } footer: {
