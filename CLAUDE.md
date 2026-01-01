@@ -29,6 +29,15 @@ mise run check           # lint:swift:strict + format:swift:check + lint:prettie
 mise run fix             # Format + lint fix all files
 ```
 
+### Pre-completion Checklist
+
+Before completing any task, run the following and fix any issues:
+
+```bash
+mise run lint     # Lint check
+mise run format   # Format fix
+```
+
 ## Architecture
 
 Uses **The Composable Architecture (TCA)** v1.23.1+ for state management.
@@ -69,6 +78,16 @@ Clients/
 
 - Swift 5.10, 4-space indent, 120 char line width
 - K&R brace style, `--self remove`
+
+### Git Usage
+
+- The `git -C` option is not prohibited, but avoid using it whenever possible
+- Instead, operate in the current directory or use `cd` to navigate before running commands
+
+## Subagent Configuration
+
+- When launching subagents via the Task tool, always set `run_in_background: true` to run them in the background by default
+- Use TaskOutput to retrieve results when needed
 
 ## Specification
 
