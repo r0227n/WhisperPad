@@ -22,7 +22,6 @@ nonisolated(unsafe) private let logger = Logger(
 private final class HotKeyManager {
     static let shared = HotKeyManager()
 
-    private var openSettingsHotKey: HotKey?
     private var recordingToggleHotKey: HotKey?
     private var cancelHotKey: HotKey?
     private var streamingHotKey: HotKey?
@@ -30,24 +29,6 @@ private final class HotKeyManager {
     private var recordingPauseHotKey: HotKey?
 
     private init() {}
-
-    // MARK: - Open Settings (⌘⇧,)
-
-    /// 設定画面を開くホットキーを登録
-    /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
-    func registerOpenSettings(handler: @escaping () -> Void) {
-        openSettingsHotKey = nil
-        let hotKey = HotKey(key: .comma, modifiers: [.command, .shift])
-        hotKey.keyDownHandler = handler
-        openSettingsHotKey = hotKey
-        logger.info("Open settings hotkey registered: ⌘⇧,")
-    }
-
-    /// 設定画面を開くホットキーを解除
-    func unregisterOpenSettings() {
-        openSettingsHotKey = nil
-        logger.info("Open settings hotkey unregistered")
-    }
 
     // MARK: - Recording Toggle (⌥⇧ Space)
 
@@ -106,26 +87,6 @@ private final class HotKeyManager {
             .info(
                 "Recording hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
             )
-    }
-
-    /// 動的キーコンボで設定を開くホットキーを登録
-    /// - Parameters:
-    ///   - combo: キーコンボ設定
-    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
-    func registerOpenSettingsWithCombo(
-        _ combo: HotKeySettings.KeyComboSettings,
-        handler: @escaping () -> Void
-    ) {
-        openSettingsHotKey = nil
-        let hotKey = HotKey(
-            carbonKeyCode: combo.carbonKeyCode,
-            carbonModifiers: combo.carbonModifiers
-        )
-        hotKey.keyDownHandler = handler
-        openSettingsHotKey = hotKey
-        logger.info(
-            "Open settings hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
-        )
     }
 
     /// 動的キーコンボでキャンセルホットキーを登録
@@ -225,7 +186,6 @@ private final class HotKeyManager {
 
     /// すべてのホットキーを解除
     func unregisterAll() {
-        openSettingsHotKey = nil
         recordingToggleHotKey = nil
         cancelHotKey = nil
         streamingHotKey = nil
@@ -240,16 +200,6 @@ private final class HotKeyManager {
 extension HotKeyClient: DependencyKey {
     static var liveValue: Self {
         Self(
-            registerOpenSettings: { handler in
-                await MainActor.run {
-                    HotKeyManager.shared.registerOpenSettings(handler: handler)
-                }
-            },
-            unregisterOpenSettings: {
-                await MainActor.run {
-                    HotKeyManager.shared.unregisterOpenSettings()
-                }
-            },
             checkAccessibilityPermission: {
                 let trusted = AXIsProcessTrusted()
                 logger.info("Accessibility permission: \(trusted ? "granted" : "denied")")
@@ -283,11 +233,6 @@ extension HotKeyClient: DependencyKey {
             registerRecordingWithCombo: { combo, handler in
                 await MainActor.run {
                     HotKeyManager.shared.registerRecordingWithCombo(combo, handler: handler)
-                }
-            },
-            registerOpenSettingsWithCombo: { combo, handler in
-                await MainActor.run {
-                    HotKeyManager.shared.registerOpenSettingsWithCombo(combo, handler: handler)
                 }
             },
             registerCancelWithCombo: { combo, handler in

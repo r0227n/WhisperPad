@@ -17,13 +17,6 @@ nonisolated(unsafe) private let clientLogger = Logger(
 /// グローバルホットキーの登録・解除を提供します。
 /// グローバルホットキーを使用するには、アクセシビリティ権限が必要です。
 struct HotKeyClient: Sendable {
-    /// 設定画面を開くホットキーを登録
-    /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
-    var registerOpenSettings: @Sendable (@escaping @Sendable () -> Void) async -> Void
-
-    /// 設定画面を開くホットキーを解除
-    var unregisterOpenSettings: @Sendable () async -> Void
-
     /// アクセシビリティ権限をチェック
     /// - Returns: 権限がある場合は true
     var checkAccessibilityPermission: @Sendable () async -> Bool
@@ -52,15 +45,6 @@ struct HotKeyClient: Sendable {
     ///   - combo: キーコンボ設定
     ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
     var registerRecordingWithCombo: @Sendable (
-        HotKeySettings.KeyComboSettings,
-        @escaping @Sendable () -> Void
-    ) async -> Void
-
-    /// 動的キーコンボで設定を開くホットキーを登録
-    /// - Parameters:
-    ///   - combo: キーコンボ設定
-    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
-    var registerOpenSettingsWithCombo: @Sendable (
         HotKeySettings.KeyComboSettings,
         @escaping @Sendable () -> Void
     ) async -> Void
@@ -135,12 +119,6 @@ enum HotKeyError: Error, Equatable, Sendable, LocalizedError {
 extension HotKeyClient: TestDependencyKey {
     static var previewValue: Self {
         Self(
-            registerOpenSettings: { _ in
-                clientLogger.debug("[PREVIEW] registerOpenSettings called")
-            },
-            unregisterOpenSettings: {
-                clientLogger.debug("[PREVIEW] unregisterOpenSettings called")
-            },
             checkAccessibilityPermission: {
                 clientLogger.debug("[PREVIEW] checkAccessibilityPermission called")
                 return true
@@ -162,9 +140,6 @@ extension HotKeyClient: TestDependencyKey {
             },
             registerRecordingWithCombo: { _, _ in
                 clientLogger.debug("[PREVIEW] registerRecordingWithCombo called")
-            },
-            registerOpenSettingsWithCombo: { _, _ in
-                clientLogger.debug("[PREVIEW] registerOpenSettingsWithCombo called")
             },
             registerCancelWithCombo: { _, _ in
                 clientLogger.debug("[PREVIEW] registerCancelWithCombo called")
@@ -189,12 +164,6 @@ extension HotKeyClient: TestDependencyKey {
 
     static var testValue: Self {
         Self(
-            registerOpenSettings: { _ in
-                clientLogger.debug("[TEST] registerOpenSettings called")
-            },
-            unregisterOpenSettings: {
-                clientLogger.debug("[TEST] unregisterOpenSettings called")
-            },
             checkAccessibilityPermission: {
                 clientLogger.debug("[TEST] checkAccessibilityPermission called")
                 return true
@@ -216,9 +185,6 @@ extension HotKeyClient: TestDependencyKey {
             },
             registerRecordingWithCombo: { _, _ in
                 clientLogger.debug("[TEST] registerRecordingWithCombo called")
-            },
-            registerOpenSettingsWithCombo: { _, _ in
-                clientLogger.debug("[TEST] registerOpenSettingsWithCombo called")
             },
             registerCancelWithCombo: { _, _ in
                 clientLogger.debug("[TEST] registerCancelWithCombo called")
