@@ -37,52 +37,8 @@ struct HotkeySettingsTab: View {
                     }
                 )
                 .help("録音を開始または停止するホットキー")
-
-                Picker(
-                    "録音モード",
-                    selection: Binding(
-                        get: { store.settings.hotKey.recordingMode },
-                        set: { newValue in
-                            var hotKey = store.settings.hotKey
-                            hotKey.recordingMode = newValue
-                            store.send(.updateHotKeySettings(hotKey))
-                        }
-                    )
-                ) {
-                    ForEach(HotKeySettings.RecordingMode.allCases, id: \.self) { mode in
-                        Text(mode.displayName).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .help("トグル: 1回押しで開始/停止、プッシュ・トゥ・トーク: 押している間のみ録音")
             } header: {
                 Text("録音")
-            }
-
-            // 出力セクション
-            Section {
-                HotkeyRecorderView(
-                    label: "最後の書き起こしをペースト",
-                    keyCombo: Binding(
-                        get: { store.settings.hotKey.pasteHotKey },
-                        set: { newValue in
-                            var hotKey = store.settings.hotKey
-                            hotKey.pasteHotKey = newValue
-                            store.send(.updateHotKeySettings(hotKey))
-                        }
-                    ),
-                    isRecording: store.recordingHotkeyType == .paste,
-                    onStartRecording: { store.send(.startRecordingHotkey(.paste)) },
-                    onStopRecording: { store.send(.stopRecordingHotkey) },
-                    onClear: {
-                        var hotKey = store.settings.hotKey
-                        hotKey.pasteHotKey = .pasteDefault
-                        store.send(.updateHotKeySettings(hotKey))
-                    }
-                )
-                .help("最後に文字起こしした内容をペーストするホットキー")
-            } header: {
-                Text("出力")
             }
 
             // アプリセクション
