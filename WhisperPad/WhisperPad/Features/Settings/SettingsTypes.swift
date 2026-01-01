@@ -11,7 +11,7 @@ import Foundation
 enum SettingsTab: String, CaseIterable, Sendable {
     case general = "一般"
     case icon = "アイコン"
-    case hotkey = "ホットキー"
+    case hotkey = "ショートカット"
     case recording = "録音"
     case model = "モデル"
 
@@ -34,7 +34,7 @@ enum SettingsTab: String, CaseIterable, Sendable {
 
 // MARK: - Hotkey Type
 
-/// ホットキータイプ（どのホットキーを編集中か）
+/// ショートカットタイプ（どのショートカットを編集中か）
 enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
     case recording
     case streaming
@@ -48,14 +48,14 @@ enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
 // MARK: - HotkeyType Metadata
 
 extension HotkeyType {
-    /// ホットキーのカテゴリ
+    /// ショートカットのカテゴリ
     enum Category: String, CaseIterable, Identifiable {
         case recording = "録音"
         case cancel = "キャンセル"
 
         var id: String { rawValue }
 
-        /// このカテゴリに属するホットキータイプ
+        /// このカテゴリに属するショートカットタイプ
         var hotkeyTypes: [HotkeyType] {
             switch self {
             case .recording:
@@ -66,7 +66,7 @@ extension HotkeyType {
         }
     }
 
-    /// ホットキーのカテゴリ
+    /// ショートカットのカテゴリ
     var category: Category {
         switch self {
         case .recording, .recordingToggle, .recordingPause, .streaming:
@@ -121,6 +121,24 @@ extension HotkeyType {
             .cancelDefault
         case .streaming:
             .streamingDefault
+        }
+    }
+
+    /// SF Symbol アイコン名
+    var iconName: String {
+        switch self {
+        case .recording:
+            "mic.fill"
+        case .recordingToggle:
+            "record.circle"
+        case .recordingPause:
+            "pause.fill"
+        case .openSettings:
+            "gear"
+        case .cancel:
+            "xmark.circle"
+        case .streaming:
+            "waveform"
         }
     }
 }

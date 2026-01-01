@@ -6,9 +6,9 @@
 import ComposableArchitecture
 import SwiftUI
 
-/// ホットキー設定タブ
+/// ショートカット設定タブ
 ///
-/// マスター・ディテール形式でグローバルホットキーの設定を行います。
+/// マスター・ディテール形式でグローバルショートカットの設定を行います。
 /// 左パネル：カテゴリ別ショートカット一覧
 /// 右パネル：選択したショートカットの詳細と編集
 struct HotkeySettingsTab: View {
@@ -18,11 +18,11 @@ struct HotkeySettingsTab: View {
         HSplitView {
             // 左パネル: ショートカット一覧
             shortcutListPanel
-                .frame(minWidth: 200, idealWidth: 220)
+                .frame(minWidth: 180, idealWidth: 200, maxWidth: 240)
 
             // 右パネル: 詳細
             detailPanel
-                .frame(minWidth: 250)
+                .frame(minWidth: 280)
         }
         .onAppear {
             // 初期選択
@@ -91,7 +91,7 @@ struct HotkeySettingsTab: View {
 
     // MARK: - Helpers
 
-    /// 指定されたホットキータイプのキーコンボを取得
+    /// 指定されたショートカットタイプのキーコンボを取得
     private func keyCombo(for type: HotkeyType) -> HotKeySettings.KeyComboSettings {
         switch type {
         case .recording:
@@ -107,7 +107,7 @@ struct HotkeySettingsTab: View {
         }
     }
 
-    /// 指定されたホットキータイプのキーコンボBindingを取得
+    /// 指定されたショートカットタイプのキーコンボBindingを取得
     private func keyComboBinding(for type: HotkeyType) -> Binding<HotKeySettings.KeyComboSettings> {
         Binding(
             get: { keyCombo(for: type) },
@@ -163,10 +163,16 @@ private struct ShortcutListRow: View {
 
             Spacer()
 
+            // キーコンボをバッジスタイルで表示
             Text(keyCombo.displayString)
-                .font(.system(.body, design: .monospaced))
+                .font(.system(.caption, design: .monospaced))
                 .foregroundColor(.secondary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(4)
         }
+        .padding(.vertical, 4)
         .contentShape(Rectangle())
         .accessibilityLabel("\(hotkeyType.displayName)、ショートカット: \(keyCombo.displayString)")
     }
@@ -185,14 +191,65 @@ private struct ShortcutDetailPanel: View {
     let hotkeyConflict: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // タイトル
-            Text(hotkeyType.displayName)
-                .font(.title2)
-                .fontWeight(.bold)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // ヘッダー：アイコンとタイトル
+                headerSection
 
-            // 説明
+                Divider()
+
+                // 説明セクション
+                descriptionSection
+
+                // ショートカット入力セクション
+                shortcutInputSection
+
+                Spacer(minLength: 0)
+            }
+            .padding(24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    /// ヘッダーセクション
+    private var headerSection: some View {
+        HStack(spacing: 12) {
+            Image(systemName: hotkeyType.iconName)
+                .font(.title2)
+                .foregroundColor(.accentColor)
+                .frame(width: 32, height: 32)
+                .background(Color.accentColor.opacity(0.1))
+                .cornerRadius(8)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(hotkeyType.displayName)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+
+                Text(hotkeyType.category.rawValue)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+
+    /// 説明セクション
+    private var descriptionSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("説明", systemImage: "info.circle")
+                .font(.headline)
+                .foregroundColor(.secondary)
+
             Text(hotkeyType.hotkeyDescription)
+                .foregroundColor(.primary)
+        }
+    }
+
+    /// ショートカット入力セクション
+    private var shortcutInputSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("ショートカットキー", systemImage: "keyboard")
+                .font(.headline)
                 .foregroundColor(.secondary)
 
             // キー設定ボタン
@@ -210,21 +267,17 @@ private struct ShortcutDetailPanel: View {
                 Label(conflict, systemImage: "exclamationmark.triangle.fill")
                     .foregroundColor(.red)
                     .font(.footnote)
-                    .accessibilityLabel("ホットキー競合警告: \(conflict)")
+                    .accessibilityLabel("ショートカット競合警告: \(conflict)")
             }
 
-            Spacer()
-
             // 注意メッセージ
-            Label(
-                "他のアプリと競合する場合は変更してください",
-                systemImage: "exclamationmark.triangle"
-            )
-            .foregroundColor(.secondary)
-            .font(.footnote)
+            Text("他のアプリと競合する場合は変更してください")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(16)
+        .background(Color(NSColor.controlBackgroundColor))
+        .cornerRadius(12)
     }
 }
 
