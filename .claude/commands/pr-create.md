@@ -1,86 +1,101 @@
 ---
-description: develop との差分を整理し PR を作成・オープン
+description: 未コミット変更のコミット分割 + develop との差分から PR 作成
 argument-hint: [--skip-confirm] [--draft]
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git push:*), Bash(gh pr create:*), Read, Grep, Glob, TodoWrite, EnterPlanMode, ExitPlanMode
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git push:*), Bash(git add:*), Bash(git commit:*), Bash(gh pr create:*), Read, Grep, Glob, TodoWrite, AskUserQuestion
 ---
 
-# Create PR: develop との差分から PR 作成
+# Create PR: コミット分割 & PR 作成
 
 ## 引数
 
 - `$ARGUMENTS`:
-  - `--skip-confirm`: plan mode 確認をスキップ
+  - `--skip-confirm`: AskUserQuestion 確認をスキップ
   - `--draft`: ドラフト PR として作成
 
 ## 概要
 
-develop ブランチと現在のブランチの差分を分析し、整理された PR を作成・オープンします。
+未コミットの変更がある場合はコミット戦略を立案し、develop ブランチとの差分から PR を作成します。
+**一度の確認で両方を実行** できます。
 
 ## 処理フロー
 
 1. ブランチ情報の収集
-2. 変更内容の分析
-3. PR 内容の生成（テンプレート使用）
-4. ユーザー確認（`--skip-confirm` 未指定時）
-5. PR 作成 & オープン
+2. 未コミット変更の検出
+3. (変更あり) コミット戦略の立案
+4. PR 内容の生成
+5. AskUserQuestion で統合確認（`--skip-confirm` 未指定時）
+6. コミット実行（該当時）
+7. PR 作成 & オープン
 
 ---
 
 ## Step 1: ブランチ情報を収集
 
-以下のコマンドで現在の状態を取得してください:
+以下のコマンドで現在の状態を取得:
 
 ```bash
-# 現在のブランチ
 git branch --show-current
-```
-
-```bash
-# develop との差分コミット
+git status --short
 git log develop..HEAD --oneline
-```
-
-```bash
-# 差分ファイル一覧
 git diff develop..HEAD --stat
 ```
 
-```bash
-# リモートとの同期状態
-git status -sb
+---
+
+## Step 2: 未コミット変更の検出
+
+`git status --short` の出力を確認:
+
+- **出力あり** → Step 3（コミット戦略）へ
+- **出力なし** → Step 4（PR 内容生成）へスキップ
+
+---
+
+## Step 3: コミット戦略の立案
+
+未コミット変更がある場合、以下のルールでコミットを分割:
+
+### レイヤー分類ルール
+
+| 優先度 | レイヤー            | パスパターン                  | 説明                         |
+| ------ | ------------------- | ----------------------------- | ---------------------------- |
+| 1      | Models              | `*/Models/*.swift`            | データモデル、基礎型         |
+| 2      | Clients (Interface) | `*/Clients/*Client.swift`     | 依存性インターフェース       |
+| 2      | Clients (Live)      | `*/Clients/*ClientLive.swift` | Live 実装                    |
+| 2      | Clients (Service)   | `*/Clients/*Service.swift`    | サービス層                   |
+| 3      | Features            | `*/Features/*/`               | TCA Feature (Reducer + View) |
+| 3      | Views               | `*/Views/*.swift`             | 独立した View                |
+| 4      | App                 | `*/App/*.swift`               | アプリルート統合             |
+| 5      | Misc                | その他                        | 設定ファイル、ドキュメント等 |
+
+### 除外ファイル
+
+```
+*.xcuserstate
+xcschememanagement.plist
+*.xcuserdatad/
+.claude/
+.DS_Store
+Pods/
 ```
 
----
+### コミットメッセージ形式
 
-## Step 2: 変更内容を分析
+```
+<type>(<scope>): <description>
 
-### コミット分類ルール
+<body - 変更の詳細説明>
 
-コミットメッセージの prefix から種類を判定:
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-| Prefix      | カテゴリ      |
-| ----------- | ------------- |
-| `feat:`     | New Features  |
-| `fix:`      | Bug Fixes     |
-| `refactor:` | Refactoring   |
-| `docs:`     | Documentation |
-| `test:`     | Tests         |
-| `chore:`    | Chores        |
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+```
 
-### ファイル分類ルール
-
-| パスパターン        | レイヤー |
-| ------------------- | -------- |
-| `*/Models/*.swift`  | Models   |
-| `*/Clients/*.swift` | Clients  |
-| `*/Features/*/`     | Features |
-| `*/App/*.swift`     | App      |
-| `*/Tests/`          | Tests    |
-| `*.md`, `docs/`     | Docs     |
+**type**: feat, fix, refactor, docs, test, chore
 
 ---
 
-## Step 3: PR 内容を生成
+## Step 4: PR 内容を生成
 
 ### PR テンプレート
 
@@ -92,38 +107,76 @@ git status -sb
 <type>(<scope>): <summary>
 ```
 
-**type**: feat, fix, refactor, docs, test, chore
-**scope**: 主要な変更対象（Settings, Recording, Transcription など）
+**scope**: 主要な変更対象（Settings, Recording, Transcription, App など）
 **summary**: 変更の簡潔な説明（英語、50 文字以内）
 
 ### 本文生成ルール
 
-テンプレートの各セクションを変更内容に基づいて埋める:
-
 1. **Summary**: 主要な変更を 1-3 点でまとめる
-2. **Changes**: コミットを種類ごとに整理
-3. **Files Changed**: ファイルをレイヤーごとに整理
-4. **Test Plan**: 変更に応じたテスト手順を提案
+2. **Changes**: コミットを種類ごとに整理（New Features / Bug Fixes / Refactoring）
+3. **Test Plan**: 変更に応じたテスト手順を提案
 
 ---
 
-## Step 4: ユーザー確認
+## Step 5: AskUserQuestion で統合確認
 
-`--skip-confirm` が **指定されていない** 場合:
+`--skip-confirm` が **指定されていない** 場合、以下の形式で確認:
 
-1. 生成した PR タイトルと本文を表示
-2. `EnterPlanMode` を使用してユーザー確認を求める
-3. ユーザーが承認したら Step 5 へ進む
+### 確認内容
 
-ユーザーは以下のアクションが可能:
+未コミット変更がある場合:
 
-- **承認**: そのまま PR 作成
-- **修正依頼**: タイトルや説明の変更を指示
-- **キャンセル**: PR 作成せずに終了
+```markdown
+## コミット戦略
+
+### Commit 1: <type>(<scope>): <description>
+
+- `path/to/file1.swift`
+- `path/to/file2.swift`
+
+### Commit 2: ...
 
 ---
 
-## Step 5: PR 作成 & オープン
+## PR 内容
+
+**タイトル**: <title>
+
+**本文**:
+
+<body>
+```
+
+### AskUserQuestion の質問
+
+```
+question: "以下の内容で実行しますか？"
+options:
+  - label: "実行"
+    description: "コミット作成 → PR 作成を実行"
+  - label: "コミットのみ"
+    description: "コミットのみ作成（PR は作成しない）"
+  - label: "PR のみ"
+    description: "既存コミットで PR のみ作成"
+```
+
+---
+
+## Step 6: コミット実行
+
+未コミット変更があり、ユーザーが承認した場合:
+
+1. `TodoWrite` で各コミットをタスクとして登録
+2. 各コミットを順番に実行:
+   ```bash
+   git add <files>
+   git commit -m "<message>"
+   ```
+3. `git log --oneline -N` で結果を確認
+
+---
+
+## Step 7: PR 作成 & オープン
 
 ### 事前確認
 
@@ -173,3 +226,12 @@ WhisperPad/WhisperPad/
 ├── Models/        → データモデル
 └── Views/         → 共通View
 ```
+
+### Logging Categories
+
+- `com.whisperpad` / `RecordingFeature`
+- `com.whisperpad` / `TranscriptionFeature`
+- `com.whisperpad` / `AudioRecorderClient`
+- `com.whisperpad` / `TranscriptionClient`
+- `com.whisperpad` / `OutputClient`
+- `com.whisperpad` / `UserDefaultsClient`

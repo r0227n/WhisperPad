@@ -28,8 +28,6 @@ actor TranscriptionService {
 
     // MARK: - State
 
-    private var whisperKit: WhisperKit?
-    private var currentModelName: String?
     private var modelState: TranscriptionModelState = .unloaded
     private var customStorageURL: URL?
 
@@ -40,12 +38,26 @@ actor TranscriptionService {
 
     /// 現在のモデル状態
     var state: TranscriptionModelState {
-        modelState
+        get async {
+            let managerState = await WhisperKitManager.shared.state
+            switch managerState {
+            case .unloaded:
+                return .unloaded
+            case .initializing:
+                return .loading
+            case .ready:
+                return .loaded
+            case let .error(message):
+                return .error(message)
+            }
+        }
     }
 
     /// 現在読み込まれているモデル名
     var loadedModelName: String? {
-        currentModelName
+        get async {
+            await WhisperKitManager.shared.loadedModelName
+        }
     }
 
     /// 現在のモデル保存先ディレクトリ
@@ -194,37 +206,15 @@ actor TranscriptionService {
     // MARK: - Initialization and Loading
 
     /// WhisperKit を初期化（モデルを読み込み）
+    ///
+    /// WhisperKitManager に委譲して共有インスタンスを初期化します。
     func initialize(modelName: String?) async throws {
-        let targetModel: String = if let modelName {
-            modelName
-        } else {
-            await recommendedModel()
-        }
-        logger.info("Initializing WhisperKit with model: \(targetModel)")
-
-        modelState = .loading
-
-        let targetDirectory = modelsDirectory
+        logger.info("Initializing WhisperKit with model: \(modelName ?? "default")")
 
         do {
-            let config = WhisperKitConfig(
-                model: targetModel,
-                downloadBase: targetDirectory,
-                modelRepo: Self.defaultModelRepo,
-                verbose: true,
-                logLevel: .info,
-                prewarm: true,
-                load: true,
-                download: true
-            )
-
-            whisperKit = try await WhisperKit(config)
-            currentModelName = targetModel
-            modelState = .loaded
-
-            logger.info("WhisperKit initialized successfully with model: \(targetModel)")
+            try await WhisperKitManager.shared.initialize(modelName: modelName)
+            logger.info("WhisperKit initialized successfully")
         } catch {
-            modelState = .error(error.localizedDescription)
             logger.error("WhisperKit initialization failed: \(error.localizedDescription)")
             throw TranscriptionError.initializationFailed(error.localizedDescription)
         }
@@ -234,7 +224,7 @@ actor TranscriptionService {
 
     /// 音声ファイルを文字起こし
     func transcribe(audioURL: URL, language: String?) async throws -> String {
-        guard let whisperKit else {
+        guard let whisperKit = await WhisperKitManager.shared.getWhisperKit() else {
             logger.error("Transcription attempted without initialized WhisperKit")
             throw TranscriptionError.modelNotLoaded
         }
@@ -269,12 +259,11 @@ actor TranscriptionService {
     // MARK: - Cleanup
 
     /// リソースを解放
+    ///
+    /// WhisperKitManager に委譲して共有インスタンスを解放します。
     func unload() async {
         logger.info("Unloading WhisperKit...")
-        await whisperKit?.unloadModels()
-        whisperKit = nil
-        currentModelName = nil
-        modelState = .unloaded
+        await WhisperKitManager.shared.unload()
         logger.info("WhisperKit unloaded")
     }
 }

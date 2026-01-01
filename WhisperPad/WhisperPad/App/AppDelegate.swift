@@ -97,6 +97,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         requestNotificationPermission()
         setupHotKeys()
         setupStreamingPopupObserver()
+
+        // WhisperKit をバックグラウンドで初期化
+        store.send(.initializeWhisperKit)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -235,34 +238,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .idle:
             let config = iconSettings.idle
             setStatusIcon(symbolName: config.symbolName, color: config.color)
+            clearRecordingTimeDisplay()
 
         case .recording:
             let config = iconSettings.recording
             setStatusIcon(symbolName: config.symbolName, color: config.color)
+            setRecordingTimeDisplay(store.recording.currentDuration)
 
         case .paused:
             let config = iconSettings.paused
             setStatusIcon(symbolName: config.symbolName, color: config.color)
+            setRecordingTimeDisplay(store.recording.currentDuration)
 
         case .transcribing:
             let config = iconSettings.transcribing
             startGearAnimation(with: config)
+            clearRecordingTimeDisplay()
 
         case .completed:
             let config = iconSettings.completed
             setStatusIcon(symbolName: config.symbolName, color: config.color)
+            clearRecordingTimeDisplay()
 
         case .streamingTranscribing:
             let config = iconSettings.streamingTranscribing
             setStatusIcon(symbolName: config.symbolName, color: config.color)
+            setRecordingTimeDisplay(store.streamingTranscription.duration)
 
         case .streamingCompleted:
             let config = iconSettings.streamingCompleted
             setStatusIcon(symbolName: config.symbolName, color: config.color)
+            clearRecordingTimeDisplay()
 
         case .error:
             let config = iconSettings.error
             setStatusIcon(symbolName: config.symbolName, color: config.color)
+            clearRecordingTimeDisplay()
         }
     }
 
@@ -278,6 +289,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "WhisperPad")
         button.image = image?.withSymbolConfiguration(config)
+    }
+
+    // MARK: - Recording Time Display
+
+    /// 録音時間を「MM:SS」形式でフォーマット
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    /// ステータスバーに録音時間を表示
+    private func setRecordingTimeDisplay(_ duration: TimeInterval) {
+        guard let button = statusItem?.button else { return }
+        // 等幅数字フォントで表示（数字幅が変わっても揃う）
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
+        ]
+        button.attributedTitle = NSAttributedString(
+            string: formatDuration(duration),
+            attributes: attributes
+        )
+    }
+
+    /// ステータスバーから録音時間表示をクリア
+    private func clearRecordingTimeDisplay() {
+        statusItem?.button?.title = ""
     }
 
     // MARK: - Actions

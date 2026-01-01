@@ -9,6 +9,16 @@
       "preLaunchTask": "Build WhisperPad (Debug)",
       "cwd": "${workspaceFolder}",
       "terminal": "console"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:feature-record-time}",
+      "name": "Release WhisperPad",
+      "target": "WhisperPad",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release WhisperPad"
     }
   ]
 }
