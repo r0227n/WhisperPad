@@ -56,7 +56,6 @@ extension AppDelegate {
         await hotKeyClient.unregisterAll()
 
         await registerRecordingHotKey(hotKeySettings)
-        await registerPasteHotKey(hotKeySettings)
         await registerOpenSettingsHotKey(hotKeySettings)
         await registerCancelHotKey(hotKeySettings)
         await registerStreamingHotKey(hotKeySettings)
@@ -65,18 +64,9 @@ extension AppDelegate {
     }
 
     private func registerRecordingHotKey(_ settings: HotKeySettings) async {
-        let mode = settings.recordingMode
         await hotKeyClient.registerRecordingWithCombo(
             settings.recordingHotKey,
-            { [weak self] in Task { @MainActor in self?.handleRecordingKeyDown(mode: mode) } },
-            { [weak self] in Task { @MainActor in self?.handleRecordingKeyUp(mode: mode) } }
-        )
-    }
-
-    private func registerPasteHotKey(_ settings: HotKeySettings) async {
-        await hotKeyClient.registerPasteWithCombo(
-            settings.pasteHotKey,
-            { [weak self] in Task { @MainActor in self?.pasteLastTranscription() } }
+            { [weak self] in Task { @MainActor in self?.toggleRecording() } }
         )
     }
 
@@ -100,33 +90,6 @@ extension AppDelegate {
             { [weak self] in Task { @MainActor in self?.handleStreamingKeyDown() } },
             { [weak self] in Task { @MainActor in self?.handleStreamingKeyUp() } }
         )
-    }
-
-    /// 録音キーダウンハンドラー（recordingMode対応）
-    func handleRecordingKeyDown(mode: HotKeySettings.RecordingMode) {
-        switch mode {
-        case .toggle:
-            toggleRecording()
-        case .pushToTalk:
-            // 録音中でなければ開始
-            switch store.appStatus {
-            case .idle, .completed, .error, .streamingCompleted:
-                logger.info("Push-to-Talk: Key down, starting recording")
-                store.send(.startRecording)
-            default:
-                break
-            }
-        }
-    }
-
-    /// 録音キーアップハンドラー（Push-to-Talk用）
-    func handleRecordingKeyUp(mode: HotKeySettings.RecordingMode) {
-        guard mode == .pushToTalk else { return }
-        // 録音中または一時停止中なら終了
-        if store.appStatus == .recording || store.appStatus == .paused {
-            logger.info("Push-to-Talk: Key up, ending recording")
-            store.send(.endRecording)
-        }
     }
 
     /// ストリーミングキーダウンハンドラー
