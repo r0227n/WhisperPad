@@ -62,6 +62,9 @@ struct SettingsFeature {
 
         /// 削除確認対象のモデル名
         var modelToDelete: String?
+
+        /// 選択中のショートカット（ホットキー設定タブ用）
+        var selectedShortcut: HotkeyType?
     }
 
     // MARK: - Action
@@ -152,6 +155,8 @@ struct SettingsFeature {
         case startRecordingHotkey(HotkeyType)
         /// ホットキー録音を停止
         case stopRecordingHotkey
+        /// ショートカットを選択
+        case selectShortcut(HotkeyType?)
 
         // MARK: - Input Devices
 
@@ -457,6 +462,10 @@ struct SettingsFeature {
 
             case .stopRecordingHotkey:
                 state.recordingHotkeyType = nil
+                return .none
+
+            case let .selectShortcut(shortcut):
+                state.selectedShortcut = shortcut
                 return .none
 
             case .fetchInputDevices:
