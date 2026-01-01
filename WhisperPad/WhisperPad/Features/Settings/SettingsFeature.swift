@@ -155,6 +155,11 @@ struct SettingsFeature {
         /// ホットキー競合をチェック
         case checkHotkeyConflict
 
+        // MARK: - Menu Bar Icon
+
+        /// メニューバーアイコン設定をデフォルトにリセット
+        case resetMenuBarIconSettings
+
         // MARK: - Delegate
 
         /// 親 Reducer へのデリゲートアクション
@@ -469,6 +474,10 @@ struct SettingsFeature {
                     state.hotkeyConflict = "競合: \(conflicts.joined(separator: ", "))"
                 }
                 return .none
+
+            case .resetMenuBarIconSettings:
+                state.settings.general.menuBarIconSettings = .default
+                return .send(.saveSettings)
 
             case .delegate:
                 return .none
