@@ -49,11 +49,11 @@ git status --short .claude/
 
 `git status --short` の出力を分類:
 
-| 記号 | 状態         | 説明                 |
-| ---- | ------------ | -------------------- |
-| `??` | 新規作成     | Untracked ファイル   |
-| `M`  | 編集         | Modified ファイル    |
-| `D`  | 削除         | Deleted ファイル     |
+| 記号 | 状態         | 説明                    |
+| ---- | ------------ | ----------------------- |
+| `??` | 新規作成     | Untracked ファイル      |
+| `M`  | 編集         | Modified ファイル       |
+| `D`  | 削除         | Deleted ファイル        |
 | `A`  | ステージ済み | Added (staged) ファイル |
 
 ### 対象ファイルのリスト化
@@ -62,12 +62,15 @@ git status --short .claude/
 ## 変更ファイル一覧
 
 ### 新規作成
+
 - `path/to/new-file.md`
 
 ### 編集
+
 - `path/to/modified-file.md`
 
 ### 削除
+
 - `path/to/deleted-file.md`
 ```
 
@@ -145,13 +148,13 @@ mkdir -p <dest-worktree>/<dir-path>
 
 レイヤー分類ルールに従ってコミットを分割:
 
-| 優先度 | レイヤー | パスパターン                    |
-| ------ | -------- | ------------------------------- |
-| 1      | Commands | `.claude/commands/*.md`         |
-| 2      | Skills   | `.claude/skills/**`             |
-| 3      | Agents   | `.claude/agents/**`             |
-| 4      | Hooks    | `.claude/hooks/**`              |
-| 5      | Settings | `.claude/settings*.json`        |
+| 優先度 | レイヤー | パスパターン                     |
+| ------ | -------- | -------------------------------- |
+| 1      | Commands | `.claude/commands/*.md`          |
+| 2      | Skills   | `.claude/skills/**`              |
+| 3      | Agents   | `.claude/agents/**`              |
+| 4      | Hooks    | `.claude/hooks/**`               |
+| 5      | Settings | `.claude/settings*.json`         |
 | 6      | Misc     | その他 `.claude/` 配下のファイル |
 
 ### 6.2 コミットメッセージ形式
@@ -186,6 +189,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 **タイトル**: <title>
 
 **本文**:
+
 <body>
 ```
 
