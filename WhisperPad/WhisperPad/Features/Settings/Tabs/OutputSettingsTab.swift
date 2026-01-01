@@ -23,6 +23,8 @@ struct OutputSettingsTab: View {
                 )
                 .disabled(true)
                 .help("文字起こし結果は常にクリップボードにコピーされます")
+                .accessibilityLabel("クリップボードにコピー（常に有効）")
+                .accessibilityHint("文字起こし結果は常にクリップボードにコピーされます")
             } header: {
                 Text("クリップボード")
             } footer: {
@@ -44,6 +46,8 @@ struct OutputSettingsTab: View {
                         }
                     )
                 )
+                .accessibilityLabel("ファイルに保存")
+                .accessibilityHint("文字起こし結果をファイルに保存します")
 
                 if store.settings.output.isEnabled {
                     HStack {
@@ -57,6 +61,8 @@ struct OutputSettingsTab: View {
                         Button("変更...") {
                             selectOutputDirectory()
                         }
+                        .accessibilityLabel("保存先を変更")
+                        .accessibilityHint("ファイルの保存先フォルダを選択します")
                     }
 
                     Picker(
@@ -77,6 +83,8 @@ struct OutputSettingsTab: View {
                         Text("連番 (WhisperPad_001)")
                             .tag(FileOutputSettings.FileNameFormat.sequential)
                     }
+                    .accessibilityLabel("ファイル名形式")
+                    .accessibilityHint("ファイル名の命名規則を選択します")
 
                     Picker(
                         "ファイル形式",
@@ -94,6 +102,8 @@ struct OutputSettingsTab: View {
                         }
                     }
                     .pickerStyle(.segmented)
+                    .accessibilityLabel("ファイル形式")
+                    .accessibilityHint("保存するファイルの拡張子を選択します")
 
                     Toggle(
                         "メタデータを含める",
@@ -107,6 +117,8 @@ struct OutputSettingsTab: View {
                         )
                     )
                     .help("ファイルに作成日時やアプリ情報を含めます")
+                    .accessibilityLabel("メタデータを含める")
+                    .accessibilityHint("ファイルに作成日時やアプリ情報を含めます")
                 }
             } header: {
                 Text("ファイル出力")
