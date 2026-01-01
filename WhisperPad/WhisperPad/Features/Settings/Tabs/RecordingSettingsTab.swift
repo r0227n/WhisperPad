@@ -34,6 +34,8 @@ struct RecordingSettingsTab: View {
                     }
                 }
                 .help("録音に使用するマイクを選択します")
+                .accessibilityLabel("入力デバイス")
+                .accessibilityHint("録音に使用するマイクを選択します")
             } header: {
                 Text("入力デバイス")
             }
@@ -52,6 +54,8 @@ struct RecordingSettingsTab: View {
                     )
                 )
                 .help("録音時間の制限を設けない")
+                .accessibilityLabel("録音時間無制限")
+                .accessibilityHint("録音時間の制限を設けません")
 
                 if let maxDuration = store.settings.recording.maxDuration {
                     HStack {
@@ -71,6 +75,8 @@ struct RecordingSettingsTab: View {
                         )
                         .frame(width: 80)
                         .textFieldStyle(.roundedBorder)
+                        .accessibilityLabel("最大録音時間")
+                        .accessibilityHint("最大録音時間を秒単位で入力します")
                         Text("秒")
                     }
                 }
@@ -92,6 +98,8 @@ struct RecordingSettingsTab: View {
                     )
                 )
                 .help("一定時間無音が続くと録音を自動停止します")
+                .accessibilityLabel("無音検出で自動停止")
+                .accessibilityHint("一定時間無音が続くと録音を自動停止します")
 
                 if store.settings.recording.silenceDetectionEnabled {
                     HStack {
@@ -111,6 +119,8 @@ struct RecordingSettingsTab: View {
                         )
                         .frame(width: 80)
                         .textFieldStyle(.roundedBorder)
+                        .accessibilityLabel("無音判定時間")
+                        .accessibilityHint("無音判定時間を秒単位で入力します")
                         Text("秒")
                     }
 
@@ -119,6 +129,7 @@ struct RecordingSettingsTab: View {
                         Spacer()
                         Text("\(Int(store.settings.recording.silenceThreshold)) dB")
                             .foregroundColor(.secondary)
+                            .accessibilityLabel("無音判定しきい値: \(Int(store.settings.recording.silenceThreshold)) デシベル")
                     }
                 }
             } header: {
