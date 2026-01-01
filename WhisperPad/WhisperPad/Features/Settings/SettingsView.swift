@@ -43,12 +43,6 @@ struct SettingsView: View {
                     Label(SettingsTab.model.rawValue, systemImage: SettingsTab.model.iconName)
                 }
                 .tag(SettingsTab.model)
-
-            OutputSettingsTab(store: store)
-                .tabItem {
-                    Label(SettingsTab.output.rawValue, systemImage: SettingsTab.output.iconName)
-                }
-                .tag(SettingsTab.output)
         }
         .frame(width: 520, height: 500)
         .onAppear {

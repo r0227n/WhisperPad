@@ -9,11 +9,19 @@ import Foundation
 ///
 /// 文字起こし結果をファイルに保存する際の設定を管理します。
 struct FileOutputSettings: Codable, Equatable, Sendable {
+    /// クリップボードにコピーするかどうか
+    var copyToClipboard: Bool = true
+
     /// ファイル出力が有効かどうか
     var isEnabled: Bool = false
 
     /// 出力先ディレクトリ
     var outputDirectory: URL
+
+    /// 出力先ディレクトリの Security-Scoped Bookmark データ
+    ///
+    /// サンドボックス環境でアプリ再起動後もフォルダへのアクセス権を維持するために使用します。
+    var outputBookmarkData: Data?
 
     /// ファイル名形式
     var fileNameFormat: FileNameFormat = .dateTime
