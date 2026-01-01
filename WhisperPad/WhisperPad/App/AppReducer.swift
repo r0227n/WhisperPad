@@ -219,14 +219,17 @@ struct AppReducer {
             case let .streamingTranscription(.delegate(.streamingCompleted(text))):
                 state.appStatus = .streamingCompleted
                 state.lastTranscription = text
+                let notificationTitle = state.settings.settings.general.notificationTitle
+                let streamingCompleteMessage = state.settings.settings.general.streamingCompleteMessage
+
                 return .run { [outputClient, clock] send in
                     // クリップボードにコピー
                     _ = await outputClient.copyToClipboard(text)
 
                     // 通知を表示
                     await outputClient.showNotification(
-                        "WhisperPad",
-                        "リアルタイム文字起こしが完了しました"
+                        notificationTitle,
+                        streamingCompleteMessage
                     )
 
                     // 完了音を再生
@@ -266,6 +269,8 @@ struct AppReducer {
                 state.appStatus = .completed
                 state.lastTranscription = text
                 let outputSettings = state.settings.settings.output
+                let notificationTitle = state.settings.settings.general.notificationTitle
+                let transcriptionCompleteMessage = state.settings.settings.general.transcriptionCompleteMessage
 
                 return .run { [outputClient] send in
                     // クリップボードにコピー
@@ -287,8 +292,8 @@ struct AppReducer {
                         }
                     } else {
                         await outputClient.showNotification(
-                            "WhisperPad",
-                            "文字起こしが完了しました"
+                            notificationTitle,
+                            transcriptionCompleteMessage
                         )
                     }
 
