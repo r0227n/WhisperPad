@@ -15,6 +15,12 @@ struct IconSettingsTab: View {
     var body: some View {
         Form {
             Section {
+                iconPreviewSection
+            } header: {
+                Text("プレビュー")
+            }
+
+            Section {
                 ForEach(IconConfigStatus.allCases) { status in
                     IconConfigurationView(
                         status: status,
@@ -36,12 +42,6 @@ struct IconSettingsTab: View {
                 .help("すべてのアイコン設定を初期値に戻します")
                 .accessibilityLabel("デフォルトに戻す")
                 .accessibilityHint("すべてのアイコン設定を初期値に戻します")
-            }
-
-            Section {
-                iconPreviewSection
-            } header: {
-                Text("プレビュー")
             }
         }
         .formStyle(.grouped)
