@@ -1,7 +1,7 @@
 ---
 description: PR レビューコメントを分析し、1件ずつ対応・コミット
 argument-hint: [--skip-confirm]
-allowed-tools: Bash(gh api:*), Bash(gh pr view:*), Bash(git add:*), Bash(git commit:*), Bash(git push:*), Bash(git diff:*), Bash(git status:*), Read, Grep, Glob, Edit, TodoWrite, EnterPlanMode, ExitPlanMode
+allowed-tools: Bash(gh api:*), Bash(gh pr view:*), Bash(git -C add:*), Bash(git -C commit:*), Bash(git -C diff:*), Bash(git -C push:*), Bash(git -C status:*), Read, Grep, Glob, Edit, TodoWrite, EnterPlanMode, ExitPlanMode
 ---
 
 # PR Comments: レビューコメント対応

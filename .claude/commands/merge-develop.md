@@ -1,7 +1,7 @@
 ---
 description: origin/develop をマージしコンフリクトを解消
 argument-hint: [--skip-confirm] [--no-push]
-allowed-tools: Bash(git status:*), Bash(git fetch:*), Bash(git log:*), Bash(git diff:*), Bash(git stash:*), Bash(git merge:*), Bash(git add:*), Bash(git commit:*), Bash(git push:*), Bash(xcodebuild:*), Read, Edit, Grep, Glob, TodoWrite, EnterPlanMode, ExitPlanMode
+allowed-tools: Bash(git -C add:*), Bash(git -C commit:*), Bash(git -C diff:*), Bash(git -C fetch:*), Bash(git -C log:*), Bash(git -C merge:*), Bash(git -C push:*), Bash(git -C stash:*), Bash(git -C status:*), Bash(xcodebuild:*), Read, Edit, Grep, Glob, TodoWrite, EnterPlanMode, ExitPlanMode
 ---
 
 # Merge Develop: origin/develop マージ & コンフリクト解消
