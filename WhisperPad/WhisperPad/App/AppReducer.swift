@@ -217,12 +217,9 @@ struct AppReducer {
 
             // StreamingTranscriptionFeature のデリゲートアクションを処理
             case let .streamingTranscription(.delegate(.streamingCompleted(text))):
-                state.appStatus = .streamingCompleted
+                // appStatusはfinalizationCompletedで既に.streamingCompletedに設定済み
                 state.lastTranscription = text
-                return .run { [outputClient, clock] send in
-                    // クリップボードにコピー
-                    _ = await outputClient.copyToClipboard(text)
-
+                return .run { [outputClient] _ in
                     // 通知を表示
                     await outputClient.showNotification(
                         "WhisperPad",
@@ -231,18 +228,21 @@ struct AppReducer {
 
                     // 完了音を再生
                     await outputClient.playCompletionSound()
-
-                    // 自動リセット
-                    try await clock.sleep(for: .seconds(3))
-                    await send(.resetToIdle)
                 }
-                .cancellable(id: "autoReset")
 
             case .streamingTranscription(.delegate(.streamingCancelled)):
                 state.appStatus = .idle
                 return .none
 
             case .streamingTranscription(.delegate(.closePopup)):
+                // 状態をリセット
+                state.appStatus = .idle
+                state.streamingTranscription.status = .idle
+                state.streamingTranscription.confirmedText = ""
+                state.streamingTranscription.pendingText = ""
+                state.streamingTranscription.decodingText = ""
+                state.streamingTranscription.duration = 0
+                state.streamingTranscription.tokensPerSecond = 0
                 // AppDelegate にポップアップを閉じる通知を送信
                 return .run { _ in
                     await MainActor.run {
@@ -254,8 +254,31 @@ struct AppReducer {
                 }
 
             // StreamingTranscriptionFeature の内部アクションで appStatus を更新
+            case .streamingTranscription(.startButtonTapped):
+                // 初期化中はギアアニメーションを表示
+                state.appStatus = .transcribing
+                return .none
+
             case .streamingTranscription(.initializationCompleted):
                 state.appStatus = .streamingTranscribing
+                return .none
+
+            case let .streamingTranscription(.initializationFailed(message)):
+                state.appStatus = .error(message)
+                return .none
+
+            case .streamingTranscription(.stopButtonTapped):
+                // 処理中（ファイナライズ中）はギアアニメーションを表示
+                state.appStatus = .transcribing
+                return .none
+
+            case .streamingTranscription(.finalizationCompleted):
+                // ファイナライズ完了時にアイコンを完了状態に
+                state.appStatus = .streamingCompleted
+                return .none
+
+            case let .streamingTranscription(.finalizationFailed(message)):
+                state.appStatus = .error(message)
                 return .none
 
             case .streamingTranscription:
