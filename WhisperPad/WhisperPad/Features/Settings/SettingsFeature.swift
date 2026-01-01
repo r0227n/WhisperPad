@@ -58,6 +58,9 @@ struct SettingsFeature {
 
         /// ホットキー競合警告メッセージ
         var hotkeyConflict: String?
+
+        /// 削除確認対象のモデル名
+        var modelToDelete: String?
     }
 
     // MARK: - Action
@@ -115,6 +118,12 @@ struct SettingsFeature {
         case downloadCompleted(String, Result<URL, Error>)
         /// モデルを削除
         case deleteModel(String)
+        /// モデル削除ボタンがタップされた（確認ダイアログを表示）
+        case deleteModelButtonTapped(String)
+        /// モデル削除を確認
+        case confirmDeleteModel
+        /// モデル削除をキャンセル
+        case cancelDeleteModel
         /// モデル削除完了
         case deleteModelResponse(String, Result<Void, Error>)
 
@@ -354,6 +363,19 @@ struct SettingsFeature {
                         await send(.deleteModelResponse(modelName, .failure(error)))
                     }
                 }
+
+            case let .deleteModelButtonTapped(modelName):
+                state.modelToDelete = modelName
+                return .none
+
+            case .confirmDeleteModel:
+                guard let modelName = state.modelToDelete else { return .none }
+                state.modelToDelete = nil
+                return .send(.deleteModel(modelName))
+
+            case .cancelDeleteModel:
+                state.modelToDelete = nil
+                return .none
 
             case let .deleteModelResponse(modelName, result):
                 switch result {

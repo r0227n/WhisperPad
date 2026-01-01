@@ -91,7 +91,7 @@ struct ModelSettingsTab: View {
                             isDownloading: store.downloadingModelName == model.id,
                             downloadProgress: store.downloadProgress[model.id] ?? 0,
                             onDownload: { store.send(.downloadModel(model.id)) },
-                            onDelete: { store.send(.deleteModel(model.id)) }
+                            onDelete: { store.send(.deleteModelButtonTapped(model.id)) }
                         )
                     }
                 }
@@ -149,6 +149,25 @@ struct ModelSettingsTab: View {
             }
         }
         .formStyle(.grouped)
+        .confirmationDialog(
+            "モデルを削除しますか？",
+            isPresented: Binding(
+                get: { store.modelToDelete != nil },
+                set: { if !$0 { store.send(.cancelDeleteModel) } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("削除", role: .destructive) {
+                store.send(.confirmDeleteModel)
+            }
+            Button("キャンセル", role: .cancel) {
+                store.send(.cancelDeleteModel)
+            }
+        } message: {
+            if let modelName = store.modelToDelete {
+                Text("「\(modelName)」を削除します。再度使用するにはダウンロードが必要です。")
+            }
+        }
         .padding()
     }
 
