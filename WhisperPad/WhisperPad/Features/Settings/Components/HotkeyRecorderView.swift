@@ -75,11 +75,14 @@ struct HotkeyRecorderView: View {
                     RoundedRectangle(cornerRadius: 6)
                         .stroke(Color.accentColor, lineWidth: 2)
                 )
+                .accessibilityLabel("キーを入力中")
 
             Button("キャンセル") {
                 onStopRecording()
             }
             .buttonStyle(.borderless)
+            .accessibilityLabel("キャンセル")
+            .accessibilityHint("ホットキーの入力をキャンセルします")
         }
         .onHover { hovering in
             if hovering {
@@ -110,6 +113,8 @@ struct HotkeyRecorderView: View {
                 onClear()
             }
             .buttonStyle(.borderless)
+            .accessibilityLabel("クリア")
+            .accessibilityHint("ホットキーをデフォルトに戻します")
         }
     }
 
