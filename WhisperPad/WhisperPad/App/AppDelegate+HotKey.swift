@@ -59,6 +59,8 @@ extension AppDelegate {
         await registerOpenSettingsHotKey(hotKeySettings)
         await registerCancelHotKey(hotKeySettings)
         await registerStreamingHotKey(hotKeySettings)
+        await registerRecordingToggleHotKey(hotKeySettings)
+        await registerRecordingPauseHotKey(hotKeySettings)
 
         logger.info("Hotkeys registered from settings")
     }
@@ -92,6 +94,47 @@ extension AppDelegate {
         )
     }
 
+    private func registerRecordingToggleHotKey(_ settings: HotKeySettings) async {
+        await hotKeyClient.registerRecordingToggleWithCombo(
+            settings.recordingToggleHotKey,
+            { [weak self] in Task { @MainActor in self?.handleRecordingToggleKeyDown() } }
+        )
+    }
+
+    private func registerRecordingPauseHotKey(_ settings: HotKeySettings) async {
+        await hotKeyClient.registerRecordingPauseWithCombo(
+            settings.recordingPauseHotKey,
+            { [weak self] in Task { @MainActor in self?.handleRecordingPauseKeyDown() } }
+        )
+    }
+
+    /// 録音キーダウンハンドラー（recordingMode対応）
+    func handleRecordingKeyDown(mode: HotKeySettings.RecordingMode) {
+        switch mode {
+        case .toggle:
+            toggleRecording()
+        case .pushToTalk:
+            // 録音中でなければ開始
+            switch store.appStatus {
+            case .idle, .completed, .error, .streamingCompleted:
+                logger.info("Push-to-Talk: Key down, starting recording")
+                store.send(.startRecording)
+            default:
+                break
+            }
+        }
+    }
+
+    /// 録音キーアップハンドラー（Push-to-Talk用）
+    func handleRecordingKeyUp(mode: HotKeySettings.RecordingMode) {
+        guard mode == .pushToTalk else { return }
+        // 録音中または一時停止中なら終了
+        if store.appStatus == .recording || store.appStatus == .paused {
+            logger.info("Push-to-Talk: Key up, ending recording")
+            store.send(.endRecording)
+        }
+    }
+
     /// ストリーミングキーダウンハンドラー
     func handleStreamingKeyDown() {
         logger.info("Streaming hotkey pressed: ⌘⇧R")
@@ -104,6 +147,32 @@ extension AppDelegate {
         if store.appStatus == .streamingTranscribing {
             logger.info("Streaming Push-to-Talk: Key up, stopping streaming")
             store.send(.streamingTranscription(.stopButtonTapped))
+        }
+    }
+
+    /// 録音開始/終了トグルキーダウンハンドラー
+    func handleRecordingToggleKeyDown() {
+        logger.info("Recording toggle hotkey pressed: ⌥⇧S")
+        switch store.appStatus {
+        case .idle, .completed, .error, .streamingCompleted:
+            store.send(.startRecording)
+        case .recording, .paused:
+            store.send(.endRecording)
+        default:
+            logger.info("Recording toggle ignored: transcribing")
+        }
+    }
+
+    /// 録音一時停止キーダウンハンドラー
+    func handleRecordingPauseKeyDown() {
+        logger.info("Recording pause hotkey pressed: ⌥⇧P")
+        switch store.appStatus {
+        case .recording:
+            store.send(.pauseRecording)
+        case .paused:
+            store.send(.resumeRecording)
+        default:
+            logger.info("Recording pause ignored: not recording")
         }
     }
 }

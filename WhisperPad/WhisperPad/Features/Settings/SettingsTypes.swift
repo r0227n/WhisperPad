@@ -43,6 +43,8 @@ enum HotkeyType: String, CaseIterable, Sendable {
     case openSettings
     case streaming
     case cancel
+    case recordingToggle
+    case recordingPause
 }
 
 // MARK: - Delegate Action

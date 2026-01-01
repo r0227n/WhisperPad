@@ -171,59 +171,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - State-based UI Updates
 
-    /// 現在の状態に応じてメニューを更新
-    private func updateMenuForCurrentState() {
-        guard let menu = statusMenu,
-              let recordingItem = menu.item(withTag: MenuItemTag.recording.rawValue),
-              let pauseResumeItem = menu.item(withTag: MenuItemTag.pauseResume.rawValue),
-              let streamingItem = menu.item(withTag: MenuItemTag.streaming.rawValue)
-        else { return }
-
-        switch store.appStatus {
-        case .idle, .completed, .error, .streamingCompleted:
-            // 録音・ストリーミングどちらも有効
-            configureMenuItem(recordingItem, title: "録音開始", action: #selector(startRecording), symbol: "mic.fill")
-            streamingItem.isEnabled = true
-            pauseResumeItem.isHidden = true
-
-        case .recording:
-            // 録音中はストリーミング無効
-            configureMenuItem(recordingItem, title: "録音終了", action: #selector(endRecording), symbol: "stop.fill")
-            configureMenuItem(
-                pauseResumeItem, title: "一時停止", action: #selector(pauseRecording), symbol: "pause.fill"
-            )
-            pauseResumeItem.isHidden = false
-            streamingItem.isEnabled = false
-
-        case .paused:
-            // 一時停止中もストリーミング無効
-            configureMenuItem(recordingItem, title: "録音終了", action: #selector(endRecording), symbol: "stop.fill")
-            configureMenuItem(
-                pauseResumeItem, title: "録音再開", action: #selector(resumeRecording), symbol: "play.fill"
-            )
-            pauseResumeItem.isHidden = false
-            streamingItem.isEnabled = false
-
-        case .transcribing:
-            // 文字起こし中はストリーミング無効
-            configureMenuItem(recordingItem, title: "文字起こし中...", action: nil, symbol: "gear", isEnabled: false)
-            pauseResumeItem.isHidden = true
-            streamingItem.isEnabled = false
-
-        case .streamingTranscribing:
-            // ストリーミング中は録音とストリーミング両方無効
-            configureMenuItem(
-                recordingItem,
-                title: "ストリーミング中...",
-                action: nil,
-                symbol: "waveform.badge.mic",
-                isEnabled: false
-            )
-            pauseResumeItem.isHidden = true
-            streamingItem.isEnabled = false
-        }
-    }
-
     /// 現在の状態に応じてアイコンを更新
     private func updateIconForCurrentState() {
         // transcribing 以外の状態ではアニメーションを停止
