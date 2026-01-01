@@ -4,6 +4,7 @@
 //
 
 import AppKit
+import ComposableArchitecture
 
 // MARK: - Menu Creation
 
@@ -30,11 +31,14 @@ extension AppDelegate {
     }
 
     private func addRecordingItems(to menu: NSMenu) {
+        let hotKey = store.settings.settings.hotKey
+
         let recordingItem = NSMenuItem(
             title: "録音開始",
             action: #selector(startRecording),
-            keyEquivalent: ""
+            keyEquivalent: hotKey.recordingToggleHotKey.keyEquivalentCharacter
         )
+        recordingItem.keyEquivalentModifierMask = hotKey.recordingToggleHotKey.keyEquivalentModifierMask
         recordingItem.tag = MenuItemTag.recording.rawValue
         recordingItem.target = self
         recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
@@ -43,8 +47,9 @@ extension AppDelegate {
         let pauseResumeItem = NSMenuItem(
             title: "一時停止",
             action: #selector(pauseRecording),
-            keyEquivalent: ""
+            keyEquivalent: hotKey.recordingPauseHotKey.keyEquivalentCharacter
         )
+        pauseResumeItem.keyEquivalentModifierMask = hotKey.recordingPauseHotKey.keyEquivalentModifierMask
         pauseResumeItem.tag = MenuItemTag.pauseResume.rawValue
         pauseResumeItem.target = self
         pauseResumeItem.image = NSImage(systemSymbolName: "pause.fill", accessibilityDescription: nil)
@@ -99,12 +104,16 @@ extension AppDelegate {
         title: String,
         action: Selector?,
         symbol: String,
-        isEnabled: Bool = true
+        isEnabled: Bool = true,
+        keyEquivalent: String = "",
+        keyEquivalentModifierMask: NSEvent.ModifierFlags = []
     ) {
         item.title = title
         item.action = action
         item.target = action != nil ? self : nil
         item.isEnabled = isEnabled
         item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        item.keyEquivalent = keyEquivalent
+        item.keyEquivalentModifierMask = keyEquivalentModifierMask
     }
 }

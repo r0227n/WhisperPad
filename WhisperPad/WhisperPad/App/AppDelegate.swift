@@ -179,27 +179,63 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
               let streamingItem = menu.item(withTag: MenuItemTag.streaming.rawValue)
         else { return }
 
+        // ショートカット設定を取得
+        let hotKey = store.settings.settings.hotKey
+        let toggleKey = hotKey.recordingToggleHotKey
+        let pauseKey = hotKey.recordingPauseHotKey
+
         switch store.appStatus {
         case .idle, .completed, .error, .streamingCompleted:
             // 録音・ストリーミングどちらも有効
-            configureMenuItem(recordingItem, title: "録音開始", action: #selector(startRecording), symbol: "mic.fill")
+            configureMenuItem(
+                recordingItem,
+                title: "録音開始",
+                action: #selector(startRecording),
+                symbol: "mic.fill",
+                keyEquivalent: toggleKey.keyEquivalentCharacter,
+                keyEquivalentModifierMask: toggleKey.keyEquivalentModifierMask
+            )
             streamingItem.isEnabled = true
             pauseResumeItem.isHidden = true
 
         case .recording:
             // 録音中はストリーミング無効
-            configureMenuItem(recordingItem, title: "録音終了", action: #selector(endRecording), symbol: "stop.fill")
             configureMenuItem(
-                pauseResumeItem, title: "一時停止", action: #selector(pauseRecording), symbol: "pause.fill"
+                recordingItem,
+                title: "録音終了",
+                action: #selector(endRecording),
+                symbol: "stop.fill",
+                keyEquivalent: toggleKey.keyEquivalentCharacter,
+                keyEquivalentModifierMask: toggleKey.keyEquivalentModifierMask
+            )
+            configureMenuItem(
+                pauseResumeItem,
+                title: "一時停止",
+                action: #selector(pauseRecording),
+                symbol: "pause.fill",
+                keyEquivalent: pauseKey.keyEquivalentCharacter,
+                keyEquivalentModifierMask: pauseKey.keyEquivalentModifierMask
             )
             pauseResumeItem.isHidden = false
             streamingItem.isEnabled = false
 
         case .paused:
             // 一時停止中もストリーミング無効
-            configureMenuItem(recordingItem, title: "録音終了", action: #selector(endRecording), symbol: "stop.fill")
             configureMenuItem(
-                pauseResumeItem, title: "録音再開", action: #selector(resumeRecording), symbol: "play.fill"
+                recordingItem,
+                title: "録音終了",
+                action: #selector(endRecording),
+                symbol: "stop.fill",
+                keyEquivalent: toggleKey.keyEquivalentCharacter,
+                keyEquivalentModifierMask: toggleKey.keyEquivalentModifierMask
+            )
+            configureMenuItem(
+                pauseResumeItem,
+                title: "録音再開",
+                action: #selector(resumeRecording),
+                symbol: "play.fill",
+                keyEquivalent: pauseKey.keyEquivalentCharacter,
+                keyEquivalentModifierMask: pauseKey.keyEquivalentModifierMask
             )
             pauseResumeItem.isHidden = false
             streamingItem.isEnabled = false
