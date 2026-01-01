@@ -16,6 +16,7 @@ extension AppDelegate {
 
         addRecordingItems(to: menu)
         addStreamingItem(to: menu)
+        addCancelItem(to: menu)
         menu.addItem(NSMenuItem.separator())
         addSettingsItem(to: menu)
         menu.addItem(NSMenuItem.separator())
@@ -68,6 +69,22 @@ extension AppDelegate {
         streamingItem.target = self
         streamingItem.image = NSImage(systemSymbolName: "waveform.badge.mic", accessibilityDescription: nil)
         menu.addItem(streamingItem)
+    }
+
+    private func addCancelItem(to menu: NSMenu) {
+        let hotKey = store.settings.settings.hotKey
+
+        let cancelItem = NSMenuItem(
+            title: "キャンセル",
+            action: #selector(cancelMenuItemTapped),
+            keyEquivalent: hotKey.cancelHotKey.keyEquivalentCharacter
+        )
+        cancelItem.keyEquivalentModifierMask = hotKey.cancelHotKey.keyEquivalentModifierMask
+        cancelItem.tag = MenuItemTag.cancel.rawValue
+        cancelItem.target = self
+        cancelItem.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: nil)
+        cancelItem.isHidden = true
+        menu.addItem(cancelItem)
     }
 
     private func addSettingsItem(to menu: NSMenu) {
@@ -126,22 +143,23 @@ extension AppDelegate {
         guard let menu = statusMenu,
               let recordingItem = menu.item(withTag: MenuItemTag.recording.rawValue),
               let pauseResumeItem = menu.item(withTag: MenuItemTag.pauseResume.rawValue),
-              let streamingItem = menu.item(withTag: MenuItemTag.streaming.rawValue)
+              let streamingItem = menu.item(withTag: MenuItemTag.streaming.rawValue),
+              let cancelItem = menu.item(withTag: MenuItemTag.cancel.rawValue)
         else { return }
 
         let hotKey = store.settings.settings.hotKey
 
         switch store.appStatus {
         case .idle, .completed, .error, .streamingCompleted:
-            configureMenuForIdleState(recordingItem, pauseResumeItem, streamingItem, hotKey)
+            configureMenuForIdleState(recordingItem, pauseResumeItem, streamingItem, cancelItem, hotKey)
         case .recording:
-            configureMenuForRecordingState(recordingItem, pauseResumeItem, streamingItem, hotKey)
+            configureMenuForRecordingState(recordingItem, pauseResumeItem, streamingItem, cancelItem, hotKey)
         case .paused:
-            configureMenuForPausedState(recordingItem, pauseResumeItem, streamingItem, hotKey)
+            configureMenuForPausedState(recordingItem, pauseResumeItem, streamingItem, cancelItem, hotKey)
         case .transcribing:
-            configureMenuForTranscribingState(recordingItem, pauseResumeItem, streamingItem)
+            configureMenuForTranscribingState(recordingItem, pauseResumeItem, streamingItem, cancelItem)
         case .streamingTranscribing:
-            configureMenuForStreamingState(recordingItem, pauseResumeItem, streamingItem)
+            configureMenuForStreamingState(recordingItem, pauseResumeItem, streamingItem, cancelItem, hotKey)
         }
     }
 
@@ -149,6 +167,7 @@ extension AppDelegate {
         _ recordingItem: NSMenuItem,
         _ pauseResumeItem: NSMenuItem,
         _ streamingItem: NSMenuItem,
+        _ cancelItem: NSMenuItem,
         _ hotKey: HotKeySettings
     ) {
         let toggleKey = hotKey.recordingToggleHotKey
@@ -162,16 +181,19 @@ extension AppDelegate {
         )
         streamingItem.isEnabled = true
         pauseResumeItem.isHidden = true
+        cancelItem.isHidden = true
     }
 
     private func configureMenuForRecordingState(
         _ recordingItem: NSMenuItem,
         _ pauseResumeItem: NSMenuItem,
         _ streamingItem: NSMenuItem,
+        _ cancelItem: NSMenuItem,
         _ hotKey: HotKeySettings
     ) {
         let toggleKey = hotKey.recordingToggleHotKey
         let pauseKey = hotKey.recordingPauseHotKey
+        let cancelKey = hotKey.cancelHotKey
         configureMenuItem(
             recordingItem,
             title: "録音終了",
@@ -188,18 +210,29 @@ extension AppDelegate {
             keyEquivalent: pauseKey.keyEquivalentCharacter,
             keyEquivalentModifierMask: pauseKey.keyEquivalentModifierMask
         )
+        configureMenuItem(
+            cancelItem,
+            title: "キャンセル",
+            action: #selector(cancelMenuItemTapped),
+            symbol: "xmark.circle.fill",
+            keyEquivalent: cancelKey.keyEquivalentCharacter,
+            keyEquivalentModifierMask: cancelKey.keyEquivalentModifierMask
+        )
         pauseResumeItem.isHidden = false
         streamingItem.isEnabled = false
+        cancelItem.isHidden = false
     }
 
     private func configureMenuForPausedState(
         _ recordingItem: NSMenuItem,
         _ pauseResumeItem: NSMenuItem,
         _ streamingItem: NSMenuItem,
+        _ cancelItem: NSMenuItem,
         _ hotKey: HotKeySettings
     ) {
         let toggleKey = hotKey.recordingToggleHotKey
         let pauseKey = hotKey.recordingPauseHotKey
+        let cancelKey = hotKey.cancelHotKey
         configureMenuItem(
             recordingItem,
             title: "録音終了",
@@ -216,14 +249,24 @@ extension AppDelegate {
             keyEquivalent: pauseKey.keyEquivalentCharacter,
             keyEquivalentModifierMask: pauseKey.keyEquivalentModifierMask
         )
+        configureMenuItem(
+            cancelItem,
+            title: "キャンセル",
+            action: #selector(cancelMenuItemTapped),
+            symbol: "xmark.circle.fill",
+            keyEquivalent: cancelKey.keyEquivalentCharacter,
+            keyEquivalentModifierMask: cancelKey.keyEquivalentModifierMask
+        )
         pauseResumeItem.isHidden = false
         streamingItem.isEnabled = false
+        cancelItem.isHidden = false
     }
 
     private func configureMenuForTranscribingState(
         _ recordingItem: NSMenuItem,
         _ pauseResumeItem: NSMenuItem,
-        _ streamingItem: NSMenuItem
+        _ streamingItem: NSMenuItem,
+        _ cancelItem: NSMenuItem
     ) {
         configureMenuItem(
             recordingItem,
@@ -234,13 +277,17 @@ extension AppDelegate {
         )
         pauseResumeItem.isHidden = true
         streamingItem.isEnabled = false
+        cancelItem.isHidden = true
     }
 
     private func configureMenuForStreamingState(
         _ recordingItem: NSMenuItem,
         _ pauseResumeItem: NSMenuItem,
-        _ streamingItem: NSMenuItem
+        _ streamingItem: NSMenuItem,
+        _ cancelItem: NSMenuItem,
+        _ hotKey: HotKeySettings
     ) {
+        let cancelKey = hotKey.cancelHotKey
         configureMenuItem(
             recordingItem,
             title: "ストリーミング中...",
@@ -248,7 +295,16 @@ extension AppDelegate {
             symbol: "waveform.badge.mic",
             isEnabled: false
         )
+        configureMenuItem(
+            cancelItem,
+            title: "キャンセル",
+            action: #selector(cancelMenuItemTapped),
+            symbol: "xmark.circle.fill",
+            keyEquivalent: cancelKey.keyEquivalentCharacter,
+            keyEquivalentModifierMask: cancelKey.keyEquivalentModifierMask
+        )
         pauseResumeItem.isHidden = true
         streamingItem.isEnabled = false
+        cancelItem.isHidden = false
     }
 }
