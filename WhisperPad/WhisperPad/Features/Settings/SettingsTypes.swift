@@ -14,7 +14,6 @@ enum SettingsTab: String, CaseIterable, Sendable {
     case hotkey = "ホットキー"
     case recording = "録音"
     case model = "モデル"
-    case output = "出力"
 
     /// SF Symbol 名
     var iconName: String {
@@ -29,8 +28,6 @@ enum SettingsTab: String, CaseIterable, Sendable {
             "waveform"
         case .model:
             "cpu"
-        case .output:
-            "doc.on.clipboard"
         }
     }
 }
