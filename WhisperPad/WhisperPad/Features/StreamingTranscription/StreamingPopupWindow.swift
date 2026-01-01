@@ -113,7 +113,20 @@ final class StreamingPopupWindow: NSPanel {
         let adjustedOriginX = adjustXPosition(windowOriginX)
 
         setFrameOrigin(NSPoint(x: adjustedOriginX, y: windowOriginY))
+
+        // Set alpha to 0 before showing
+        alphaValue = 0
         makeKeyAndOrderFront(nil)
+
+        // Add fade-in animation
+        if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+            alphaValue = 1
+        } else {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.15
+                self.animator().alphaValue = 1
+            }
+        }
     }
 
     /// 画面の上部中央に表示（フォールバック用）
@@ -125,7 +138,20 @@ final class StreamingPopupWindow: NSPanel {
         let originY = screenFrame.maxY - Constants.windowHeight - 50
 
         setFrameOrigin(NSPoint(x: originX, y: originY))
+
+        // Set alpha to 0 before showing
+        alphaValue = 0
         makeKeyAndOrderFront(nil)
+
+        // Add fade-in animation
+        if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+            alphaValue = 1
+        } else {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.15
+                self.animator().alphaValue = 1
+            }
+        }
     }
 
     /// X座標を画面内に収まるよう調整
