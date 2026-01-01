@@ -248,26 +248,13 @@ struct AppReducer {
                 return .send(.streamingTranscription(.startButtonTapped))
 
             // StreamingTranscriptionFeature のデリゲートアクションを処理
+            // 注: 通知と完了音は finalizationCompleted で既に実行済み
             case let .streamingTranscription(.delegate(.streamingCompleted(text))):
                 // appStatusはfinalizationCompletedで既に.streamingCompletedに設定済み
                 state.lastTranscription = text
                 let copyToClipboard = state.settings.settings.output.copyToClipboard
-                let generalSettings = state.settings.settings.general
 
                 return .run { [outputClient, clock] send in
-                    // 通知を表示（設定が有効な場合）
-                    if generalSettings.showNotificationOnComplete {
-                        await outputClient.showNotification(
-                            "WhisperPad",
-                            "リアルタイム文字起こしが完了しました"
-                        )
-                    }
-
-                    // 完了音を再生（設定が有効な場合）
-                    if generalSettings.playSoundOnComplete {
-                        await outputClient.playCompletionSound()
-                    }
-
                     // クリップボードにコピー（設定が有効な場合）
                     if copyToClipboard {
                         _ = await outputClient.copyToClipboard(text)
