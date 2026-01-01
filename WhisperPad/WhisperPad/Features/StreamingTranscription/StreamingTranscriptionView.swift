@@ -53,12 +53,16 @@ private struct HeaderView: View {
             Spacer()
 
             // 経過時間
-            Text("経過時間")
-                .foregroundColor(.secondary)
-                .font(.caption)
-            Text(formatDuration(store.duration))
-                .font(.system(.body, design: .monospaced))
-                .foregroundColor(.primary)
+            HStack(spacing: 4) {
+                Text("経過時間")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                Text(formatDuration(store.duration))
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundColor(.primary)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("経過時間 \(formatDurationAccessible(store.duration))")
 
             Spacer()
 
@@ -71,6 +75,7 @@ private struct HeaderView: View {
             }
             .buttonStyle(.plain)
             .help("閉じる")
+            .accessibilityLabel("閉じる")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -80,6 +85,16 @@ private struct HeaderView: View {
         let minutes = Int(duration) / 60
         let seconds = Int(duration) % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    private func formatDurationAccessible(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        if minutes > 0 {
+            return "\(minutes)分\(seconds)秒"
+        } else {
+            return "\(seconds)秒"
+        }
     }
 }
 
@@ -100,6 +115,8 @@ private struct StatusIndicator: View {
                 .fontWeight(.medium)
                 .foregroundColor(statusColor)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(statusText)、\(statusColorName)インジケーター")
     }
 
     private var statusColor: Color {
@@ -139,6 +156,23 @@ private struct StatusIndicator: View {
     private var isPulsing: Bool {
         if case .recording = status { return true }
         return false
+    }
+
+    private var statusColorName: String {
+        switch status {
+        case .idle:
+            "グレー"
+        case .initializing:
+            "黄色"
+        case .recording:
+            "赤"
+        case .processing:
+            "青"
+        case .completed:
+            "緑"
+        case .error:
+            "オレンジ"
+        }
     }
 }
 
@@ -200,6 +234,7 @@ private struct TextDisplayView: View {
                         Text("▋")
                             .foregroundColor(.secondary)
                             .opacity(0.5)
+                            .accessibilityHidden(true)
                     }
 
                     // スクロールアンカー
@@ -210,6 +245,8 @@ private struct TextDisplayView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(transcriptionAccessibilityLabel)
             }
             .onChange(of: store.confirmedText) { _, _ in
                 scrollToBottom(proxy: proxy)
@@ -229,6 +266,23 @@ private struct TextDisplayView: View {
                 proxy.scrollTo("bottom", anchor: .bottom)
             }
         }
+    }
+
+    private var transcriptionAccessibilityLabel: String {
+        var parts: [String] = []
+        if !store.confirmedText.isEmpty {
+            parts.append(store.confirmedText)
+        }
+        if !store.pendingText.isEmpty {
+            parts.append(store.pendingText)
+        }
+        if !store.decodingText.isEmpty {
+            parts.append(store.decodingText)
+        }
+        if parts.isEmpty {
+            return "文字起こしテキストなし"
+        }
+        return "文字起こし: " + parts.joined(separator: " ")
     }
 }
 
@@ -270,6 +324,8 @@ private struct FooterView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.red)
+            .accessibilityLabel("停止")
+            .accessibilityHint("録音を停止します")
 
         case .processing:
             // 処理中: 処理中表示
@@ -287,6 +343,8 @@ private struct FooterView: View {
                 Text("ファイル保存")
             }
             .buttonStyle(.bordered)
+            .accessibilityLabel("ファイル保存")
+            .accessibilityHint("文字起こしをファイルに保存します")
 
             Button {
                 store.send(.copyAndCloseButtonTapped)
@@ -294,6 +352,8 @@ private struct FooterView: View {
                 Text("コピーして閉じる")
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityLabel("コピーして閉じる")
+            .accessibilityHint("文字起こしをクリップボードにコピーしてウィンドウを閉じます")
 
         case let .error(message):
             // エラー: エラーメッセージ表示
