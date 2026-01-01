@@ -30,6 +30,9 @@ struct SettingsFeature {
         /// 利用可能なモデル一覧
         var availableModels: [WhisperModel] = []
 
+        /// ダウンロード済みモデル一覧（ローカルディレクトリスキャンで取得）
+        var downloadedModels: [WhisperModel] = []
+
         /// モデル一覧を読み込み中かどうか
         var isLoadingModels: Bool = false
 
@@ -112,6 +115,10 @@ struct SettingsFeature {
         case fetchModels
         /// モデル一覧取得完了
         case modelsResponse(Result<[WhisperModel], Error>)
+        /// ダウンロード済みモデル一覧を取得（ローカルスキャン）
+        case fetchDownloadedModels
+        /// ダウンロード済みモデル一覧取得完了
+        case downloadedModelsResponse([WhisperModel])
         /// モデルを選択
         case selectModel(String)
         /// モデルをダウンロード
@@ -250,10 +257,11 @@ struct SettingsFeature {
                         if let url = await userDefaultsClient.resolveBookmark(bookmarkData) {
                             await transcriptionClient.setStorageLocation(url)
                         }
+                        await send(.fetchDownloadedModels)
                         await send(.storageUsageResponse(transcriptionClient.getStorageUsage()))
                     }
                 }
-                return .none
+                return .send(.fetchDownloadedModels)
 
             case .saveSettings:
                 state.isSaving = true
@@ -320,6 +328,37 @@ struct SettingsFeature {
                 }
                 return .none
 
+            case .fetchDownloadedModels:
+                return .run { send in
+                    let modelNames = await transcriptionClient.fetchDownloadedModels()
+                    let recommendedModel = await transcriptionClient.recommendedModel()
+                    var models: [WhisperModel] = modelNames.map { name in
+                        WhisperModel.from(
+                            id: name,
+                            isDownloaded: true,
+                            isRecommended: name == recommendedModel
+                        )
+                    }
+                    models.sort { lhs, rhs in
+                        let lhsKnown = WhisperModel.knownModels[lhs.id] != nil
+                        let rhsKnown = WhisperModel.knownModels[rhs.id] != nil
+                        if lhsKnown, !rhsKnown { return true }
+                        if !lhsKnown, rhsKnown { return false }
+                        return lhs.id < rhs.id
+                    }
+                    await send(.downloadedModelsResponse(models))
+                }
+
+            case let .downloadedModelsResponse(models):
+                state.downloadedModels = models
+                // 現在のモデルがダウンロード済みリストに含まれていない場合、最初のモデルを選択
+                let currentModel = state.settings.transcription.modelName
+                if !models.isEmpty, !models.contains(where: { $0.id == currentModel }) {
+                    state.settings.transcription.modelName = models.first!.id
+                    return .send(.saveSettings)
+                }
+                return .none
+
             case let .selectModel(modelName):
                 state.settings.transcription.modelName = modelName
                 return .merge(
@@ -354,7 +393,10 @@ struct SettingsFeature {
                     if let index = state.availableModels.firstIndex(where: { $0.id == modelName }) {
                         state.availableModels[index].isDownloaded = true
                     }
-                    return .send(.calculateStorageUsage)
+                    return .merge(
+                        .send(.calculateStorageUsage),
+                        .send(.fetchDownloadedModels)
+                    )
                 case let .failure(error):
                     state.errorMessage = "ダウンロードに失敗しました: \(error.localizedDescription)"
                     return .none
@@ -389,7 +431,10 @@ struct SettingsFeature {
                     if let index = state.availableModels.firstIndex(where: { $0.id == modelName }) {
                         state.availableModels[index].isDownloaded = false
                     }
-                    return .send(.calculateStorageUsage)
+                    return .merge(
+                        .send(.calculateStorageUsage),
+                        .send(.fetchDownloadedModels)
+                    )
                 case let .failure(error):
                     state.errorMessage = "削除に失敗しました: \(error.localizedDescription)"
                     return .none
@@ -449,6 +494,7 @@ struct SettingsFeature {
                 return .run { send in
                     await transcriptionClient.setStorageLocation(nil)
                     await send(.saveSettings)
+                    await send(.fetchDownloadedModels)
                     await send(.calculateStorageUsage)
                 }
 

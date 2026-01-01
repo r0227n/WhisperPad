@@ -17,14 +17,14 @@ struct ModelSettingsTab: View {
             // MARK: - モデル選択
 
             Section {
-                Picker(
-                    "使用モデル",
-                    selection: Binding(
-                        get: { store.settings.transcription.modelName },
-                        set: { store.send(.selectModel($0)) }
-                    )
-                ) {
-                    ForEach(downloadedModels, id: \.id) { model in
+                Picker("使用モデル", selection: validatedModelSelection) {
+                    // プレースホルダー（downloadedModels が空の場合）
+                    if store.downloadedModels.isEmpty {
+                        Text("モデルをダウンロードしてください")
+                            .tag("")
+                    }
+
+                    ForEach(store.downloadedModels, id: \.id) { model in
                         HStack {
                             Text(model.displayName)
                             if model.isRecommended {
@@ -36,11 +36,12 @@ struct ModelSettingsTab: View {
                         .tag(model.id)
                     }
                 }
-                .disabled(downloadedModels.isEmpty)
+                .pickerStyle(.menu)
+                .disabled(store.downloadedModels.isEmpty)
             } header: {
                 Text("モデル選択")
             } footer: {
-                if downloadedModels.isEmpty {
+                if store.downloadedModels.isEmpty {
                     Text("モデルをダウンロードしてください")
                         .foregroundStyle(.secondary)
                 }
@@ -171,9 +172,25 @@ struct ModelSettingsTab: View {
         .padding()
     }
 
-    /// ダウンロード済みモデルのフィルタリング
-    private var downloadedModels: [WhisperModel] {
-        store.availableModels.filter(\.isDownloaded)
+    /// 検証済みのモデル選択 Binding
+    ///
+    /// 現在の modelName がダウンロード済みモデルに含まれていない場合、
+    /// 最初のダウンロード済みモデルを返すことで Picker の動作を安定させます。
+    private var validatedModelSelection: Binding<String> {
+        Binding(
+            get: {
+                // ダウンロード済みモデルがない場合は空文字列（プレースホルダー用）
+                guard !store.downloadedModels.isEmpty else {
+                    return ""
+                }
+                let currentModel = store.settings.transcription.modelName
+                if store.downloadedModels.contains(where: { $0.id == currentModel }) {
+                    return currentModel
+                }
+                return store.downloadedModels.first?.id ?? ""
+            },
+            set: { store.send(.selectModel($0)) }
+        )
     }
 }
 
@@ -189,6 +206,11 @@ struct ModelSettingsTab: View {
                     WhisperModel.from(id: "openai_whisper-small", isDownloaded: true, isRecommended: true),
                     WhisperModel.from(id: "openai_whisper-medium", isDownloaded: false, isRecommended: false),
                     WhisperModel.from(id: "openai_whisper-large-v3", isDownloaded: false, isRecommended: false)
+                ],
+                downloadedModels: [
+                    WhisperModel.from(id: "openai_whisper-tiny", isDownloaded: true, isRecommended: false),
+                    WhisperModel.from(id: "openai_whisper-base", isDownloaded: true, isRecommended: false),
+                    WhisperModel.from(id: "openai_whisper-small", isDownloaded: true, isRecommended: true)
                 ],
                 storageUsage: 500_000_000
             )
