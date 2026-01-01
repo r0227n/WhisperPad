@@ -197,7 +197,7 @@ private final class HotKeyManager {
         hotKey.keyDownHandler = handler
         recordingToggleKey = hotKey
         logger.info(
-            "Recording toggle hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
+            "Recording toggle hotkey registered: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
         )
     }
 
@@ -219,7 +219,7 @@ private final class HotKeyManager {
         hotKey.keyDownHandler = handler
         recordingPauseHotKey = hotKey
         logger.info(
-            "Recording pause hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
+            "Recording pause hotkey registered: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
         )
     }
 
