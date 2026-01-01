@@ -9,6 +9,9 @@ import Foundation
 ///
 /// 文字起こし結果をファイルに保存する際の設定を管理します。
 struct FileOutputSettings: Codable, Equatable, Sendable {
+    /// クリップボードにコピーするかどうか
+    var copyToClipboard: Bool = true
+
     /// ファイル出力が有効かどうか
     var isEnabled: Bool = false
 
