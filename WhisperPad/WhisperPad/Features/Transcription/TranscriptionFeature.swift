@@ -59,6 +59,7 @@ struct TranscriptionFeature {
     // MARK: - Dependencies
 
     @Dependency(\.transcriptionClient) var transcriptionClient
+    @Dependency(\.userDefaultsClient) var userDefaultsClient
     @Dependency(\.whisperKitClient) var whisperKitClient
 
     // MARK: - Reducer Body
@@ -87,9 +88,12 @@ struct TranscriptionFeature {
                 state.status = .initializingModel
                 logger.info("Initializing WhisperKit model...")
 
-                return .run { send in
+                return .run { [userDefaultsClient] send in
                     do {
-                        try await transcriptionClient.initialize(nil)
+                        let settings = await userDefaultsClient.loadSettings()
+                        let modelName = settings.transcription.modelName
+                        logger.info("Using model from settings: \(modelName)")
+                        try await transcriptionClient.initialize(modelName)
                         await send(.modelInitialized)
                     } catch {
                         let transcriptionError =
