@@ -27,6 +27,8 @@ struct GeneralSettingsTab: View {
                     )
                 )
                 .help("macOS 起動時にアプリを自動的に起動します")
+                .accessibilityLabel("ログイン時に起動")
+                .accessibilityHint("macOS 起動時にアプリを自動的に起動します")
             } header: {
                 Text("起動")
             }
@@ -44,6 +46,8 @@ struct GeneralSettingsTab: View {
                     )
                 )
                 .help("文字起こし完了時に通知センターに通知を表示します")
+                .accessibilityLabel("完了時に通知を表示")
+                .accessibilityHint("文字起こし完了時に通知センターに通知を表示します")
 
                 Toggle(
                     "完了音を鳴らす",
@@ -57,6 +61,8 @@ struct GeneralSettingsTab: View {
                     )
                 )
                 .help("文字起こし完了時にサウンドを再生します")
+                .accessibilityLabel("完了音を鳴らす")
+                .accessibilityHint("文字起こし完了時にサウンドを再生します")
 
                 Divider()
 
@@ -73,6 +79,8 @@ struct GeneralSettingsTab: View {
                 )
                 .textFieldStyle(.roundedBorder)
                 .help("通知に表示されるタイトル")
+                .accessibilityLabel("通知タイトル")
+                .accessibilityHint("通知に表示されるタイトルを入力します")
 
                 TextField(
                     "完了メッセージ（通常）",
@@ -87,6 +95,8 @@ struct GeneralSettingsTab: View {
                 )
                 .textFieldStyle(.roundedBorder)
                 .help("通常録音完了時のメッセージ")
+                .accessibilityLabel("完了メッセージ（通常）")
+                .accessibilityHint("通常録音完了時のメッセージを入力します")
 
                 TextField(
                     "完了メッセージ（リアルタイム）",
@@ -101,6 +111,8 @@ struct GeneralSettingsTab: View {
                 )
                 .textFieldStyle(.roundedBorder)
                 .help("リアルタイム文字起こし完了時のメッセージ")
+                .accessibilityLabel("完了メッセージ（リアルタイム）")
+                .accessibilityHint("リアルタイム文字起こし完了時のメッセージを入力します")
 
                 Button("デフォルトに戻す") {
                     var general = store.settings.general
@@ -111,6 +123,8 @@ struct GeneralSettingsTab: View {
                 }
                 .buttonStyle(.link)
                 .font(.caption)
+                .accessibilityLabel("デフォルトに戻す")
+                .accessibilityHint("通知設定を初期値に戻します")
             } header: {
                 Text("通知")
             }
