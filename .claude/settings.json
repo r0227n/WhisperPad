@@ -18,19 +18,14 @@
       "Write",
       "Bash(cat:*)",
       "Bash(ls:*)",
+      "Bash(grep:*)",
       "Bash(tree:*)",
       "Bash(gh pr create:*)",
       "Bash(gh pr view:*)",
       "Bash(gh run view:*)",
-      "Bash(git -C:* add:*)",
-      "Bash(git -C:* branch:*)",
-      "Bash(git -C:* checkout:*)",
-      "Bash(git -C:* commit:*)",
-      "Bash(git -C:* diff:*)",
-      "Bash(git -C:* log:*)",
-      "Bash(git -C:* merge:*)",
-      "Bash(git -C:* push:*)",
-      "Bash(git -C:* status:*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)",
+      "Bash(git gtr:*)",
       "Skill(ui-ux-pro-max)",
       "Bash(python3 **/*.claude/skills/ui-ux-pro-max/scripts/*)",
       "Bash(mise:*)",
@@ -58,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/format-lint.sh"
+            "command": ".claude/hooks/format-lint.sh"
           }
         ]
       }
