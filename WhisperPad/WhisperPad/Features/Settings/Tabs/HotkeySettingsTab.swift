@@ -141,6 +141,7 @@ struct HotkeySettingsTab: View {
                     Label(conflict, systemImage: "exclamationmark.triangle.fill")
                         .foregroundColor(.red)
                         .font(.footnote)
+                        .accessibilityLabel("ホットキー競合警告: \(conflict)")
                 }
             }
 
