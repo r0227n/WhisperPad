@@ -27,6 +27,12 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     /// 録音キャンセルのホットキー
     var cancelHotKey: KeyComboSettings
 
+    /// 録音開始/終了のトグルホットキー
+    var recordingToggleHotKey: KeyComboSettings
+
+    /// 録音一時停止のホットキー
+    var recordingPauseHotKey: KeyComboSettings
+
     /// デフォルト設定
     static let `default` = HotKeySettings()
 
@@ -37,7 +43,9 @@ struct HotKeySettings: Codable, Equatable, Sendable {
         openSettingsHotKey: KeyComboSettings = .openSettingsDefault,
         recordingMode: RecordingMode = .toggle,
         streamingHotKey: KeyComboSettings = .streamingDefault,
-        cancelHotKey: KeyComboSettings = .cancelDefault
+        cancelHotKey: KeyComboSettings = .cancelDefault,
+        recordingToggleHotKey: KeyComboSettings = .recordingToggleDefault,
+        recordingPauseHotKey: KeyComboSettings = .recordingPauseDefault
     ) {
         self.recordingHotKey = recordingHotKey
         self.pasteHotKey = pasteHotKey
@@ -45,6 +53,58 @@ struct HotKeySettings: Codable, Equatable, Sendable {
         self.recordingMode = recordingMode
         self.streamingHotKey = streamingHotKey
         self.cancelHotKey = cancelHotKey
+        self.recordingToggleHotKey = recordingToggleHotKey
+        self.recordingPauseHotKey = recordingPauseHotKey
+    }
+
+    // MARK: - Codable (Migration Support)
+
+    private enum CodingKeys: String, CodingKey {
+        case recordingHotKey, pasteHotKey, openSettingsHotKey, recordingMode
+        case streamingHotKey, cancelHotKey, recordingPauseHotKey
+        case recordingToggleHotKey
+        // Legacy keys for migration
+        case recordingStartHotKey
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        recordingHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .recordingHotKey)
+            ?? .recordingDefault
+        pasteHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .pasteHotKey)
+            ?? .pasteDefault
+        openSettingsHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .openSettingsHotKey)
+            ?? .openSettingsDefault
+        recordingMode = try container.decodeIfPresent(RecordingMode.self, forKey: .recordingMode)
+            ?? .toggle
+        streamingHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .streamingHotKey)
+            ?? .streamingDefault
+        cancelHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .cancelHotKey)
+            ?? .cancelDefault
+        recordingPauseHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .recordingPauseHotKey)
+            ?? .recordingPauseDefault
+
+        // Migration: try recordingToggleHotKey first, fall back to recordingStartHotKey
+        if let toggleKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .recordingToggleHotKey) {
+            recordingToggleHotKey = toggleKey
+        } else if let startKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .recordingStartHotKey) {
+            recordingToggleHotKey = startKey
+        } else {
+            recordingToggleHotKey = .recordingToggleDefault
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(recordingHotKey, forKey: .recordingHotKey)
+        try container.encode(pasteHotKey, forKey: .pasteHotKey)
+        try container.encode(openSettingsHotKey, forKey: .openSettingsHotKey)
+        try container.encode(recordingMode, forKey: .recordingMode)
+        try container.encode(streamingHotKey, forKey: .streamingHotKey)
+        try container.encode(cancelHotKey, forKey: .cancelHotKey)
+        try container.encode(recordingToggleHotKey, forKey: .recordingToggleHotKey)
+        try container.encode(recordingPauseHotKey, forKey: .recordingPauseHotKey)
     }
 }
 
@@ -89,6 +149,18 @@ extension HotKeySettings {
         static let cancelDefault = KeyComboSettings(
             carbonKeyCode: 53,
             carbonModifiers: 0
+        )
+
+        /// 録音開始/終了トグルホットキーのデフォルト（⌥⇧S）
+        static let recordingToggleDefault = KeyComboSettings(
+            carbonKeyCode: 1,
+            carbonModifiers: 2560
+        )
+
+        /// 録音一時停止ホットキーのデフォルト（⌥⇧P）
+        static let recordingPauseDefault = KeyComboSettings(
+            carbonKeyCode: 35,
+            carbonModifiers: 2560
         )
     }
 }

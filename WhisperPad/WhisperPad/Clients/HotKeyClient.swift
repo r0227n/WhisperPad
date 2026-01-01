@@ -108,6 +108,24 @@ struct HotKeyClient: Sendable {
 
     /// ストリーミングホットキーを解除
     var unregisterStreaming: @Sendable () async -> Void
+
+    /// 動的キーコンボで録音開始/終了トグルホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    var registerRecordingToggleWithCombo: @Sendable (
+        HotKeySettings.KeyComboSettings,
+        @escaping @Sendable () -> Void
+    ) async -> Void
+
+    /// 動的キーコンボで録音一時停止ホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    var registerRecordingPauseWithCombo: @Sendable (
+        HotKeySettings.KeyComboSettings,
+        @escaping @Sendable () -> Void
+    ) async -> Void
 }
 
 // MARK: - HotKeyError
@@ -186,6 +204,12 @@ extension HotKeyClient: TestDependencyKey {
             },
             unregisterStreaming: {
                 clientLogger.debug("[PREVIEW] unregisterStreaming called")
+            },
+            registerRecordingToggleWithCombo: { _, _ in
+                clientLogger.debug("[PREVIEW] registerRecordingToggleWithCombo called")
+            },
+            registerRecordingPauseWithCombo: { _, _ in
+                clientLogger.debug("[PREVIEW] registerRecordingPauseWithCombo called")
             }
         )
     }
@@ -243,6 +267,12 @@ extension HotKeyClient: TestDependencyKey {
             },
             unregisterStreaming: {
                 clientLogger.debug("[TEST] unregisterStreaming called")
+            },
+            registerRecordingToggleWithCombo: { _, _ in
+                clientLogger.debug("[TEST] registerRecordingToggleWithCombo called")
+            },
+            registerRecordingPauseWithCombo: { _, _ in
+                clientLogger.debug("[TEST] registerRecordingPauseWithCombo called")
             }
         )
     }

@@ -55,6 +55,48 @@ struct HotkeySettingsTab: View {
                 }
                 .pickerStyle(.segmented)
                 .help("トグル: 1回押しで開始/停止、プッシュ・トゥ・トーク: 押している間のみ録音")
+
+                HotkeyRecorderView(
+                    label: "録音開始/終了",
+                    keyCombo: Binding(
+                        get: { store.settings.hotKey.recordingToggleHotKey },
+                        set: { newValue in
+                            var hotKey = store.settings.hotKey
+                            hotKey.recordingToggleHotKey = newValue
+                            store.send(.updateHotKeySettings(hotKey))
+                        }
+                    ),
+                    isRecording: store.recordingHotkeyType == .recordingToggle,
+                    onStartRecording: { store.send(.startRecordingHotkey(.recordingToggle)) },
+                    onStopRecording: { store.send(.stopRecordingHotkey) },
+                    onClear: {
+                        var hotKey = store.settings.hotKey
+                        hotKey.recordingToggleHotKey = .recordingToggleDefault
+                        store.send(.updateHotKeySettings(hotKey))
+                    }
+                )
+                .help("録音を開始または終了するホットキー（トグル動作）")
+
+                HotkeyRecorderView(
+                    label: "録音一時停止/再開",
+                    keyCombo: Binding(
+                        get: { store.settings.hotKey.recordingPauseHotKey },
+                        set: { newValue in
+                            var hotKey = store.settings.hotKey
+                            hotKey.recordingPauseHotKey = newValue
+                            store.send(.updateHotKeySettings(hotKey))
+                        }
+                    ),
+                    isRecording: store.recordingHotkeyType == .recordingPause,
+                    onStartRecording: { store.send(.startRecordingHotkey(.recordingPause)) },
+                    onStopRecording: { store.send(.stopRecordingHotkey) },
+                    onClear: {
+                        var hotKey = store.settings.hotKey
+                        hotKey.recordingPauseHotKey = .recordingPauseDefault
+                        store.send(.updateHotKeySettings(hotKey))
+                    }
+                )
+                .help("録音を一時停止または再開するホットキー")
             } header: {
                 Text("録音")
             }

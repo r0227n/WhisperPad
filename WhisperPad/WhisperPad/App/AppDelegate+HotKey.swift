@@ -60,6 +60,8 @@ extension AppDelegate {
         await registerOpenSettingsHotKey(hotKeySettings)
         await registerCancelHotKey(hotKeySettings)
         await registerStreamingHotKey(hotKeySettings)
+        await registerRecordingToggleHotKey(hotKeySettings)
+        await registerRecordingPauseHotKey(hotKeySettings)
 
         logger.info("Hotkeys registered from settings")
     }
@@ -102,6 +104,20 @@ extension AppDelegate {
         )
     }
 
+    private func registerRecordingToggleHotKey(_ settings: HotKeySettings) async {
+        await hotKeyClient.registerRecordingToggleWithCombo(
+            settings.recordingToggleHotKey,
+            { [weak self] in Task { @MainActor in self?.handleRecordingToggleKeyDown() } }
+        )
+    }
+
+    private func registerRecordingPauseHotKey(_ settings: HotKeySettings) async {
+        await hotKeyClient.registerRecordingPauseWithCombo(
+            settings.recordingPauseHotKey,
+            { [weak self] in Task { @MainActor in self?.handleRecordingPauseKeyDown() } }
+        )
+    }
+
     /// 録音キーダウンハンドラー（recordingMode対応）
     func handleRecordingKeyDown(mode: HotKeySettings.RecordingMode) {
         switch mode {
@@ -141,6 +157,32 @@ extension AppDelegate {
         if store.appStatus == .streamingTranscribing {
             logger.info("Streaming Push-to-Talk: Key up, stopping streaming")
             store.send(.streamingTranscription(.stopButtonTapped))
+        }
+    }
+
+    /// 録音開始/終了トグルキーダウンハンドラー
+    func handleRecordingToggleKeyDown() {
+        logger.info("Recording toggle hotkey pressed: ⌥⇧S")
+        switch store.appStatus {
+        case .idle, .completed, .error, .streamingCompleted:
+            store.send(.startRecording)
+        case .recording, .paused:
+            store.send(.endRecording)
+        default:
+            logger.info("Recording toggle ignored: transcribing")
+        }
+    }
+
+    /// 録音一時停止キーダウンハンドラー
+    func handleRecordingPauseKeyDown() {
+        logger.info("Recording pause hotkey pressed: ⌥⇧P")
+        switch store.appStatus {
+        case .recording:
+            store.send(.pauseRecording)
+        case .paused:
+            store.send(.resumeRecording)
+        default:
+            logger.info("Recording pause ignored: not recording")
         }
     }
 }
