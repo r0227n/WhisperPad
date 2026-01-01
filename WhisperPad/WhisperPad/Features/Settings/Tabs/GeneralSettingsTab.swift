@@ -57,6 +57,60 @@ struct GeneralSettingsTab: View {
                     )
                 )
                 .help("文字起こし完了時にサウンドを再生します")
+
+                Divider()
+
+                TextField(
+                    "通知タイトル",
+                    text: Binding(
+                        get: { store.settings.general.notificationTitle },
+                        set: { newValue in
+                            var general = store.settings.general
+                            general.notificationTitle = newValue
+                            store.send(.updateGeneralSettings(general))
+                        }
+                    )
+                )
+                .textFieldStyle(.roundedBorder)
+                .help("通知に表示されるタイトル")
+
+                TextField(
+                    "完了メッセージ（通常）",
+                    text: Binding(
+                        get: { store.settings.general.transcriptionCompleteMessage },
+                        set: { newValue in
+                            var general = store.settings.general
+                            general.transcriptionCompleteMessage = newValue
+                            store.send(.updateGeneralSettings(general))
+                        }
+                    )
+                )
+                .textFieldStyle(.roundedBorder)
+                .help("通常録音完了時のメッセージ")
+
+                TextField(
+                    "完了メッセージ（リアルタイム）",
+                    text: Binding(
+                        get: { store.settings.general.streamingCompleteMessage },
+                        set: { newValue in
+                            var general = store.settings.general
+                            general.streamingCompleteMessage = newValue
+                            store.send(.updateGeneralSettings(general))
+                        }
+                    )
+                )
+                .textFieldStyle(.roundedBorder)
+                .help("リアルタイム文字起こし完了時のメッセージ")
+
+                Button("デフォルトに戻す") {
+                    var general = store.settings.general
+                    general.notificationTitle = "WhisperPad"
+                    general.transcriptionCompleteMessage = "文字起こしが完了しました"
+                    general.streamingCompleteMessage = "リアルタイム文字起こしが完了しました"
+                    store.send(.updateGeneralSettings(general))
+                }
+                .buttonStyle(.link)
+                .font(.caption)
             } header: {
                 Text("通知")
             }

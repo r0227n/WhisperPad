@@ -11,7 +11,7 @@
 
 ### ブランチ: feature/streaming-models
 
-- [ ] 1.1 StreamingSettings モデル作成
+- [x] 1.1 StreamingSettings モデル作成
   - **ファイル**: `WhisperPad/WhisperPad/Models/StreamingSettings.swift`
   - **内容**:
     ```swift
@@ -29,7 +29,7 @@
   - **完了条件**: コンパイル成功、`Codable` でのエンコード/デコードが動作
   - **前提条件**: なし
 
-- [ ] 1.2 StreamingStatus enum 作成
+- [x] 1.2 StreamingStatus enum 作成
   - **ファイル**: `WhisperPad/WhisperPad/Models/StreamingStatus.swift`
   - **内容**:
     ```swift
@@ -46,7 +46,7 @@
   - **完了条件**: コンパイル成功
   - **前提条件**: なし
 
-- [ ] 1.3 StreamingTranscriptionError enum 作成
+- [x] 1.3 StreamingTranscriptionError enum 作成
   - **ファイル**: `WhisperPad/WhisperPad/Models/StreamingTranscriptionError.swift`
   - **内容**:
 
@@ -65,14 +65,14 @@
   - **完了条件**: コンパイル成功、`LocalizedError` の `errorDescription` 実装
   - **前提条件**: なし
 
-- [ ] 1.4 AppSettings 更新
+- [x] 1.4 AppSettings 更新
   - **ファイル**: `WhisperPad/WhisperPad/Models/AppSettings.swift`
   - **変更**:
     - `var streaming: StreamingSettings = .default` プロパティ追加
   - **完了条件**: 既存テストがパス、新しいプロパティが `Codable` で正しく処理される
   - **前提条件**: 1.1 完了
 
-- [ ] 1.5 AppStatus 拡張
+- [x] 1.5 AppStatus 拡張
   - **ファイル**: `WhisperPad/WhisperPad/Models/AppState.swift` または該当ファイル
   - **変更**:
     ```swift
@@ -86,7 +86,7 @@
   - **完了条件**: コンパイル成功、メニューバーアイコン処理で新ステータスが認識される
   - **前提条件**: なし
 
-- [ ] 1.6 HotKeySettings 拡張
+- [x] 1.6 HotKeySettings 拡張
   - **ファイル**: `WhisperPad/WhisperPad/Models/HotKeySettings.swift`
   - **変更**:
     - `var streamingHotKey: KeyComboSettings` プロパティ追加（デフォルト: `⌘⇧R`）
@@ -102,7 +102,7 @@
 
 ### ワークツリー 1: feature/streaming-audio-client
 
-- [ ] 2.1 StreamingAudioService actor 作成
+- [x] 2.1 StreamingAudioService actor 作成
   - **ファイル**: `WhisperPad/WhisperPad/Clients/StreamingAudioService.swift`
   - **内容**:
 
@@ -121,7 +121,7 @@
   - **完了条件**: マイク入力のリアルタイムストリームが取得可能
   - **前提条件**: フェーズ 1 完了
 
-- [ ] 2.2 StreamingAudioClient struct 作成
+- [x] 2.2 StreamingAudioClient struct 作成
   - **ファイル**: `WhisperPad/WhisperPad/Clients/StreamingAudioClient.swift`
   - **内容**:
 
@@ -147,7 +147,7 @@
 
 ### ワークツリー 2: feature/streaming-transcription-client
 
-- [ ] 2.3 StreamingTranscriptionService actor 作成
+- [x] 2.3 StreamingTranscriptionService actor 作成
   - **ファイル**: `WhisperPad/WhisperPad/Clients/StreamingTranscriptionService.swift`
   - **内容**:
 
@@ -177,7 +177,7 @@
   - **完了条件**: 音声チャンクからテキストへの変換が動作
   - **前提条件**: フェーズ 1 完了
 
-- [ ] 2.4 StreamingTranscriptionClient struct 作成
+- [x] 2.4 StreamingTranscriptionClient struct 作成
   - **ファイル**: `WhisperPad/WhisperPad/Clients/StreamingTranscriptionClient.swift`
   - **内容**:
 
@@ -202,7 +202,7 @@
 
 ### ブランチ: feature/streaming-feature
 
-- [ ] 3.1 StreamingTranscriptionFeature Reducer 作成
+- [x] 3.1 StreamingTranscriptionFeature Reducer 作成
   - **ファイル**: `WhisperPad/WhisperPad/Features/StreamingTranscription/StreamingTranscriptionFeature.swift`
   - **内容**:
 
@@ -255,7 +255,7 @@
   - **完了条件**: 状態遷移が仕様通り動作、タイマーでの経過時間更新
   - **前提条件**: 2.2, 2.4 完了
 
-- [ ] 3.2 StreamingTranscriptionView 作成
+- [x] 3.2 StreamingTranscriptionView 作成
   - **ファイル**: `WhisperPad/WhisperPad/Features/StreamingTranscription/StreamingTranscriptionView.swift`
   - **内容**:
 
@@ -287,7 +287,7 @@
 
 ### ブランチ: feature/streaming-popup
 
-- [ ] 4.1 StreamingPopupWindow 作成
+- [x] 4.1 StreamingPopupWindow 作成
   - **ファイル**: `WhisperPad/WhisperPad/Features/StreamingTranscription/StreamingPopupWindow.swift`
   - **内容**:
 
@@ -316,11 +316,12 @@
   - **完了条件**: ポップアップがメニューバー直下に正しく表示
   - **前提条件**: 3.2 完了
 
-- [ ] 4.2 StreamingPopupWindowController 作成（オプション）
-  - **ファイル**: `WhisperPad/WhisperPad/Features/StreamingTranscription/StreamingPopupWindowController.swift`
+- [x] 4.2 StreamingPopupWindowController 作成（オプション）
+  - **ファイル**: N/A（StreamingPopupWindow で NSPanel を直接管理する設計に変更）
   - **役割**: ウィンドウのライフサイクル管理、フォーカス制御
   - **完了条件**: ウィンドウの表示/非表示が正しく動作
   - **前提条件**: 4.1 完了
+  - **備考**: NSPanel 内で直接管理するため、別ファイル不要
 
 ---
 
@@ -372,6 +373,7 @@
   - **仕様**: docs/spec.md 4.1.2, 6.3
   - **完了条件**: メニューからストリーミングが起動、アイコンが正しく更新
   - **前提条件**: 5.1, 4.1 完了
+  - **進捗**: ⚠️ 部分実装 - `updateIconForCurrentState()` と `updateMenuForCurrentState()` で streamingTranscribing/streamingCompleted ステータス対応済み。ポップアップ表示/管理ロジックは未実装
 
 - [ ] 5.3 HotKeyClient にストリーミングホットキー追加
   - **ファイル**: `WhisperPad/WhisperPad/Clients/HotKeyClient.swift`

@@ -34,7 +34,6 @@ actor StreamingTranscriptionService {
 
     // MARK: - State
 
-    private var whisperKit: WhisperKit?
     private var confirmedSegments: [String] = []
     private var pendingSegment: String = ""
     private var previousResults: [String] = []
@@ -44,11 +43,14 @@ actor StreamingTranscriptionService {
 
     // MARK: - Initialization
 
-    /// WhisperKit を初期化
+    /// ストリーミング文字起こしを初期化
+    ///
+    /// テキスト状態をリセットし、WhisperKitManager の共有インスタンスを使用します。
+    /// WhisperKit の初期化は AppReducer で行われるため、ここでは状態のリセットのみ行います。
     func initialize(modelName: String?, confirmationCount: Int = 2, language: String? = "ja") async throws {
         logger.info("Initializing StreamingTranscriptionService with model: \(modelName ?? "default")")
 
-        // テキスト状態をリセット（モデルは保持）
+        // テキスト状態をリセット
         confirmedSegments.removeAll()
         pendingSegment = ""
         previousResults.removeAll()
@@ -57,45 +59,26 @@ actor StreamingTranscriptionService {
         self.confirmationCount = confirmationCount
         self.language = language
 
-        // WhisperKit が既に初期化されている場合はスキップ
-        if whisperKit != nil {
-            logger.info("WhisperKit already initialized, reusing existing instance")
+        // WhisperKitManager が初期化済みかチェック
+        guard await WhisperKitManager.shared.isReady else {
+            // まだ初期化されていない場合は初期化を試みる
+            logger.info("WhisperKit not ready, initializing...")
+            do {
+                try await WhisperKitManager.shared.initialize(modelName: modelName)
+                logger.info("WhisperKit initialized successfully")
+            } catch {
+                logger.error("Failed to initialize WhisperKit: \(error.localizedDescription)")
+                throw StreamingTranscriptionError.initializationFailed(error.localizedDescription)
+            }
             return
         }
 
-        let targetModel: String
-        if let modelName {
-            targetModel = modelName
-        } else {
-            let modelSupport = WhisperKit.recommendedModels()
-            targetModel = modelSupport.default
-        }
-
-        do {
-            let config = WhisperKitConfig(
-                model: targetModel,
-                downloadBase: Self.modelsDirectory,
-                modelRepo: Self.defaultModelRepo,
-                verbose: true,
-                logLevel: .info,
-                prewarm: true,
-                load: true,
-                download: true
-            )
-
-            logger
-                .info("WhisperKit initializing with model: \(targetModel), downloadBase: \(Self.modelsDirectory.path)")
-            whisperKit = try await WhisperKit(config)
-            logger.info("WhisperKit initialized successfully")
-        } catch {
-            logger.error("Failed to initialize WhisperKit: \(error.localizedDescription)")
-            throw StreamingTranscriptionError.initializationFailed(error.localizedDescription)
-        }
+        logger.info("WhisperKit already initialized, reusing existing instance")
     }
 
     /// 音声チャンクを処理して文字起こし結果を返す
     func processAudioChunk(_ samples: [Float]) async throws -> TranscriptionProgress {
-        guard let whisperKit else {
+        guard let whisperKit = await WhisperKitManager.shared.getWhisperKit() else {
             throw StreamingTranscriptionError.initializationFailed("WhisperKit not initialized")
         }
 
@@ -164,7 +147,8 @@ actor StreamingTranscriptionService {
     /// 文字起こしを終了し、最終結果を返す
     func finalize() async throws -> String {
         // 残りのサンプルを処理
-        if !accumulatedSamples.isEmpty, let whisperKit {
+        if !accumulatedSamples.isEmpty,
+           let whisperKit = await WhisperKitManager.shared.getWhisperKit() {
             var options = DecodingOptions()
             options.language = language
             options.task = .transcribe

@@ -20,6 +20,12 @@ struct SettingsView: View {
                 }
                 .tag(SettingsTab.general)
 
+            IconSettingsTab(store: store)
+                .tabItem {
+                    Label(SettingsTab.icon.rawValue, systemImage: SettingsTab.icon.iconName)
+                }
+                .tag(SettingsTab.icon)
+
             HotkeySettingsTab(store: store)
                 .tabItem {
                     Label(SettingsTab.hotkey.rawValue, systemImage: SettingsTab.hotkey.iconName)
