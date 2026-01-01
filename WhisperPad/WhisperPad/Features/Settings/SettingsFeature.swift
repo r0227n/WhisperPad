@@ -185,6 +185,8 @@ struct SettingsFeature {
 
         /// メニューバーアイコン設定をデフォルトにリセット
         case resetMenuBarIconSettings
+        /// 特定の状態のアイコン設定をデフォルトにリセット
+        case resetIconSetting(IconConfigStatus)
 
         // MARK: - Delegate
 
@@ -597,6 +599,11 @@ struct SettingsFeature {
 
             case .resetMenuBarIconSettings:
                 state.settings.general.menuBarIconSettings = .default
+                return .send(.saveSettings)
+
+            case let .resetIconSetting(status):
+                let defaultConfig = MenuBarIconSettings.default.config(for: status)
+                state.settings.general.menuBarIconSettings.setConfig(defaultConfig, for: status)
                 return .send(.saveSettings)
 
             case .delegate:

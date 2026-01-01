@@ -16,6 +16,9 @@ struct IconConfigurationView: View {
     /// アイコン設定
     @Binding var config: StatusIconConfig
 
+    /// デフォルトにリセットするコールバック
+    var onReset: (() -> Void)?
+
     /// シンボルピッカーの表示状態
     @State private var showSymbolPicker = false
 
@@ -26,9 +29,11 @@ struct IconConfigurationView: View {
     /// - Parameters:
     ///   - status: 状態タイプ
     ///   - config: アイコン設定のバインディング
-    init(status: IconConfigStatus, config: Binding<StatusIconConfig>) {
+    ///   - onReset: デフォルトにリセットするコールバック
+    init(status: IconConfigStatus, config: Binding<StatusIconConfig>, onReset: (() -> Void)? = nil) {
         self.status = status
         self._config = config
+        self.onReset = onReset
         // NSColor を SwiftUI の Color に変換
         self._selectedColor = State(initialValue: Color(nsColor: config.wrappedValue.color))
     }
@@ -72,10 +77,25 @@ struct IconConfigurationView: View {
                 .accessibilityHint("アイコンの色を選択します")
 
             Spacer()
+
+            // 個別リセットボタン
+            if let onReset {
+                Button(action: onReset) {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("このアイコンをデフォルトに戻す")
+                .accessibilityLabel("\(status.rawValue)をデフォルトに戻す")
+            }
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(status.rawValue)のアイコン設定: \(config.symbolName)")
+        .onChange(of: config) { _, newConfig in
+            selectedColor = Color(nsColor: newConfig.color)
+        }
     }
 }
 
