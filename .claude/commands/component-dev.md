@@ -72,9 +72,6 @@ git worktree list
 ### 3.1 worktree 作成
 
 ```bash
-# メインリポジトリに移動
-cd /Users/r0227n/Dev/WhisperPad
-
 # worktree作成（現在のブランチから分岐）
 git gtr new feature/<機能名>-phase<N> --from <現在のブランチ>
 ```
@@ -82,11 +79,6 @@ git gtr new feature/<機能名>-phase<N> --from <現在のブランチ>
 ### 3.2 実装
 
 worktree 内でコンポーネントを実装:
-
-```bash
-cd /Users/r0227n/Dev/WhisperPad-worktrees/feature-<機能名>-phase<N>
-mise trust
-```
 
 ファイルの作成・編集を実行。
 
@@ -118,8 +110,6 @@ EOF
 ### 3.5 メインブランチにマージ
 
 ```bash
-# メインブランチに戻る
-cd /Users/r0227n/Dev/WhisperPad-worktrees/<メインブランチ>
 
 # マージ
 git merge feature/<機能名>-phase<N> --no-ff -m "$(cat <<'EOF'
