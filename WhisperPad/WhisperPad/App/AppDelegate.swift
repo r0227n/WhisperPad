@@ -252,7 +252,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// - Parameters:
     ///   - symbolName: SF Symbol 名
     ///   - color: アイコンの色
-    private func setStatusIcon(symbolName: String, color: NSColor) {
+    func setStatusIcon(symbolName: String, color: NSColor) {
         guard let button = statusItem?.button else { return }
 
         let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)

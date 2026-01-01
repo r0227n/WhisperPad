@@ -251,6 +251,7 @@ struct AppReducer {
             case let .streamingTranscription(.delegate(.streamingCompleted(text))):
                 // appStatusはfinalizationCompletedで既に.streamingCompletedに設定済み
                 state.lastTranscription = text
+                let copyToClipboard = state.settings.settings.output.copyToClipboard
 
                 return .run { [outputClient, clock] send in
                     // 通知を表示
@@ -262,8 +263,10 @@ struct AppReducer {
                     // 完了音を再生
                     await outputClient.playCompletionSound()
 
-                    // クリップボードにコピー
-                    _ = await outputClient.copyToClipboard(text)
+                    // クリップボードにコピー（設定が有効な場合）
+                    if copyToClipboard {
+                        _ = await outputClient.copyToClipboard(text)
+                    }
 
                     // 自動リセット
                     try await clock.sleep(for: .seconds(3))
@@ -341,8 +344,10 @@ struct AppReducer {
                 let transcriptionCompleteMessage = state.settings.settings.general.transcriptionCompleteMessage
 
                 return .run { [outputClient] send in
-                    // クリップボードにコピー
-                    _ = await outputClient.copyToClipboard(text)
+                    // クリップボードにコピー（設定が有効な場合）
+                    if outputSettings.copyToClipboard {
+                        _ = await outputClient.copyToClipboard(text)
+                    }
 
                     // 自動ファイル出力が有効な場合
                     if outputSettings.isEnabled {
