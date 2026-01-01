@@ -14,11 +14,6 @@ struct RecordingSettings: Codable, Equatable, Sendable {
     /// `nil` の場合はシステムデフォルトのデバイスを使用します。
     var inputDeviceID: String?
 
-    /// 最大録音時間（秒）
-    ///
-    /// `nil` の場合は無制限です。
-    var maxDuration: TimeInterval?
-
     /// 無音検出を有効にするかどうか
     var silenceDetectionEnabled: Bool
 
@@ -36,13 +31,11 @@ struct RecordingSettings: Codable, Equatable, Sendable {
     /// デフォルト初期化
     init(
         inputDeviceID: String? = nil,
-        maxDuration: TimeInterval? = nil,
         silenceDetectionEnabled: Bool = false,
         silenceThreshold: Float = -40.0,
         silenceDuration: TimeInterval = 3.0
     ) {
         self.inputDeviceID = inputDeviceID
-        self.maxDuration = maxDuration
         self.silenceDetectionEnabled = silenceDetectionEnabled
         self.silenceThreshold = silenceThreshold
         self.silenceDuration = silenceDuration
