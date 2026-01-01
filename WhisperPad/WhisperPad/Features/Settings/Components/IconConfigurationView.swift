@@ -39,27 +39,26 @@ struct IconConfigurationView: View {
             Text(status.rawValue)
                 .frame(width: 120, alignment: .leading)
 
-            // プレビュー
-            Image(systemName: config.symbolName)
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(selectedColor)
-                .font(.system(size: 20))
-                .frame(width: 30, height: 30)
-                .help("現在のアイコン: \(config.symbolName)")
-                .accessibilityLabel("\(status.rawValue)のアイコン: \(config.symbolName)")
-
-            // アイコン変更ボタン
-            Button("変更...") {
+            // プレビュー（クリックでアイコン変更ダイアログを開く）
+            Button {
                 showSymbolPicker = true
+            } label: {
+                Image(systemName: config.symbolName)
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(selectedColor)
+                    .font(.system(size: 20))
+                    .frame(width: 30, height: 30)
             }
+            .buttonStyle(.plain)
+            .help("クリックしてアイコンを変更")
+            .accessibilityLabel("\(status.rawValue)のアイコンを変更")
+            .accessibilityHint("アイコン選択画面を開きます")
             .sheet(isPresented: $showSymbolPicker) {
                 SFSymbolPickerView(
                     selectedSymbol: $config.symbolName,
                     isPresented: $showSymbolPicker
                 )
             }
-            .accessibilityLabel("\(status.rawValue)のアイコンを変更")
-            .accessibilityHint("アイコン選択画面を開きます")
 
             // 色選択
             ColorPicker("", selection: $selectedColor)
