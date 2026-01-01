@@ -38,24 +38,6 @@ struct HotkeySettingsTab: View {
                 )
                 .help("録音を開始または停止するホットキー")
 
-                Picker(
-                    "録音モード",
-                    selection: Binding(
-                        get: { store.settings.hotKey.recordingMode },
-                        set: { newValue in
-                            var hotKey = store.settings.hotKey
-                            hotKey.recordingMode = newValue
-                            store.send(.updateHotKeySettings(hotKey))
-                        }
-                    )
-                ) {
-                    ForEach(HotKeySettings.RecordingMode.allCases, id: \.self) { mode in
-                        Text(mode.displayName).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .help("トグル: 1回押しで開始/停止、プッシュ・トゥ・トーク: 押している間のみ録音")
-
                 HotkeyRecorderView(
                     label: "録音開始/終了",
                     keyCombo: Binding(

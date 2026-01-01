@@ -108,33 +108,6 @@ extension AppDelegate {
         )
     }
 
-    /// 録音キーダウンハンドラー（recordingMode対応）
-    func handleRecordingKeyDown(mode: HotKeySettings.RecordingMode) {
-        switch mode {
-        case .toggle:
-            toggleRecording()
-        case .pushToTalk:
-            // 録音中でなければ開始
-            switch store.appStatus {
-            case .idle, .completed, .error, .streamingCompleted:
-                logger.info("Push-to-Talk: Key down, starting recording")
-                store.send(.startRecording)
-            default:
-                break
-            }
-        }
-    }
-
-    /// 録音キーアップハンドラー（Push-to-Talk用）
-    func handleRecordingKeyUp(mode: HotKeySettings.RecordingMode) {
-        guard mode == .pushToTalk else { return }
-        // 録音中または一時停止中なら終了
-        if store.appStatus == .recording || store.appStatus == .paused {
-            logger.info("Push-to-Talk: Key up, ending recording")
-            store.send(.endRecording)
-        }
-    }
-
     /// ストリーミングキーダウンハンドラー
     func handleStreamingKeyDown() {
         logger.info("Streaming hotkey pressed: ⌘⇧R")
