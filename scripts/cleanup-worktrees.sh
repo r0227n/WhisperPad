@@ -25,8 +25,8 @@ NC='\033[0m' # No Color
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Main repository root (two levels up from .claude/scripts/)
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# Main repository root (one level up from scripts/)
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Options
 DRY_RUN=false

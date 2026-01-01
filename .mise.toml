@@ -8,7 +8,7 @@ description = "Initial project setup"
 run = """
 git config gtr.defaultBranch develop
 claude mcp reset-project-choices
-chmod +x .claude/hooks/*.sh 2>/dev/null || true
+chmod chmod +x scripts/*.sh 2>/dev/null || true
 """
 dir = "{{cwd}}"
 
