@@ -228,27 +228,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         switch store.appStatus {
         case .idle:
             setStatusIcon(symbolName: "mic", color: .systemGray)
+            clearRecordingTimeDisplay()
 
         case .recording:
             setStatusIcon(symbolName: "mic.fill", color: .systemRed)
+            setRecordingTimeDisplay(store.recording.currentDuration)
 
         case .paused:
             setStatusIcon(symbolName: "pause.fill", color: .systemOrange)
+            setRecordingTimeDisplay(store.recording.currentDuration)
 
         case .transcribing:
             startGearAnimation()
+            clearRecordingTimeDisplay()
 
         case .completed:
             setStatusIcon(symbolName: "checkmark.circle", color: .systemGreen)
+            clearRecordingTimeDisplay()
 
         case .streamingTranscribing:
             setStatusIcon(symbolName: "waveform.badge.mic", color: .systemPurple)
+            setRecordingTimeDisplay(store.streamingTranscription.duration)
 
         case .streamingCompleted:
             setStatusIcon(symbolName: "checkmark.circle", color: .systemGreen)
+            clearRecordingTimeDisplay()
 
         case .error:
             setStatusIcon(symbolName: "exclamationmark.triangle", color: .systemYellow)
+            clearRecordingTimeDisplay()
         }
     }
 
@@ -264,6 +272,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "WhisperPad")
         button.image = image?.withSymbolConfiguration(config)
+    }
+
+    // MARK: - Recording Time Display
+
+    /// 録音時間を「MM:SS」形式でフォーマット
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    /// ステータスバーに録音時間を表示
+    private func setRecordingTimeDisplay(_ duration: TimeInterval) {
+        guard let button = statusItem?.button else { return }
+        // 等幅数字フォントで表示（数字幅が変わっても揃う）
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
+        ]
+        button.attributedTitle = NSAttributedString(
+            string: formatDuration(duration),
+            attributes: attributes
+        )
+    }
+
+    /// ステータスバーから録音時間表示をクリア
+    private func clearRecordingTimeDisplay() {
+        statusItem?.button?.title = ""
     }
 
     // MARK: - Actions
