@@ -65,6 +65,15 @@ actor TranscriptionService {
         customStorageURL ?? Self.defaultModelsDirectory
     }
 
+    /// WhisperKit がモデルを保存する実際のディレクトリ
+    /// WhisperKit は downloadBase の中に "models/argmaxinc/whisperkit-coreml/" を作成する
+    private var whisperKitModelsDirectory: URL {
+        modelsDirectory
+            .appendingPathComponent("models", isDirectory: true)
+            .appendingPathComponent("argmaxinc", isDirectory: true)
+            .appendingPathComponent("whisperkit-coreml", isDirectory: true)
+    }
+
     // MARK: - Initialization
 
     init() {}
@@ -106,7 +115,7 @@ actor TranscriptionService {
 
     /// モデルを削除
     func deleteModel(_ modelName: String) throws {
-        let modelPath = modelsDirectory.appendingPathComponent(modelName)
+        let modelPath = whisperKitModelsDirectory.appendingPathComponent(modelName)
         let fileManager = FileManager.default
 
         guard fileManager.fileExists(atPath: modelPath.path) else {
@@ -150,14 +159,14 @@ actor TranscriptionService {
 
     /// モデルがダウンロード済みかどうかを確認
     func isModelDownloaded(modelName: String) -> Bool {
-        let modelPath = modelsDirectory.appendingPathComponent(modelName)
+        let modelPath = whisperKitModelsDirectory.appendingPathComponent(modelName)
         let exists = FileManager.default.fileExists(atPath: modelPath.path)
         return exists
     }
 
     /// ローカルにダウンロード済みのモデル一覧を取得
     func fetchDownloadedModels() -> [String] {
-        let directory = modelsDirectory
+        let directory = whisperKitModelsDirectory
         guard FileManager.default.fileExists(atPath: directory.path) else {
             logger.info("Models directory does not exist: \(directory.path)")
             return []
