@@ -59,6 +59,8 @@ struct ModelDownloadRow: View {
                     ProgressView(value: downloadProgress)
                         .progressViewStyle(.linear)
                         .frame(width: 60)
+                        .accessibilityLabel("\(model.displayName)のダウンロード進捗")
+                        .accessibilityValue("\(Int(downloadProgress * 100))パーセント")
 
                     Text("\(Int(downloadProgress * 100))%")
                         .font(.caption)
@@ -71,6 +73,7 @@ struct ModelDownloadRow: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                         .help("ダウンロード済み")
+                        .accessibilityLabel("ダウンロード済み")
 
                     Button(role: .destructive) {
                         onDelete()
@@ -79,6 +82,8 @@ struct ModelDownloadRow: View {
                     }
                     .buttonStyle(.borderless)
                     .help("モデルを削除")
+                    .accessibilityLabel("\(model.displayName)を削除")
+                    .accessibilityHint("モデルを削除します。再度使用するにはダウンロードが必要です")
                 }
             } else {
                 Button {
@@ -89,9 +94,13 @@ struct ModelDownloadRow: View {
                 }
                 .buttonStyle(.bordered)
                 .help("モデルをダウンロード")
+                .accessibilityLabel("\(model.displayName)をダウンロード")
+                .accessibilityHint("モデルをダウンロードしてオフラインで使用できるようにします")
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(model.displayName)\(model.isRecommended ? "、推奨" : "")\(model.isDownloaded ? "、ダウンロード済み" : "")")
     }
 }
 
