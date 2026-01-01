@@ -24,6 +24,19 @@ struct StreamingTranscriptionView: View {
         }
         .frame(width: 400, height: 300)
         .background(Color.clear)
+        .alert(
+            "録音を中止しますか？",
+            isPresented: $store.showCancelConfirmation
+        ) {
+            Button("続ける", role: .cancel) {
+                store.send(.cancelConfirmationDismissed)
+            }
+            Button("中止して閉じる", role: .destructive) {
+                store.send(.cancelConfirmationConfirmed)
+            }
+        } message: {
+            Text("録音中のデータは破棄されます。")
+        }
     }
 }
 
@@ -51,7 +64,7 @@ private struct HeaderView: View {
 
             // 閉じるボタン
             Button {
-                store.send(.cancelButtonTapped)
+                store.send(.closeButtonTapped)
             } label: {
                 Image(systemName: "xmark")
                     .foregroundColor(.secondary)

@@ -61,22 +61,33 @@ struct StreamingTranscriptionFeature {
             if case .error = status { return true }
             return false
         }
+
+        /// キャンセル確認ダイアログを表示するか
+        var showCancelConfirmation: Bool = false
     }
 
     // MARK: - Action
 
-    enum Action: Sendable {
+    enum Action: Sendable, BindableAction {
         // ユーザー操作
         /// 開始ボタンがタップされた
         case startButtonTapped
         /// 停止ボタンがタップされた
         case stopButtonTapped
-        /// キャンセルボタンがタップされた（✕ボタン）
+        /// ✕ボタンがタップされた（条件分岐用）
+        case closeButtonTapped
+        /// キャンセルボタンがタップされた（内部用：実際のキャンセル処理）
         case cancelButtonTapped
+        /// キャンセル確認ダイアログで「中止して閉じる」が選択された
+        case cancelConfirmationConfirmed
+        /// キャンセル確認ダイアログで「続ける」が選択された
+        case cancelConfirmationDismissed
         /// 「コピーして閉じる」ボタンがタップされた
         case copyAndCloseButtonTapped
         /// 「ファイル保存」ボタンがタップされた
         case saveToFileButtonTapped
+        /// Binding action
+        case binding(BindingAction<State>)
 
         // 内部アクション
         /// 初期化が完了した
@@ -132,8 +143,12 @@ struct StreamingTranscriptionFeature {
     // MARK: - Reducer Body
 
     var body: some Reducer<State, Action> {
+        BindingReducer()
         Reduce { state, action in
             switch action {
+            case .binding:
+                return .none
+
             // MARK: - ユーザー操作
 
             case .startButtonTapped:
@@ -188,6 +203,23 @@ struct StreamingTranscriptionFeature {
                         }
                     }
                 )
+
+            case .closeButtonTapped:
+                // 録音中のみ確認ダイアログを表示
+                if state.isRecording {
+                    state.showCancelConfirmation = true
+                    return .none
+                }
+                // それ以外は即座にキャンセル処理を実行
+                return .send(.cancelButtonTapped)
+
+            case .cancelConfirmationConfirmed:
+                state.showCancelConfirmation = false
+                return .send(.cancelButtonTapped)
+
+            case .cancelConfirmationDismissed:
+                state.showCancelConfirmation = false
+                return .none
 
             case .cancelButtonTapped:
                 let wasRecording = state.isRecording
