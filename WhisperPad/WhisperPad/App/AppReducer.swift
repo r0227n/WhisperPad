@@ -264,7 +264,15 @@ struct AppReducer {
 
             case .streamingTranscription(.delegate(.streamingCancelled)):
                 state.appStatus = .idle
-                return .none
+                // AppDelegate にポップアップを閉じる通知を送信
+                return .run { _ in
+                    await MainActor.run {
+                        NotificationCenter.default.post(
+                            name: .closeStreamingPopup,
+                            object: nil
+                        )
+                    }
+                }
 
             case .streamingTranscription(.delegate(.closePopup)):
                 // 状態をリセット
