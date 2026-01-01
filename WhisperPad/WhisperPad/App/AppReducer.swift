@@ -236,6 +236,14 @@ struct AppReducer {
             // MARK: - Streaming Transcription
 
             case .startStreamingTranscription:
+                // 既存のストリーミング状態をリセット
+                state.streamingTranscription.status = .idle
+                state.streamingTranscription.confirmedText = ""
+                state.streamingTranscription.pendingText = ""
+                state.streamingTranscription.decodingText = ""
+                state.streamingTranscription.duration = 0
+                state.streamingTranscription.tokensPerSecond = 0
+                state.streamingTranscription.showCancelConfirmation = false
                 // ストリーミング文字起こし機能に委譲
                 return .send(.streamingTranscription(.startButtonTapped))
 

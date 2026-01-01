@@ -274,7 +274,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// 録音を終了
-    @objc private func endRecording() {
+    @objc func endRecording() {
         logger.info("End recording requested")
         store.send(.endRecording)
     }
@@ -286,7 +286,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// 録音を再開
-    @objc private func resumeRecording() {
+    @objc func resumeRecording() {
         logger.info("Resume recording requested")
         store.send(.resumeRecording)
     }
