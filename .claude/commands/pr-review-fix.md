@@ -186,7 +186,7 @@ git push
 
 Conventional Commits 形式を使用:
 
-```
+```txt
 <type>: <description>
 
 <body>
@@ -216,7 +216,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
 ### ディレクトリ構造
 
-```
+```bash
 WhisperPad/WhisperPad/
 ├── App/           → AppReducer, AppDelegate
 ├── Features/      → Recording, Transcription, Settings

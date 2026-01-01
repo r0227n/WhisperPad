@@ -208,7 +208,7 @@ xcodebuild -project WhisperPad/WhisperPad.xcodeproj -scheme WhisperPad -configur
 
 ### ディレクトリ構造
 
-```
+```bash
 WhisperPad/WhisperPad/
 ├── App/           → AppReducer, AppDelegate
 ├── Features/      → Recording, Transcription, Settings, StreamingTranscription

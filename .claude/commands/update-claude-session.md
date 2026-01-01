@@ -86,15 +86,15 @@ git status --short .claude/
 
 AskUserQuestion で入力:
 
-```
-question: "新しいブランチ名を入力してください"
+```yaml
+question: '新しいブランチ名を入力してください'
 options:
-  - label: "feature/..."
-    description: "新機能用ブランチ"
-  - label: "fix/..."
-    description: "バグ修正用ブランチ"
-  - label: "docs/..."
-    description: "ドキュメント更新用ブランチ"
+  - label: 'feature/...'
+    description: '新機能用ブランチ'
+  - label: 'fix/...'
+    description: 'バグ修正用ブランチ'
+  - label: 'docs/...'
+    description: 'ドキュメント更新用ブランチ'
 ```
 
 ---
@@ -123,7 +123,7 @@ git worktree add ../WhisperPad-worktrees/<worktree-name> -b <branch-name> develo
 
 ## Step 5: 変更ファイルのコピー
 
-現在のworktreeから新しいworktreeに変更ファイルをコピー:
+現在の worktree から新しい worktree に変更ファイルをコピー:
 
 ```bash
 # 新規作成・編集ファイルをコピー
@@ -159,7 +159,7 @@ mkdir -p <dest-worktree>/<dir-path>
 
 ### 6.2 コミットメッセージ形式
 
-```
+```txt
 <type>(<scope>): <description>
 
 <body - 変更の詳細説明>
@@ -193,15 +193,15 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 <body>
 ```
 
-```
-question: "以下の内容で実行しますか？"
+```yaml
+question: '以下の内容で実行しますか？'
 options:
-  - label: "実行"
-    description: "コミット作成 → PR 作成を実行"
-  - label: "コミットのみ"
-    description: "コミットのみ作成（PR は作成しない）"
-  - label: "キャンセル"
-    description: "実行せずに終了"
+  - label: '実行'
+    description: 'コミット作成 → PR 作成を実行'
+  - label: 'コミットのみ'
+    description: 'コミットのみ作成（PR は作成しない）'
+  - label: 'キャンセル'
+    description: '実行せずに終了'
 ```
 
 ### 6.4 コミット実行
@@ -219,32 +219,4 @@ git push -u origin <branch-name>
 
 # PR 作成
 gh pr create --base develop --title "<title>" --body "<body>"
-```
-
----
-
-## プロジェクト固有情報: WhisperPad
-
-### worktree ベースディレクトリ
-
-```
-/Users/r0227n/Dev/WhisperPad-worktrees/
-```
-
-### メインリポジトリ
-
-```
-/Users/r0227n/Dev/WhisperPad
-```
-
-### .claude/ 構造
-
-```
-.claude/
-├── agents/      → エージェント定義
-├── commands/    → カスタムスラッシュコマンド
-├── hooks/       → フック
-├── skills/      → スキル
-├── settings.json
-└── settings.local.json
 ```
