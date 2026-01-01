@@ -133,8 +133,6 @@ extension HotkeyType {
             "record.circle"
         case .recordingPause:
             "pause.fill"
-        case .openSettings:
-            "gear"
         case .cancel:
             "xmark.circle"
         case .streaming:
