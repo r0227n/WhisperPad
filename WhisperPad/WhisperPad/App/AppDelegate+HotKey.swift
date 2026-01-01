@@ -56,7 +56,6 @@ extension AppDelegate {
         await hotKeyClient.unregisterAll()
 
         await registerRecordingHotKey(hotKeySettings)
-        await registerOpenSettingsHotKey(hotKeySettings)
         await registerCancelHotKey(hotKeySettings)
         await registerStreamingHotKey(hotKeySettings)
         await registerRecordingToggleHotKey(hotKeySettings)
@@ -69,13 +68,6 @@ extension AppDelegate {
         await hotKeyClient.registerRecordingWithCombo(
             settings.recordingHotKey,
             { [weak self] in Task { @MainActor in self?.toggleRecording() } }
-        )
-    }
-
-    private func registerOpenSettingsHotKey(_ settings: HotKeySettings) async {
-        await hotKeyClient.registerOpenSettingsWithCombo(
-            settings.openSettingsHotKey,
-            { Task { @MainActor in NotificationCenter.default.post(name: .openSettingsRequest, object: nil) } }
         )
     }
 
