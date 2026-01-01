@@ -18,9 +18,6 @@ struct GeneralSettings: Equatable, Sendable {
     /// 文字起こし完了時にサウンドを再生するかどうか
     var playSoundOnComplete: Bool = true
 
-    /// メニューバーアイコンのスタイル
-    var menuBarIconStyle: MenuBarIconStyle = .standard
-
     /// メニューバーアイコンのカスタム設定
     var menuBarIconSettings: MenuBarIconSettings = .default
 
@@ -44,7 +41,6 @@ extension GeneralSettings: Codable {
         case launchAtLogin
         case showNotificationOnComplete
         case playSoundOnComplete
-        case menuBarIconStyle
         case menuBarIconSettings
         case notificationTitle
         case transcriptionCompleteMessage
@@ -58,9 +54,6 @@ extension GeneralSettings: Codable {
             Bool.self, forKey: .showNotificationOnComplete
         ) ?? true
         playSoundOnComplete = try container.decodeIfPresent(Bool.self, forKey: .playSoundOnComplete) ?? true
-        menuBarIconStyle = try container.decodeIfPresent(
-            MenuBarIconStyle.self, forKey: .menuBarIconStyle
-        ) ?? .standard
         menuBarIconSettings = try container.decodeIfPresent(
             MenuBarIconSettings.self, forKey: .menuBarIconSettings
         ) ?? .default
@@ -71,33 +64,5 @@ extension GeneralSettings: Codable {
         streamingCompleteMessage = try container.decodeIfPresent(
             String.self, forKey: .streamingCompleteMessage
         ) ?? "リアルタイム文字起こしが完了しました"
-    }
-}
-
-// MARK: - MenuBarIconStyle
-
-extension GeneralSettings {
-    /// メニューバーアイコンスタイル
-    enum MenuBarIconStyle: String, Codable, CaseIterable, Sendable {
-        /// 標準スタイル
-        case standard
-
-        /// モノクロスタイル
-        case monochrome
-
-        /// カラフルスタイル
-        case colorful
-
-        /// 表示名
-        var displayName: String {
-            switch self {
-            case .standard:
-                "標準"
-            case .monochrome:
-                "モノクロ"
-            case .colorful:
-                "カラー"
-            }
-        }
     }
 }
