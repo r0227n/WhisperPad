@@ -70,14 +70,12 @@ git diff develop..HEAD --stat
 
 ### 除外ファイル
 
-```
-*.xcuserstate
-xcschememanagement.plist
-*.xcuserdatad/
-.claude/
-.DS_Store
-Pods/
-```
+- `*.xcuserstate`
+- `xcschememanagement.plist`
+- `*.xcuserdatad/`
+- `.claude/`
+- `.DS_Store`
+- `Pods/`
 
 ### コミットメッセージ形式
 
@@ -149,15 +147,15 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
 ### AskUserQuestion の質問
 
-```
-question: "以下の内容で実行しますか？"
+```yml
+question: '以下の内容で実行しますか？'
 options:
-  - label: "実行"
-    description: "コミット作成 → PR 作成を実行"
-  - label: "コミットのみ"
-    description: "コミットのみ作成（PR は作成しない）"
-  - label: "PR のみ"
-    description: "既存コミットで PR のみ作成"
+  - label: '実行'
+    description: 'コミット作成 → PR 作成を実行'
+  - label: 'コミットのみ'
+    description: 'コミットのみ作成（PR は作成しない）'
+  - label: 'PR のみ'
+    description: '既存コミットで PR のみ作成'
 ```
 
 ---
@@ -218,7 +216,7 @@ gh pr create --base develop --title "<title>" --body "<body>" --draft
 
 ### ディレクトリ構造
 
-```
+```bash
 WhisperPad/WhisperPad/
 ├── App/           → AppReducer, AppDelegate
 ├── Features/      → Recording, Transcription, Settings

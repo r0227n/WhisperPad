@@ -33,6 +33,9 @@ struct HotkeyRecorderView: View {
     /// イベントモニター
     @State private var eventMonitor: Any?
 
+    /// マウスが一度でもホバーしたか（初期状態での誤終了防止）
+    @State private var wasHovered: Bool = false
+
     var body: some View {
         HStack {
             Text(label)
@@ -47,6 +50,7 @@ struct HotkeyRecorderView: View {
         }
         .onChange(of: isRecording) { _, newValue in
             if newValue {
+                wasHovered = false
                 startKeyMonitor()
             } else {
                 removeKeyMonitor()
@@ -76,6 +80,13 @@ struct HotkeyRecorderView: View {
                 onStopRecording()
             }
             .buttonStyle(.borderless)
+        }
+        .onHover { hovering in
+            if hovering {
+                wasHovered = true
+            } else if wasHovered {
+                onStopRecording()
+            }
         }
     }
 

@@ -70,14 +70,12 @@ git log --oneline -5
 
 以下のファイルはコミットから **除外** してください:
 
-```
-*.xcuserstate
-xcschememanagement.plist
-*.xcuserdatad/
-.claude/
-.DS_Store
-Pods/
-```
+- `\*.xcuserstate`
+- `xcschememanagement.plist`
+- `\*.xcuserdatad/`
+- `.claude/`
+- `.DS_Store`
+- `Pods/`
 
 除外理由を説明し、必要に応じて `.gitignore` への追加を提案してください。
 
@@ -166,7 +164,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
 ### ディレクトリ構造
 
-```
+```bash
 WhisperPad/WhisperPad/
 ├── App/           → AppReducer, AppDelegate
 ├── Features/      → Recording, Transcription, Settings
