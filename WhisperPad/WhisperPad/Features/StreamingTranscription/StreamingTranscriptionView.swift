@@ -147,19 +147,21 @@ private struct StatusIndicator: View {
 private struct PulseModifier: ViewModifier {
     let isActive: Bool
     @State private var isPulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
-            .opacity(isActive ? (isPulsing ? 0.5 : 1.0) : 1.0)
+            .opacity(isActive && !reduceMotion ? (isPulsing ? 0.5 : 1.0) : 1.0)
             .animation(
-                isActive ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true) : .default,
+                isActive && !reduceMotion
+                    ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true) : .default,
                 value: isPulsing
             )
             .onAppear {
-                if isActive { isPulsing = true }
+                if isActive, !reduceMotion { isPulsing = true }
             }
             .onChange(of: isActive) { _, newValue in
-                isPulsing = newValue
+                isPulsing = newValue && !reduceMotion
             }
     }
 }
@@ -168,6 +170,7 @@ private struct PulseModifier: ViewModifier {
 
 private struct TextDisplayView: View {
     let store: StoreOf<StreamingTranscriptionFeature>
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -209,17 +212,23 @@ private struct TextDisplayView: View {
                 .padding(.vertical, 12)
             }
             .onChange(of: store.confirmedText) { _, _ in
-                withAnimation(.easeOut(duration: 0.2)) {
-                    proxy.scrollTo("bottom", anchor: .bottom)
-                }
+                scrollToBottom(proxy: proxy)
             }
             .onChange(of: store.pendingText) { _, _ in
-                withAnimation(.easeOut(duration: 0.2)) {
-                    proxy.scrollTo("bottom", anchor: .bottom)
-                }
+                scrollToBottom(proxy: proxy)
             }
         }
         .frame(maxHeight: .infinity)
+    }
+
+    private func scrollToBottom(proxy: ScrollViewProxy) {
+        if reduceMotion {
+            proxy.scrollTo("bottom", anchor: .bottom)
+        } else {
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo("bottom", anchor: .bottom)
+            }
+        }
     }
 }
 
