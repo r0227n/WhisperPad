@@ -94,15 +94,14 @@ actor StreamingTranscriptionService {
         // バッファサイズチェック（警告閾値）
         if accumulatedSamples.count >= Self.bufferWarningThreshold {
             logger.warning(
-                "Buffer size approaching limit: \(accumulatedSamples.count) samples " +
-                    "(threshold: \(Self.bufferWarningThreshold), max: \(Self.maxBufferSize))"
+                "Buffer size approaching limit: \(self.accumulatedSamples.count) samples (threshold: \(Self.bufferWarningThreshold), max: \(Self.maxBufferSize))"
             )
         }
 
         // バッファサイズチェック（最大値）
         if accumulatedSamples.count >= Self.maxBufferSize {
             logger.error(
-                "Buffer overflow: \(accumulatedSamples.count) samples exceeds max \(Self.maxBufferSize)"
+                "Buffer overflow: \(self.accumulatedSamples.count) samples exceeds max \(Self.maxBufferSize)"
             )
             throw StreamingTranscriptionError.bufferOverflow
         }
