@@ -88,7 +88,7 @@ actor StreamingTranscriptionService {
         // 最低限のサンプル数が必要（約1秒分 = 16000サンプル）
         guard accumulatedSamples.count >= 16000 else {
             return TranscriptionProgress(
-                confirmedText: confirmedSegments.joined(separator: " "),
+                confirmedText: confirmedSegments.joined(separator: "\n"),
                 pendingText: pendingSegment,
                 decodingText: "",
                 tokensPerSecond: 0
@@ -113,7 +113,7 @@ actor StreamingTranscriptionService {
             let duration = endTime - startTime
 
             // 結果を結合
-            let transcribedText = results.map(\.text).joined(separator: " ")
+            let transcribedText = results.map(\.text).joined(separator: "\n")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
             // トークン数を概算（文字数ベース: 1トークン ≒ 2文字と仮定）
@@ -133,7 +133,7 @@ actor StreamingTranscriptionService {
             }
 
             return TranscriptionProgress(
-                confirmedText: confirmedSegments.joined(separator: " "),
+                confirmedText: confirmedSegments.joined(separator: "\n"),
                 pendingText: pendingSegment,
                 decodingText: transcribedText,
                 tokensPerSecond: tokensPerSecond
@@ -158,7 +158,7 @@ actor StreamingTranscriptionService {
                 decodeOptions: options
             )
 
-            let finalText = results.map(\.text).joined(separator: " ")
+            let finalText = results.map(\.text).joined(separator: "\n")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
             if !finalText.isEmpty {
@@ -166,7 +166,7 @@ actor StreamingTranscriptionService {
             }
         }
 
-        let result = confirmedSegments.joined(separator: " ")
+        let result = confirmedSegments.joined(separator: "\n")
         logger.info("Finalized transcription: \(result.prefix(50))...")
         return result
     }
