@@ -9,7 +9,7 @@ import Dependencies
 import HotKey
 import OSLog
 
-nonisolated(unsafe) private let logger = Logger(
+private let logger = Logger(
     subsystem: "com.whisperpad",
     category: "HotKeyClientLive"
 )
@@ -30,7 +30,23 @@ private final class HotKeyManager {
     private var popupSaveToFileHotKey: HotKey?
     private var popupCloseHotKey: HotKey?
 
+    /// 解放待ちのHotKeyインスタンスを一時保持（遅延解放用）
+    private var pendingDeallocation: [HotKey] = []
+
     private init() {}
+
+    /// 古いHotKeyインスタンスを遅延解放する共通処理
+    private func scheduleDeallocation(_ oldHotKey: HotKey) {
+        pendingDeallocation.append(oldHotKey)
+        Task {
+            try? await Task.sleep(for: .milliseconds(500))
+            await MainActor.run {
+                if let index = self.pendingDeallocation.firstIndex(where: { $0 === oldHotKey }) {
+                    self.pendingDeallocation.remove(at: index)
+                }
+            }
+        }
+    }
 
     // MARK: - Recording Toggle (⌥⇧ Space)
 
@@ -78,7 +94,30 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
+        // Validate BEFORE attempting to create HotKey instance
+        let validation = HotKeyValidator.canRegister(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+
+        switch validation {
+        case .success:
+            // Validation passed, proceed with registration
+            break
+        case let .failure(error):
+            logger.error(
+                """
+                Cannot register recording hotkey: \(error). \
+                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+                """
+            )
+            // Don't proceed with registration - keep old hotkey or leave as nil
+            return
+        }
+
+        if let oldHotKey = recordingToggleHotKey { scheduleDeallocation(oldHotKey) }
         recordingToggleHotKey = nil
+
         let hotKey = HotKey(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -87,7 +126,10 @@ private final class HotKeyManager {
         recordingToggleHotKey = hotKey
         logger
             .info(
-                "Recording hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
+                """
+                Recording hotkey registered with combo: \
+                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+                """
             )
     }
 
@@ -99,7 +141,30 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
+        // Validate BEFORE attempting to create HotKey instance
+        let validation = HotKeyValidator.canRegister(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+
+        switch validation {
+        case .success:
+            // Validation passed, proceed with registration
+            break
+        case let .failure(error):
+            logger.error(
+                """
+                Cannot register cancel hotkey: \(error). \
+                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+                """
+            )
+            // Don't proceed with registration - keep old hotkey or leave as nil
+            return
+        }
+
+        if let oldHotKey = cancelHotKey { scheduleDeallocation(oldHotKey) }
         cancelHotKey = nil
+
         let hotKey = HotKey(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -123,7 +188,30 @@ private final class HotKeyManager {
         keyDownHandler: @escaping () -> Void,
         keyUpHandler: @escaping () -> Void
     ) {
+        // Validate BEFORE attempting to create HotKey instance
+        let validation = HotKeyValidator.canRegister(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+
+        switch validation {
+        case .success:
+            // Validation passed, proceed with registration
+            break
+        case let .failure(error):
+            logger.error(
+                """
+                Cannot register streaming hotkey: \(error). \
+                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+                """
+            )
+            // Don't proceed with registration - keep old hotkey or leave as nil
+            return
+        }
+
+        if let oldHotKey = streamingHotKey { scheduleDeallocation(oldHotKey) }
         streamingHotKey = nil
+
         let hotKey = HotKey(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -152,7 +240,30 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
+        // Validate BEFORE attempting to create HotKey instance
+        let validation = HotKeyValidator.canRegister(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+
+        switch validation {
+        case .success:
+            // Validation passed, proceed with registration
+            break
+        case let .failure(error):
+            logger.error(
+                """
+                Cannot register recording pause hotkey: \(error). \
+                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+                """
+            )
+            // Don't proceed with registration - keep old hotkey or leave as nil
+            return
+        }
+
+        if let oldHotKey = recordingPauseHotKey { scheduleDeallocation(oldHotKey) }
         recordingPauseHotKey = nil
+
         let hotKey = HotKey(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -186,7 +297,30 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
+        // Validate BEFORE attempting to create HotKey instance
+        let validation = HotKeyValidator.canRegister(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+
+        switch validation {
+        case .success:
+            // Validation passed, proceed with registration
+            break
+        case let .failure(error):
+            logger.error(
+                """
+                Cannot register popup copy & close hotkey: \(error). \
+                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+                """
+            )
+            // Don't proceed with registration - keep old hotkey or leave as nil
+            return
+        }
+
+        if let oldHotKey = popupCopyAndCloseHotKey { scheduleDeallocation(oldHotKey) }
         popupCopyAndCloseHotKey = nil
+
         let hotKey = HotKey(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -206,7 +340,30 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
+        // Validate BEFORE attempting to create HotKey instance
+        let validation = HotKeyValidator.canRegister(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+
+        switch validation {
+        case .success:
+            // Validation passed, proceed with registration
+            break
+        case let .failure(error):
+            logger.error(
+                """
+                Cannot register popup save to file hotkey: \(error). \
+                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+                """
+            )
+            // Don't proceed with registration - keep old hotkey or leave as nil
+            return
+        }
+
+        if let oldHotKey = popupSaveToFileHotKey { scheduleDeallocation(oldHotKey) }
         popupSaveToFileHotKey = nil
+
         let hotKey = HotKey(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -226,7 +383,30 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
+        // Validate BEFORE attempting to create HotKey instance
+        let validation = HotKeyValidator.canRegister(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+
+        switch validation {
+        case .success:
+            // Validation passed, proceed with registration
+            break
+        case let .failure(error):
+            logger.error(
+                """
+                Cannot register popup close hotkey: \(error). \
+                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+                """
+            )
+            // Don't proceed with registration - keep old hotkey or leave as nil
+            return
+        }
+
+        if let oldHotKey = popupCloseHotKey { scheduleDeallocation(oldHotKey) }
         popupCloseHotKey = nil
+
         let hotKey = HotKey(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers

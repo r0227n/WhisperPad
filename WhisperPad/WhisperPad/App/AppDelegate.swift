@@ -65,6 +65,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// ストリーミングポップアップウィンドウ
     private var streamingPopupWindow: StreamingPopupWindow?
 
+    /// ホットキー再登録タスク（デバウンス用）
+    private var hotKeyRegistrationTask: Task<Void, Never>?
+
     // MARK: - Property Accessors (for extensions)
 
     func getStatusItem() -> NSStatusItem? { statusItem }
@@ -82,6 +85,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func setPulseTimer(_ timer: Timer?) { pulseTimer = timer }
     func getPulsePhase() -> Double { pulsePhase }
     func setPulsePhase(_ phase: Double) { pulsePhase = phase }
+
+    // HotKey registration task accessor
+    func getHotKeyRegistrationTask() -> Task<Void, Never>? { hotKeyRegistrationTask }
+    func setHotKeyRegistrationTask(_ task: Task<Void, Never>?) { hotKeyRegistrationTask = task }
 
     // MARK: - Menu Item Tags
 
