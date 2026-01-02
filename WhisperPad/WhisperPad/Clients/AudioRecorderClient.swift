@@ -41,6 +41,14 @@ struct AudioRecorderClient: Sendable {
     /// - Returns: 音声レベル（dB）、録音していない場合は nil
     var currentLevel: @Sendable () async -> Float?
 
+    /// 音声レベルをリアルタイムで監視
+    ///
+    /// - Returns: 音声レベル（dB）のストリーム
+    ///
+    /// 30fps（33ms間隔）で音声レベルを更新します。
+    /// 設定ウィンドウが開いているときのみ使用し、閉じるときにストリームをキャンセルしてください。
+    var observeAudioLevel: @Sendable () -> AsyncStream<Float>
+
     /// 録音を一時停止（マイクを完全に解放）
     var pauseRecording: @Sendable () async -> Void
 
@@ -71,6 +79,11 @@ extension AudioRecorderClient: TestDependencyKey {
             endRecording: { nil },
             currentTime: { nil },
             currentLevel: { nil },
+            observeAudioLevel: {
+                AsyncStream { continuation in
+                    continuation.finish()
+                }
+            },
             pauseRecording: {},
             resumeRecording: {},
             isPaused: { false },
@@ -88,6 +101,11 @@ extension AudioRecorderClient: TestDependencyKey {
             endRecording: { nil },
             currentTime: { nil },
             currentLevel: { nil },
+            observeAudioLevel: {
+                AsyncStream { continuation in
+                    continuation.finish()
+                }
+            },
             pauseRecording: {},
             resumeRecording: {},
             isPaused: { false },
