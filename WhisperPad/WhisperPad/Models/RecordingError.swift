@@ -28,19 +28,31 @@ enum RecordingError: Error, Equatable, Sendable, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .permissionDenied:
-            "マイクへのアクセスが許可されていません。システム環境設定でマイクの権限を許可してください。"
+            String(localized: "error.recording.permission_denied")
         case let .recordingFailed(message):
-            "録音の開始に失敗しました: \(message)"
+            String(
+                format: String(localized: "error.recording.recording_failed"),
+                message
+            )
         case .noRecordingURL:
-            "録音ファイルのURLが設定されていません。"
+            String(localized: "error.recording.no_recording_url")
         case .audioSessionSetupFailed:
-            "オーディオセッションの設定に失敗しました。"
+            String(localized: "error.recording.audio_session_setup_failed")
         case let .recorderStartFailed(message):
-            "録音の開始に失敗しました: \(message)"
+            String(
+                format: String(localized: "error.recording.recorder_start_failed"),
+                message
+            )
         case let .audioFileCreationFailed(message):
-            "オーディオファイルの作成に失敗しました: \(message)"
+            String(
+                format: String(localized: "error.recording.audio_file_creation_failed"),
+                message
+            )
         case let .segmentMergeFailed(message):
-            "音声セグメントの結合に失敗しました: \(message)"
+            String(
+                format: String(localized: "error.recording.segment_merge_failed"),
+                message
+            )
         }
     }
 }

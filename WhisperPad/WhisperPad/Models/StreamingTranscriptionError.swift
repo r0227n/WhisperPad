@@ -22,13 +22,19 @@ enum StreamingTranscriptionError: Error, Equatable, Sendable, LocalizedError {
     var errorDescription: String? {
         switch self {
         case let .initializationFailed(message):
-            "ストリーミング文字起こしの初期化に失敗しました: \(message)"
+            String(
+                format: String(localized: "error.streaming.initialization_failed"),
+                message
+            )
         case let .processingFailed(message):
-            "音声処理に失敗しました: \(message)"
+            String(
+                format: String(localized: "error.streaming.processing_failed"),
+                message
+            )
         case .bufferOverflow:
-            "音声バッファがオーバーフローしました。処理が追いついていません。"
+            String(localized: "error.streaming.buffer_overflow")
         case .microphonePermissionDenied:
-            "マイクへのアクセスが許可されていません。システム環境設定でマイクの権限を許可してください。"
+            String(localized: "error.streaming.microphone_permission_denied")
         }
     }
 }
