@@ -97,6 +97,8 @@ struct SettingsFeature {
         case updateTranscriptionSettings(TranscriptionSettings)
         /// 出力設定を更新
         case updateOutputSettings(FileOutputSettings)
+        /// ストリーミング設定を更新
+        case updateStreamingSettings(StreamingSettings)
         /// 出力ディレクトリのブックマークが作成された
         case outputBookmarkCreated(Data)
         /// 出力ディレクトリのブックマークが解決された
@@ -265,6 +267,10 @@ struct SettingsFeature {
                     }
                 }
 
+                return .send(.saveSettings)
+
+            case let .updateStreamingSettings(streaming):
+                state.settings.streaming = streaming
                 return .send(.saveSettings)
 
             case .loadSettings:

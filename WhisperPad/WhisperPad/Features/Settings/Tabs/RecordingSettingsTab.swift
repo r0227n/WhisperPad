@@ -95,6 +95,28 @@ struct RecordingSettingsTab: View {
                     Text("指定した時間、音声レベルがしきい値を下回ると録音を停止します")
                 }
             }
+
+            // ストリーミング設定セクション
+            Section {
+                Toggle(
+                    "リアルタイムプレビューを表示",
+                    isOn: Binding(
+                        get: { store.settings.streaming.showDecodingPreview },
+                        set: { enabled in
+                            var streaming = store.settings.streaming
+                            streaming.showDecodingPreview = enabled
+                            store.send(.updateStreamingSettings(streaming))
+                        }
+                    )
+                )
+                .help("リアルタイム文字起こし中にデコード中のテキストをプレビュー表示します")
+                .accessibilityLabel("リアルタイムプレビューを表示")
+                .accessibilityHint("リアルタイム文字起こし中にデコード中のテキストをプレビュー表示します")
+            } header: {
+                Text("ストリーミング")
+            } footer: {
+                Text("オンにすると、文字起こし中に認識途中のテキストが薄く表示されます")
+            }
         }
         .formStyle(.grouped)
         .padding()

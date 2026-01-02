@@ -37,6 +37,9 @@ struct StreamingTranscriptionFeature {
         /// 処理速度（トークン/秒）
         var tokensPerSecond: Double = 0
 
+        /// デコード中プレビューを表示するかどうか
+        var showDecodingPreview: Bool = true
+
         /// 全テキスト（表示用）
         var displayText: String {
             [confirmedText, pendingText, decodingText]
@@ -92,6 +95,8 @@ struct StreamingTranscriptionFeature {
         // 内部アクション
         /// 初期化が完了した
         case initializationCompleted
+        /// プレビュー表示設定を更新
+        case updateShowDecodingPreview(Bool)
         /// 初期化に失敗した
         case initializationFailed(String)
         /// 進捗が更新された
@@ -160,7 +165,10 @@ struct StreamingTranscriptionFeature {
                 state.duration = 0
                 state.tokensPerSecond = 0
 
-                return .run { [whisperKitClient, streamingTranscription] send in
+                return .run { [userDefaultsClient, whisperKitClient, streamingTranscription] send in
+                    // 設定を読み込んでプレビュー表示設定を反映
+                    let settings = await userDefaultsClient.loadSettings()
+                    await send(.updateShowDecodingPreview(settings.streaming.showDecodingPreview))
                     do {
                         // WhisperKitManager が ready なら即座に初期化完了
                         let isReady = await whisperKitClient.isReady()
@@ -304,6 +312,10 @@ struct StreamingTranscriptionFeature {
 
             case let .initializationFailed(message):
                 state.status = .error(message)
+                return .none
+
+            case let .updateShowDecodingPreview(show):
+                state.showDecodingPreview = show
                 return .none
 
             case let .audioChunkReceived(samples):

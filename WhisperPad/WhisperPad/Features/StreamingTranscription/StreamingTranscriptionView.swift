@@ -222,8 +222,8 @@ private struct TextDisplayView: View {
                             .foregroundColor(.secondary)
                     }
 
-                    // デコード中テキスト
-                    if !store.decodingText.isEmpty {
+                    // デコード中テキスト（設定で有効な場合のみ表示）
+                    if store.showDecodingPreview, !store.decodingText.isEmpty {
                         Text(store.decodingText)
                             .foregroundColor(.secondary)
                             .opacity(0.7)
@@ -276,7 +276,7 @@ private struct TextDisplayView: View {
         if !store.pendingText.isEmpty {
             parts.append(store.pendingText)
         }
-        if !store.decodingText.isEmpty {
+        if store.showDecodingPreview, !store.decodingText.isEmpty {
             parts.append(store.decodingText)
         }
         if parts.isEmpty {
