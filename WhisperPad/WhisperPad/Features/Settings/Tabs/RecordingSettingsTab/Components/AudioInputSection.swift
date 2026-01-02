@@ -70,7 +70,10 @@ struct AudioInputSection: View {
                             .foregroundColor(.secondary)
 
                         InfoPopoverButton(
-                            helpText: "Real-time audio input level. Speak into your microphone to see the meter respond. Green is good, yellow is loud, and red is too loud.",
+                            helpText: """
+                            Real-time audio input level. Speak into your microphone to see \
+                            the meter respond. Green is good, yellow is loud, and red is too loud.
+                            """,
                             title: "About Input Levels"
                         )
 

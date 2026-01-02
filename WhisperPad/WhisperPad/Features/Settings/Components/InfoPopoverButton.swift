@@ -70,7 +70,10 @@ struct InfoPopoverButton: View {
 
         Text("Sample Rate:")
         InfoPopoverButton(
-            helpText: "The number of audio samples per second. Higher rates provide better quality but use more storage."
+            helpText: """
+            The number of audio samples per second. Higher rates provide better quality but \
+            use more storage.
+            """
         )
     }
     .padding()
@@ -81,7 +84,10 @@ struct InfoPopoverButton: View {
         HStack {
             Text("Silence Detection")
             InfoPopoverButton(
-                helpText: "When enabled, recording automatically stops after the specified duration of silence. This is useful for hands-free recording.",
+                helpText: """
+                When enabled, recording automatically stops after the specified duration of silence. \
+                This is useful for hands-free recording.
+                """,
                 title: "About Silence Detection"
             )
         }
@@ -89,7 +95,10 @@ struct InfoPopoverButton: View {
         HStack {
             Text("Audio Quality")
             InfoPopoverButton(
-                helpText: "Higher quality settings provide better transcription accuracy but use more storage space and processing power.",
+                helpText: """
+                Higher quality settings provide better transcription accuracy but use more \
+                storage space and processing power.
+                """,
                 title: "Audio Quality Settings"
             )
         }

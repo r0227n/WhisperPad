@@ -1,5 +1,5 @@
 //
-//  RecordingSettingsTab.swift
+//  RecordingSettingsTab_Legacy.swift
 //  WhisperPad
 //
 

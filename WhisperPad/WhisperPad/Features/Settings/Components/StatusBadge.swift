@@ -45,7 +45,7 @@ struct StatusBadge: View {
                 if shouldPulse {
                     withAnimation(
                         .easeInOut(duration: 1.5)
-                        .repeatForever(autoreverses: false)
+                            .repeatForever(autoreverses: false)
                     ) {
                         isPulsing = true
                     }
