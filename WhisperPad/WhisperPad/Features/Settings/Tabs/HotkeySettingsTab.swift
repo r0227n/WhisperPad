@@ -103,6 +103,12 @@ struct HotkeySettingsTab: View {
             store.settings.hotKey.cancelHotKey
         case .streaming:
             store.settings.hotKey.streamingHotKey
+        case .popupCopyAndClose:
+            store.settings.hotKey.popupCopyAndCloseHotKey
+        case .popupSaveToFile:
+            store.settings.hotKey.popupSaveToFileHotKey
+        case .popupClose:
+            store.settings.hotKey.popupCloseHotKey
         }
     }
 
@@ -121,6 +127,12 @@ struct HotkeySettingsTab: View {
                     hotKey.cancelHotKey = newValue
                 case .streaming:
                     hotKey.streamingHotKey = newValue
+                case .popupCopyAndClose:
+                    hotKey.popupCopyAndCloseHotKey = newValue
+                case .popupSaveToFile:
+                    hotKey.popupSaveToFileHotKey = newValue
+                case .popupClose:
+                    hotKey.popupCloseHotKey = newValue
                 }
                 store.send(.updateHotKeySettings(hotKey))
             }
@@ -139,6 +151,12 @@ struct HotkeySettingsTab: View {
             hotKey.cancelHotKey = .cancelDefault
         case .streaming:
             hotKey.streamingHotKey = .streamingDefault
+        case .popupCopyAndClose:
+            hotKey.popupCopyAndCloseHotKey = .popupCopyAndCloseDefault
+        case .popupSaveToFile:
+            hotKey.popupSaveToFileHotKey = .popupSaveToFileDefault
+        case .popupClose:
+            hotKey.popupCloseHotKey = .popupCloseDefault
         }
         store.send(.updateHotKeySettings(hotKey))
     }

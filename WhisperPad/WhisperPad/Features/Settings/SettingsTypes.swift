@@ -40,6 +40,9 @@ enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
     case streaming
     case cancel
     case recordingPause
+    case popupCopyAndClose
+    case popupSaveToFile
+    case popupClose
 
     var id: String { rawValue }
 }
@@ -51,6 +54,7 @@ extension HotkeyType {
     enum Category: String, CaseIterable, Identifiable {
         case recording = "録音"
         case cancel = "キャンセル"
+        case popup = "ポップアップ"
 
         var id: String { rawValue }
 
@@ -61,6 +65,8 @@ extension HotkeyType {
                 [.recording, .recordingPause, .streaming]
             case .cancel:
                 [.cancel]
+            case .popup:
+                [.popupCopyAndClose, .popupSaveToFile, .popupClose]
             }
         }
     }
@@ -72,6 +78,8 @@ extension HotkeyType {
             .recording
         case .cancel:
             .cancel
+        case .popupCopyAndClose, .popupSaveToFile, .popupClose:
+            .popup
         }
     }
 
@@ -86,6 +94,12 @@ extension HotkeyType {
             "録音キャンセル"
         case .streaming:
             "ストリーミング"
+        case .popupCopyAndClose:
+            "コピーして閉じる"
+        case .popupSaveToFile:
+            "ファイル保存"
+        case .popupClose:
+            "閉じる"
         }
     }
 
@@ -100,6 +114,12 @@ extension HotkeyType {
             "進行中の録音をキャンセルします"
         case .streaming:
             "リアルタイム文字起こしを開始します"
+        case .popupCopyAndClose:
+            "文字起こしをクリップボードにコピーしてポップアップを閉じます"
+        case .popupSaveToFile:
+            "文字起こしをファイルに保存します"
+        case .popupClose:
+            "ポップアップを閉じます"
         }
     }
 
@@ -114,6 +134,12 @@ extension HotkeyType {
             .cancelDefault
         case .streaming:
             .streamingDefault
+        case .popupCopyAndClose:
+            .popupCopyAndCloseDefault
+        case .popupSaveToFile:
+            .popupSaveToFileDefault
+        case .popupClose:
+            .popupCloseDefault
         }
     }
 
@@ -128,6 +154,12 @@ extension HotkeyType {
             "xmark.circle"
         case .streaming:
             "waveform"
+        case .popupCopyAndClose:
+            "doc.on.clipboard"
+        case .popupSaveToFile:
+            "square.and.arrow.down"
+        case .popupClose:
+            "xmark"
         }
     }
 
@@ -141,6 +173,12 @@ extension HotkeyType {
         case .cancel:
             .cancel
         case .streaming:
+            .streamingTranscribing
+        case .popupCopyAndClose:
+            .streamingCompleted
+        case .popupSaveToFile:
+            .streamingCompleted
+        case .popupClose:
             .streamingTranscribing
         }
     }

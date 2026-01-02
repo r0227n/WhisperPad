@@ -83,6 +83,38 @@ struct HotKeyClient: Sendable {
         HotKeySettings.KeyComboSettings,
         @escaping @Sendable () -> Void
     ) async -> Void
+
+    // MARK: - ポップアップ用ホットキー
+
+    /// ポップアップ: コピーして閉じるホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    var registerPopupCopyAndClose: @Sendable (
+        HotKeySettings.KeyComboSettings,
+        @escaping @Sendable () -> Void
+    ) async -> Void
+
+    /// ポップアップ: ファイル保存ホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    var registerPopupSaveToFile: @Sendable (
+        HotKeySettings.KeyComboSettings,
+        @escaping @Sendable () -> Void
+    ) async -> Void
+
+    /// ポップアップ: 閉じるホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    var registerPopupClose: @Sendable (
+        HotKeySettings.KeyComboSettings,
+        @escaping @Sendable () -> Void
+    ) async -> Void
+
+    /// ポップアップ用ホットキーをすべて解除
+    var unregisterPopupHotKeys: @Sendable () async -> Void
 }
 
 // MARK: - HotKeyError
@@ -146,6 +178,18 @@ extension HotKeyClient: TestDependencyKey {
             },
             registerRecordingPauseWithCombo: { _, _ in
                 clientLogger.debug("[PREVIEW] registerRecordingPauseWithCombo called")
+            },
+            registerPopupCopyAndClose: { _, _ in
+                clientLogger.debug("[PREVIEW] registerPopupCopyAndClose called")
+            },
+            registerPopupSaveToFile: { _, _ in
+                clientLogger.debug("[PREVIEW] registerPopupSaveToFile called")
+            },
+            registerPopupClose: { _, _ in
+                clientLogger.debug("[PREVIEW] registerPopupClose called")
+            },
+            unregisterPopupHotKeys: {
+                clientLogger.debug("[PREVIEW] unregisterPopupHotKeys called")
             }
         )
     }
@@ -188,6 +232,18 @@ extension HotKeyClient: TestDependencyKey {
             },
             registerRecordingPauseWithCombo: { _, _ in
                 clientLogger.debug("[TEST] registerRecordingPauseWithCombo called")
+            },
+            registerPopupCopyAndClose: { _, _ in
+                clientLogger.debug("[TEST] registerPopupCopyAndClose called")
+            },
+            registerPopupSaveToFile: { _, _ in
+                clientLogger.debug("[TEST] registerPopupSaveToFile called")
+            },
+            registerPopupClose: { _, _ in
+                clientLogger.debug("[TEST] registerPopupClose called")
+            },
+            unregisterPopupHotKeys: {
+                clientLogger.debug("[TEST] unregisterPopupHotKeys called")
             }
         )
     }

@@ -578,7 +578,10 @@ struct SettingsFeature {
                     ("録音", hotKey.recordingHotKey),
                     ("ストリーミング", hotKey.streamingHotKey),
                     ("キャンセル", hotKey.cancelHotKey),
-                    ("録音一時停止", hotKey.recordingPauseHotKey)
+                    ("録音一時停止", hotKey.recordingPauseHotKey),
+                    ("コピーして閉じる", hotKey.popupCopyAndCloseHotKey),
+                    ("ファイル保存", hotKey.popupSaveToFileHotKey),
+                    ("閉じる", hotKey.popupCloseHotKey)
                 ]
 
                 var conflicts: [String] = []
