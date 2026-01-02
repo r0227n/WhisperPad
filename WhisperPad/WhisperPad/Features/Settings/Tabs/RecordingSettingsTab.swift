@@ -15,7 +15,8 @@ struct RecordingSettingsTab: View {
 
     var body: some View {
         Form {
-            // 入力デバイスセクション
+            // MARK: - 録音セクション
+
             Section {
                 Picker(
                     "入力デバイス",
@@ -37,7 +38,10 @@ struct RecordingSettingsTab: View {
                 .accessibilityLabel("入力デバイス")
                 .accessibilityHint("録音に使用するマイクを選択します")
             } header: {
-                Text("入力デバイス")
+                Label("録音", systemImage: "waveform.circle")
+            } footer: {
+                Text("マイク入力を選択します。システムデフォルトを使用する場合は「システムデフォルト」を選択してください")
+                    .foregroundStyle(.secondary)
             }
 
             // MARK: - 出力セクション
@@ -102,10 +106,13 @@ struct RecordingSettingsTab: View {
                 }
             }
 
-            // 無音検出セクション
+            // MARK: - 無音検出セクション
+
             Section {
-                Toggle(
-                    "無音検出で自動停止",
+                SettingRowWithIcon(
+                    icon: "mic.slash",
+                    iconColor: .purple,
+                    title: "無音検出で自動停止",
                     isOn: Binding(
                         get: { store.settings.recording.silenceDetectionEnabled },
                         set: { enabled in
@@ -151,10 +158,11 @@ struct RecordingSettingsTab: View {
                     }
                 }
             } header: {
-                Text("無音検出")
+                Label("無音検出", systemImage: "waveform.path.badge.minus")
             } footer: {
                 if store.settings.recording.silenceDetectionEnabled {
                     Text("指定した時間、音声レベルがしきい値を下回ると録音を停止します")
+                        .foregroundStyle(.secondary)
                 }
             }
         }
