@@ -279,7 +279,7 @@ actor TranscriptionService {
             )
 
             // 結果を結合
-            let transcribedText = results.map(\.text).joined(separator: " ")
+            let transcribedText = results.map(\.text).joined(separator: "\n")
             let trimmedText = transcribedText.trimmingCharacters(in: .whitespacesAndNewlines)
 
             logger.info("Transcription completed: \(trimmedText.prefix(50))...")
