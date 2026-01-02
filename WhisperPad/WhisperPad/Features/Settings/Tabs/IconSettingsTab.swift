@@ -3,84 +3,67 @@
 //  WhisperPad
 //
 
+import AppKit
 import ComposableArchitecture
 import SwiftUI
 
 /// アイコン設定タブ
 ///
-/// メニューバーに表示するアイコンと色を各状態ごとにカスタマイズできます。
+/// マスター・ディテール形式でメニューバーアイコンの設定を行います。
+/// 左パネル：状態別アイコン一覧
+/// 右パネル：選択した状態の詳細と編集
 struct IconSettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
 
-    var body: some View {
-        Form {
-            Section {
-                iconPreviewSection
-            } header: {
-                Text("プレビュー")
-            }
+    /// 選択中の状態
+    @State private var selectedStatus: IconConfigStatus = .idle
 
+    var body: some View {
+        HSplitView {
+            // 左パネル: アイコン状態一覧
+            iconListPanel
+                .frame(minWidth: 180, idealWidth: 200, maxWidth: 240)
+
+            // 右パネル: 詳細
+            detailPanel
+                .frame(minWidth: 300)
+        }
+    }
+
+    // MARK: - Left Panel
+
+    /// アイコン一覧パネル
+    private var iconListPanel: some View {
+        List(selection: $selectedStatus) {
             Section {
                 ForEach(IconConfigStatus.allCases) { status in
-                    IconConfigurationView(
+                    IconListRow(
                         status: status,
-                        config: binding(for: status),
-                        onReset: { store.send(.resetIconSetting(status)) }
+                        config: store.settings.general.menuBarIconSettings.config(for: status)
                     )
+                    .tag(status)
                 }
             } header: {
-                HStack {
-                    Text("状態ごとのアイコン設定")
-                    Spacer()
-                    Button("デフォルトに戻す") {
-                        store.send(.resetMenuBarIconSettings)
-                    }
-                    .font(.caption)
-                    .buttonStyle(.link)
-                    .help("すべてのアイコン設定を初期値に戻します")
-                    .accessibilityLabel("デフォルトに戻す")
-                    .accessibilityHint("すべてのアイコン設定を初期値に戻します")
-                }
-            } footer: {
-                Text("各状態でメニューバーに表示されるアイコンと色を設定できます。")
-                    .font(.caption)
+                Text("アイコン状態")
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
             }
         }
-        .formStyle(.grouped)
-        .padding()
+        .listStyle(.sidebar)
     }
 
-    /// アイコンプレビューセクション
-    @ViewBuilder
-    private var iconPreviewSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("設定したアイコンのプレビュー:")
-                .font(.caption)
-                .foregroundColor(.secondary)
+    // MARK: - Right Panel
 
-            HStack(spacing: 20) {
-                ForEach(IconConfigStatus.allCases) { status in
-                    VStack(spacing: 4) {
-                        let config = store.settings.general.menuBarIconSettings.config(for: status)
-                        Image(systemName: config.symbolName)
-                            .symbolRenderingMode(.hierarchical)
-                            .foregroundStyle(Color(nsColor: config.color))
-                            .font(.system(size: 18))
-                            .frame(width: 24, height: 24)
-                            .accessibilityLabel("\(status.rawValue)のアイコン: \(config.symbolName)")
-
-                        Text(status.rawValue)
-                            .font(.system(size: 8))
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
-                    .accessibilityElement(children: .combine)
-                }
-            }
-            .padding(.vertical, 8)
-        }
+    /// 詳細パネル
+    private var detailPanel: some View {
+        IconDetailPanel(
+            status: selectedStatus,
+            config: binding(for: selectedStatus),
+            onReset: { store.send(.resetIconSetting(selectedStatus)) }
+        )
     }
+
+    // MARK: - Helpers
 
     /// 状態に対応するアイコン設定のバインディングを作成
     /// - Parameter status: 状態タイプ
@@ -98,6 +81,239 @@ struct IconSettingsTab: View {
                 store.send(.updateGeneralSettings(general))
             }
         )
+    }
+}
+
+// MARK: - IconListRow
+
+/// アイコン一覧の行
+private struct IconListRow: View {
+    let status: IconConfigStatus
+    let config: StatusIconConfig
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // アイコンプレビュー
+            Image(systemName: config.symbolName)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(Color(nsColor: config.color))
+                .font(.system(size: 18))
+                .frame(width: 24, height: 24)
+
+            // 状態名
+            Text(status.rawValue)
+                .lineLimit(1)
+
+            Spacer()
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .accessibilityLabel("\(status.rawValue)のアイコン")
+    }
+}
+
+// MARK: - IconDetailPanel
+
+/// アイコン詳細パネル
+private struct IconDetailPanel: View {
+    let status: IconConfigStatus
+    @Binding var config: StatusIconConfig
+    let onReset: () -> Void
+
+    /// SwiftUI Color として管理（NSColor との同期用）
+    @State private var selectedColor: Color
+
+    /// プリセット色
+    private let presetColors: [NSColor] = [
+        .systemGray,
+        .systemRed,
+        .systemOrange,
+        .systemYellow,
+        .systemBlue,
+        .systemGreen,
+        .systemPurple
+    ]
+
+    init(
+        status: IconConfigStatus,
+        config: Binding<StatusIconConfig>,
+        onReset: @escaping () -> Void
+    ) {
+        self.status = status
+        self._config = config
+        self.onReset = onReset
+        self._selectedColor = State(initialValue: Color(nsColor: config.wrappedValue.color))
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // ヘッダー: アイコンとタイトル
+                headerSection
+
+                Divider()
+
+                // 説明セクション
+                descriptionSection
+
+                // アイコン編集セクション
+                iconEditSection
+
+                // 色編集セクション
+                colorEditSection
+
+                Spacer(minLength: 0)
+            }
+            .padding(24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .onChange(of: selectedColor) { _, newColor in
+            config.color = NSColor(newColor)
+        }
+        .onChange(of: config.color) { _, newColor in
+            let newSwiftUIColor = Color(nsColor: newColor)
+            if selectedColor != newSwiftUIColor {
+                selectedColor = newSwiftUIColor
+            }
+        }
+        .onChange(of: status) { _, _ in
+            selectedColor = Color(nsColor: config.color)
+        }
+    }
+
+    // MARK: - Sections
+
+    /// ヘッダーセクション
+    private var headerSection: some View {
+        HStack(spacing: 12) {
+            Image(systemName: config.symbolName)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(Color(nsColor: config.color))
+                .font(.title2)
+                .frame(width: 32, height: 32)
+                .background(Color(nsColor: config.color).opacity(0.1))
+                .cornerRadius(8)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(status.rawValue)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+
+                Text("メニューバーアイコン")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Button {
+                onReset()
+            } label: {
+                Image(systemName: "arrow.counterclockwise")
+            }
+            .buttonStyle(.borderless)
+            .help("この状態をリセット")
+        }
+    }
+
+    /// 説明セクション
+    private var descriptionSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("説明", systemImage: "info.circle")
+                .font(.headline)
+                .foregroundColor(.secondary)
+
+            Text(status.detailedDescription)
+                .foregroundColor(.primary)
+        }
+    }
+
+    /// アイコン編集セクション
+    private var iconEditSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("アイコン", systemImage: "star")
+                .font(.headline)
+                .foregroundColor(.secondary)
+
+            InlineSymbolPicker(selection: $config.symbolName)
+        }
+        .padding(16)
+        .background(Color(NSColor.controlBackgroundColor))
+        .cornerRadius(12)
+    }
+
+    /// 色編集セクション
+    private var colorEditSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("色", systemImage: "paintpalette")
+                .font(.headline)
+                .foregroundColor(.secondary)
+
+            HStack(spacing: 8) {
+                // ColorPicker
+                ColorPicker("", selection: $selectedColor)
+                    .labelsHidden()
+                    .frame(width: 44, height: 24)
+
+                Divider()
+                    .frame(height: 24)
+
+                // プリセット色ボタン
+                ForEach(presetColors, id: \.self) { presetColor in
+                    presetColorButton(for: presetColor)
+                }
+            }
+        }
+        .padding(16)
+        .background(Color(NSColor.controlBackgroundColor))
+        .cornerRadius(12)
+    }
+
+    /// プリセット色ボタン
+    @ViewBuilder
+    private func presetColorButton(for presetColor: NSColor) -> some View {
+        let isSelected = config.color.isApproximatelyEqual(to: presetColor)
+
+        Button {
+            config.color = presetColor
+            selectedColor = Color(nsColor: presetColor)
+        } label: {
+            Circle()
+                .fill(Color(nsColor: presetColor))
+                .frame(width: 20, height: 20)
+                .overlay(
+                    Circle()
+                        .stroke(Color.primary.opacity(0.2), lineWidth: 1)
+                )
+                .overlay(
+                    isSelected
+                        ? Image(systemName: "checkmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white)
+                        : nil
+                )
+        }
+        .buttonStyle(.plain)
+        .help(presetColor.accessibilityName)
+        .accessibilityLabel(presetColor.accessibilityName)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+// MARK: - NSColor Extension
+
+private extension NSColor {
+    /// 2つの色が近似的に等しいかを判定
+    func isApproximatelyEqual(to other: NSColor, tolerance: CGFloat = 0.01) -> Bool {
+        guard let selfRGB = self.usingColorSpace(.sRGB),
+              let otherRGB = other.usingColorSpace(.sRGB)
+        else {
+            return false
+        }
+
+        return abs(selfRGB.redComponent - otherRGB.redComponent) < tolerance
+            && abs(selfRGB.greenComponent - otherRGB.greenComponent) < tolerance
+            && abs(selfRGB.blueComponent - otherRGB.blueComponent) < tolerance
     }
 }
 
