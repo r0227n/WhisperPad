@@ -9,147 +9,42 @@ import SwiftUI
 /// モデル設定タブ
 ///
 /// WhisperKit モデルの選択、ダウンロード、ストレージ管理を行います。
+/// 検索・フィルタリング機能付きのリスト型UIを提供します。
 struct ModelSettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
 
+    // MARK: - Local State for Filtering
+
+    @State private var searchText = ""
+    @State private var downloadFilter = ModelDownloadFilter.all
+
+    // MARK: - Body
+
     var body: some View {
-        Form {
-            // MARK: - モデル選択
+        ScrollView {
+            VStack(spacing: 20) {
+                // MARK: - Active Model Section
 
-            Section {
-                Picker("使用モデル", selection: validatedModelSelection) {
-                    // プレースホルダー（downloadedModels が空の場合）
-                    if store.downloadedModels.isEmpty {
-                        Text("モデルをダウンロードしてください")
-                            .tag("")
-                    }
+                activeModelSection
 
-                    ForEach(store.downloadedModels, id: \.id) { model in
-                        HStack {
-                            Text(model.displayName)
-                            if model.isRecommended {
-                                Text("推奨")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .tag(model.id)
-                    }
-                }
-                .pickerStyle(.menu)
-                .disabled(store.downloadedModels.isEmpty)
-            } header: {
-                Text("モデル選択")
-            } footer: {
-                if store.downloadedModels.isEmpty {
-                    Text("モデルをダウンロードしてください")
-                        .foregroundStyle(.secondary)
-                }
+                Divider()
+
+                // MARK: - Search & Filter Section
+
+                searchFilterSection
+
+                // MARK: - Model List Section
+
+                modelListSection
+
+                Divider()
+
+                // MARK: - Storage Section
+
+                storageSection
             }
-
-            // MARK: - 言語設定
-
-            Section {
-                Picker(
-                    "認識言語",
-                    selection: Binding(
-                        get: { store.settings.transcription.language },
-                        set: { newValue in
-                            var transcription = store.settings.transcription
-                            transcription.language = newValue
-                            store.send(.updateTranscriptionSettings(transcription))
-                        }
-                    )
-                ) {
-                    ForEach(TranscriptionSettings.TranscriptionLanguage.allCases, id: \.self) { language in
-                        Text(language.displayName).tag(language)
-                    }
-                }
-            } header: {
-                Text("言語")
-            } footer: {
-                Text("「自動検出」を選択すると、音声から言語を自動的に判別します")
-                    .foregroundStyle(.secondary)
-            }
-
-            // MARK: - 利用可能なモデル
-
-            Section {
-                if store.isLoadingModels {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                            .scaleEffect(0.8)
-                        Text("モデル一覧を取得中...")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                    }
-                    .padding(.vertical, 8)
-                } else {
-                    ForEach(store.availableModels) { model in
-                        ModelDownloadRow(
-                            model: model,
-                            isDownloading: store.downloadingModelName == model.id,
-                            downloadProgress: store.downloadProgress[model.id] ?? 0,
-                            onDownload: { store.send(.downloadModel(model.id)) },
-                            onDelete: { store.send(.deleteModelButtonTapped(model.id)) }
-                        )
-                    }
-                }
-
-                Button {
-                    store.send(.fetchModels)
-                } label: {
-                    Label("モデル一覧を更新", systemImage: "arrow.clockwise")
-                }
-                .disabled(store.isLoadingModels)
-            } header: {
-                Text("利用可能なモデル")
-            }
-
-            // MARK: - ストレージ
-
-            Section {
-                HStack {
-                    Text("使用量")
-                    Spacer()
-                    Text(ByteCountFormatter.string(fromByteCount: store.storageUsage, countStyle: .file))
-                        .foregroundStyle(.secondary)
-                }
-
-                HStack {
-                    Text("保存先")
-                    Spacer()
-                    if let customURL = store.settings.transcription.customStorageURL {
-                        Text(customURL.path)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    } else {
-                        Text("デフォルト")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                HStack {
-                    Button("保存先を変更...") {
-                        store.send(.selectStorageLocation)
-                    }
-
-                    if store.settings.transcription.customStorageURL != nil {
-                        Button("デフォルトに戻す") {
-                            store.send(.resetStorageLocation)
-                        }
-                    }
-                }
-            } header: {
-                Text("ストレージ")
-            } footer: {
-                Text("モデルはデバイス上に保存され、オフラインで使用できます")
-                    .foregroundStyle(.secondary)
-            }
+            .padding()
         }
-        .formStyle(.grouped)
         .confirmationDialog(
             "モデルを削除しますか？",
             isPresented: Binding(
@@ -169,17 +64,231 @@ struct ModelSettingsTab: View {
                 Text("「\(modelName)」を削除します。再度使用するにはダウンロードが必要です。")
             }
         }
-        .padding()
     }
 
+    // MARK: - Active Model Section
+
+    private var activeModelSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("使用中のモデル", systemImage: "cpu")
+                .font(.headline)
+
+            HStack(spacing: 20) {
+                // モデル選択
+                HStack {
+                    Text("モデル")
+                        .foregroundStyle(.secondary)
+                    Picker("", selection: validatedModelSelection) {
+                        if store.downloadedModels.isEmpty {
+                            Text("モデルをダウンロードしてください")
+                                .tag("")
+                        }
+                        ForEach(store.downloadedModels, id: \.id) { model in
+                            HStack {
+                                Text(model.displayName)
+                                if model.isRecommended {
+                                    Text("推奨")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            .tag(model.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .disabled(store.downloadedModels.isEmpty)
+                    .frame(minWidth: 120)
+                }
+
+                // 言語選択
+                HStack {
+                    Text("言語")
+                        .foregroundStyle(.secondary)
+                    Picker(
+                        "",
+                        selection: Binding(
+                            get: { store.settings.transcription.language },
+                            set: { newValue in
+                                var transcription = store.settings.transcription
+                                transcription.language = newValue
+                                store.send(.updateTranscriptionSettings(transcription))
+                            }
+                        )
+                    ) {
+                        ForEach(
+                            TranscriptionSettings.TranscriptionLanguage.allCases,
+                            id: \.self
+                        ) { language in
+                            Text(language.displayName).tag(language)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(minWidth: 100)
+                }
+
+                Spacer()
+            }
+
+            if store.downloadedModels.isEmpty {
+                Text("下のモデル一覧からモデルをダウンロードしてください")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+        }
+        .padding()
+        .background(Color(.controlBackgroundColor))
+        .cornerRadius(10)
+    }
+
+    // MARK: - Search & Filter Section
+
+    private var searchFilterSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("利用可能なモデル", systemImage: "square.stack.3d.up")
+                .font(.headline)
+
+            ModelSearchFilterBar(
+                searchText: $searchText,
+                downloadFilter: $downloadFilter,
+                isLoading: store.isLoadingModels,
+                onRefresh: { store.send(.fetchModels) }
+            )
+        }
+    }
+
+    // MARK: - Model List Section
+
+    private var modelListSection: some View {
+        Group {
+            if store.isLoadingModels {
+                loadingView
+            } else if filteredModels.isEmpty {
+                emptyStateView
+            } else {
+                modelList
+            }
+        }
+    }
+
+    private var loadingView: some View {
+        HStack {
+            Spacer()
+            ProgressView()
+                .scaleEffect(0.8)
+            Text("モデル一覧を取得中...")
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.vertical, 40)
+    }
+
+    private var emptyStateView: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.largeTitle)
+                .foregroundStyle(.secondary)
+            Text("条件に一致するモデルがありません")
+                .foregroundStyle(.secondary)
+            Button("フィルターをリセット") {
+                searchText = ""
+                downloadFilter = .all
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+        .padding(.vertical, 40)
+    }
+
+    private var modelList: some View {
+        VStack(spacing: 0) {
+            ForEach(filteredModels) { model in
+                ModelListRow(
+                    model: model,
+                    isDownloading: store.downloadingModelName == model.id,
+                    downloadProgress: store.downloadProgress[model.id] ?? 0,
+                    onDownload: { store.send(.downloadModel(model.id)) },
+                    onDelete: { store.send(.deleteModelButtonTapped(model.id)) }
+                )
+                if model.id != filteredModels.last?.id {
+                    Divider()
+                        .padding(.leading, 44)
+                }
+            }
+        }
+        .background(Color(.controlBackgroundColor))
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color(.separatorColor), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Storage Section
+
+    private var storageSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("ストレージ", systemImage: "internaldrive")
+                .font(.headline)
+
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("使用量")
+                            .foregroundStyle(.secondary)
+                        Text(ByteCountFormatter.string(
+                            fromByteCount: store.storageUsage,
+                            countStyle: .file
+                        ))
+                        .fontWeight(.medium)
+                    }
+
+                    HStack {
+                        Text("保存先")
+                            .foregroundStyle(.secondary)
+                        if let customURL = store.settings.transcription.customStorageURL {
+                            Text(customURL.path)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        } else {
+                            Text("デフォルト")
+                        }
+                    }
+                }
+
+                Spacer()
+
+                HStack(spacing: 8) {
+                    Button("変更...") {
+                        store.send(.selectStorageLocation)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    if store.settings.transcription.customStorageURL != nil {
+                        Button("リセット") {
+                            store.send(.resetStorageLocation)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
+            }
+
+            Text("モデルはデバイス上に保存され、オフラインで使用できます")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(Color(.controlBackgroundColor))
+        .cornerRadius(10)
+    }
+
+    // MARK: - Computed Properties
+
     /// 検証済みのモデル選択 Binding
-    ///
-    /// 現在の modelName がダウンロード済みモデルに含まれていない場合、
-    /// 最初のダウンロード済みモデルを返すことで Picker の動作を安定させます。
     private var validatedModelSelection: Binding<String> {
         Binding(
             get: {
-                // ダウンロード済みモデルがない場合は空文字列（プレースホルダー用）
                 guard !store.downloadedModels.isEmpty else {
                     return ""
                 }
@@ -192,6 +301,21 @@ struct ModelSettingsTab: View {
             set: { store.send(.selectModel($0)) }
         )
     }
+
+    /// フィルタリング済みのモデル一覧
+    private var filteredModels: [WhisperModel] {
+        store.availableModels.filter { model in
+            // 検索テキストでフィルタリング
+            let matchesSearch = searchText.isEmpty ||
+                model.displayName.localizedCaseInsensitiveContains(searchText) ||
+                model.id.localizedCaseInsensitiveContains(searchText)
+
+            // ダウンロード状態フィルター
+            let matchesDownload = downloadFilter.matches(isDownloaded: model.isDownloaded)
+
+            return matchesSearch && matchesDownload
+        }
+    }
 }
 
 // MARK: - Preview
@@ -201,16 +325,63 @@ struct ModelSettingsTab: View {
         store: Store(
             initialState: SettingsFeature.State(
                 availableModels: [
-                    WhisperModel.from(id: "openai_whisper-tiny", isDownloaded: true, isRecommended: false),
-                    WhisperModel.from(id: "openai_whisper-base", isDownloaded: true, isRecommended: false),
-                    WhisperModel.from(id: "openai_whisper-small", isDownloaded: true, isRecommended: true),
-                    WhisperModel.from(id: "openai_whisper-medium", isDownloaded: false, isRecommended: false),
-                    WhisperModel.from(id: "openai_whisper-large-v3", isDownloaded: false, isRecommended: false)
+                    WhisperModel.from(
+                        id: "openai_whisper-tiny",
+                        isDownloaded: true,
+                        isRecommended: false
+                    ),
+                    WhisperModel.from(
+                        id: "openai_whisper-tiny.en",
+                        isDownloaded: false,
+                        isRecommended: false
+                    ),
+                    WhisperModel.from(
+                        id: "openai_whisper-base",
+                        isDownloaded: true,
+                        isRecommended: false
+                    ),
+                    WhisperModel.from(
+                        id: "openai_whisper-small",
+                        isDownloaded: true,
+                        isRecommended: true
+                    ),
+                    WhisperModel.from(
+                        id: "openai_whisper-small.en",
+                        isDownloaded: false,
+                        isRecommended: false
+                    ),
+                    WhisperModel.from(
+                        id: "openai_whisper-medium",
+                        isDownloaded: false,
+                        isRecommended: false
+                    ),
+                    WhisperModel.from(
+                        id: "openai_whisper-large-v3",
+                        isDownloaded: false,
+                        isRecommended: false
+                    ),
+                    WhisperModel.from(
+                        id: "openai_whisper-large-v3-turbo",
+                        isDownloaded: false,
+                        isRecommended: false
+                    )
                 ],
                 downloadedModels: [
-                    WhisperModel.from(id: "openai_whisper-tiny", isDownloaded: true, isRecommended: false),
-                    WhisperModel.from(id: "openai_whisper-base", isDownloaded: true, isRecommended: false),
-                    WhisperModel.from(id: "openai_whisper-small", isDownloaded: true, isRecommended: true)
+                    WhisperModel.from(
+                        id: "openai_whisper-tiny",
+                        isDownloaded: true,
+                        isRecommended: false
+                    ),
+                    WhisperModel.from(
+                        id: "openai_whisper-base",
+                        isDownloaded: true,
+                        isRecommended: false
+                    ),
+                    WhisperModel.from(
+                        id: "openai_whisper-small",
+                        isDownloaded: true,
+                        isRecommended: true
+                    )
                 ],
                 storageUsage: 500_000_000
             )
@@ -218,5 +389,32 @@ struct ModelSettingsTab: View {
             SettingsFeature()
         }
     )
-    .frame(width: 500, height: 600)
+    .frame(width: 520, height: 700)
+}
+
+#Preview("Loading") {
+    ModelSettingsTab(
+        store: Store(
+            initialState: SettingsFeature.State(
+                isLoadingModels: true
+            )
+        ) {
+            SettingsFeature()
+        }
+    )
+    .frame(width: 520, height: 700)
+}
+
+#Preview("Empty") {
+    ModelSettingsTab(
+        store: Store(
+            initialState: SettingsFeature.State(
+                availableModels: [],
+                downloadedModels: []
+            )
+        ) {
+            SettingsFeature()
+        }
+    )
+    .frame(width: 520, height: 700)
 }
