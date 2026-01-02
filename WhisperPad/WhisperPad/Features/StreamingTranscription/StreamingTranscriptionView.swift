@@ -24,6 +24,9 @@ struct StreamingTranscriptionView: View {
         }
         .frame(width: 400, height: 300)
         .background(Color.clear)
+        .onAppear {
+            store.send(.onAppear)
+        }
         .alert(
             "録音を中止しますか？",
             isPresented: $store.showCancelConfirmation
@@ -343,6 +346,7 @@ private struct FooterView: View {
                 Text("ファイル保存")
             }
             .buttonStyle(.bordered)
+            .hoverTooltip(store.popupSaveToFileShortcut)
             .accessibilityLabel("ファイル保存")
             .accessibilityHint("文字起こしをファイルに保存します")
 
@@ -352,6 +356,7 @@ private struct FooterView: View {
                 Text("コピーして閉じる")
             }
             .buttonStyle(.borderedProminent)
+            .hoverTooltip(store.popupCopyAndCloseShortcut)
             .accessibilityLabel("コピーして閉じる")
             .accessibilityHint("文字起こしをクリップボードにコピーしてウィンドウを閉じます")
 
@@ -411,4 +416,40 @@ private struct FooterView: View {
         }
     )
     .background(Color(nsColor: .windowBackgroundColor))
+}
+
+// MARK: - HoverTooltip
+
+private struct HoverTooltipModifier: ViewModifier {
+    let text: String
+    @State private var isHovering = false
+
+    func body(content: Content) -> some View {
+        content
+            .onHover { hovering in
+                isHovering = hovering
+            }
+            .overlay(alignment: .top) {
+                if isHovering, !text.isEmpty {
+                    Text(text)
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color(nsColor: .controlBackgroundColor))
+                                .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+                        )
+                        .offset(y: -28)
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                        .animation(.easeOut(duration: 0.15), value: isHovering)
+                }
+            }
+    }
+}
+
+extension View {
+    func hoverTooltip(_ text: String) -> some View {
+        modifier(HoverTooltipModifier(text: text))
+    }
 }

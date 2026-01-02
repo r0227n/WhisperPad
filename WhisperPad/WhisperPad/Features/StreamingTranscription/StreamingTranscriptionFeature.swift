@@ -64,11 +64,19 @@ struct StreamingTranscriptionFeature {
 
         /// キャンセル確認ダイアログを表示するか
         var showCancelConfirmation: Bool = false
+
+        /// ポップアップ用ホットキー表示文字列
+        var popupSaveToFileShortcut: String = HotKeySettings.KeyComboSettings.popupSaveToFileDefault.displayString
+        var popupCopyAndCloseShortcut: String = HotKeySettings.KeyComboSettings.popupCopyAndCloseDefault.displayString
     }
 
     // MARK: - Action
 
     enum Action: Sendable, BindableAction {
+        // ライフサイクル
+        /// ビューが表示された
+        case onAppear
+
         // ユーザー操作
         /// 開始ボタンがタップされた
         case startButtonTapped
@@ -108,6 +116,8 @@ struct StreamingTranscriptionFeature {
         case fileSaveCompleted(URL)
         /// ファイル保存に失敗した
         case fileSaveFailed(String)
+        /// ポップアップ用ホットキー設定を読み込み完了
+        case popupHotKeysLoaded(saveToFile: String, copyAndClose: String)
 
         // デリゲートアクション（親Reducerへの通知）
         case delegate(Delegate)
@@ -148,6 +158,18 @@ struct StreamingTranscriptionFeature {
             switch action {
             case .binding:
                 return .none
+
+            // MARK: - ライフサイクル
+
+            case .onAppear:
+                return .run { [userDefaultsClient] send in
+                    let settings = await userDefaultsClient.loadSettings()
+                    let hotKeySettings = settings.hotKey
+                    await send(.popupHotKeysLoaded(
+                        saveToFile: hotKeySettings.popupSaveToFileHotKey.displayString,
+                        copyAndClose: hotKeySettings.popupCopyAndCloseHotKey.displayString
+                    ))
+                }
 
             // MARK: - ユーザー操作
 
@@ -403,6 +425,11 @@ struct StreamingTranscriptionFeature {
                         "保存に失敗しました: \(message)"
                     )
                 }
+
+            case let .popupHotKeysLoaded(saveToFile, copyAndClose):
+                state.popupSaveToFileShortcut = saveToFile
+                state.popupCopyAndCloseShortcut = copyAndClose
+                return .none
 
             case .delegate:
                 // 親Reducerで処理
