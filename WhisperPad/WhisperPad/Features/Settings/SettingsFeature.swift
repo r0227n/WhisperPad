@@ -353,13 +353,7 @@ struct SettingsFeature {
                                 isRecommended: name == recommendedModel
                             ))
                         }
-                        models.sort { lhs, rhs in
-                            let lhsKnown = WhisperModel.knownModels[lhs.id] != nil
-                            let rhsKnown = WhisperModel.knownModels[rhs.id] != nil
-                            if lhsKnown, !rhsKnown { return true }
-                            if !lhsKnown, rhsKnown { return false }
-                            return lhs.id < rhs.id
-                        }
+                        models.sort { $0.id < $1.id }
                         await send(.modelsResponse(.success(models)))
                     } catch {
                         await send(.modelsResponse(.failure(error)))
@@ -387,13 +381,7 @@ struct SettingsFeature {
                             isRecommended: name == recommendedModel
                         )
                     }
-                    models.sort { lhs, rhs in
-                        let lhsKnown = WhisperModel.knownModels[lhs.id] != nil
-                        let rhsKnown = WhisperModel.knownModels[rhs.id] != nil
-                        if lhsKnown, !rhsKnown { return true }
-                        if !lhsKnown, rhsKnown { return false }
-                        return lhs.id < rhs.id
-                    }
+                    models.sort { $0.id < $1.id }
                     await send(.downloadedModelsResponse(models))
                 }
 
