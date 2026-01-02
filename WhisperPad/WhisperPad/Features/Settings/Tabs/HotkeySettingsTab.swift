@@ -275,6 +275,7 @@ private struct ShortcutDetailPanel: View {
             ShortcutKeyButton(
                 keyCombo: $keyCombo,
                 defaultKeyCombo: hotkeyType.defaultKeyCombo,
+                hotkeyType: hotkeyType,
                 isRecording: isRecording,
                 onStartRecording: onStartRecording,
                 onStopRecording: onStopRecording,
