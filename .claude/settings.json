@@ -16,6 +16,7 @@
     "allow": [
       "Edit",
       "Write",
+      "mcp__deepwiki__**",
       "Bash(cat:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
