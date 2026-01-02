@@ -185,34 +185,7 @@ struct StreamingTranscriptionFeature {
             // MARK: - ユーザー操作
 
             case .startButtonTapped:
-                guard state.status == .idle else { return .none }
-                state.status = .initializing
-                state.confirmedText = ""
-                state.pendingText = ""
-                state.decodingText = ""
-                state.duration = 0
-                state.tokensPerSecond = 0
-
-                return .run { [whisperKitClient, streamingTranscription] send in
-                    do {
-                        // WhisperKitManager が ready なら即座に初期化完了
-                        let isReady = await whisperKitClient.isReady()
-                        if isReady {
-                            // 状態リセットのみ行う
-                            try await streamingTranscription.initialize(nil)
-                            await send(.initializationCompleted)
-                        } else {
-                            // フォールバック: WhisperKit の初期化を実行
-                            try await streamingTranscription.initialize(nil)
-                            await send(.initializationCompleted)
-                        }
-                    } catch {
-                        let message = (error as? StreamingTranscriptionError)?.errorDescription
-                            ?? error.localizedDescription
-                        await send(.initializationFailed(message))
-                    }
-                }
-                .cancellable(id: CancelID.initialization)
+                return handleStartButtonTapped(state: &state)
 
             case .stopButtonTapped:
                 guard case .recording = state.status else { return .none }
@@ -473,5 +446,40 @@ struct StreamingTranscriptionFeature {
                 return .none
             }
         }
+    }
+}
+
+// MARK: - Private Methods
+
+extension StreamingTranscriptionFeature {
+    private func handleStartButtonTapped(state: inout State) -> Effect<Action> {
+        guard state.status == .idle else { return .none }
+        state.status = .initializing
+        state.confirmedText = ""
+        state.pendingText = ""
+        state.decodingText = ""
+        state.duration = 0
+        state.tokensPerSecond = 0
+
+        return .run { [whisperKitClient, streamingTranscription] send in
+            do {
+                // WhisperKitManager が ready なら即座に初期化完了
+                let isReady = await whisperKitClient.isReady()
+                if isReady {
+                    // 状態リセットのみ行う
+                    try await streamingTranscription.initialize(nil)
+                    await send(.initializationCompleted)
+                } else {
+                    // フォールバック: WhisperKit の初期化を実行
+                    try await streamingTranscription.initialize(nil)
+                    await send(.initializationCompleted)
+                }
+            } catch {
+                let message = (error as? StreamingTranscriptionError)?.errorDescription
+                    ?? error.localizedDescription
+                await send(.initializationFailed(message))
+            }
+        }
+        .cancellable(id: CancelID.initialization)
     }
 }
