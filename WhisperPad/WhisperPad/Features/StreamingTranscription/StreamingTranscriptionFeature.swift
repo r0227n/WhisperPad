@@ -120,6 +120,8 @@ struct StreamingTranscriptionFeature {
         case finalizationCompleted(String)
         /// ファイナライズに失敗した
         case finalizationFailed(String)
+        /// バッファオーバーフローが発生した
+        case bufferOverflowDetected
         /// ファイル保存が完了した
         case fileSaveCompleted(URL)
         /// ファイル保存に失敗した
@@ -344,8 +346,18 @@ struct StreamingTranscriptionFeature {
                     do {
                         let progress = try await streamingTranscription.processChunk(samples)
                         await send(.progressUpdated(progress))
+                    } catch let error as StreamingTranscriptionError {
+                        // 型付きエラーハンドリング
+                        if error == .bufferOverflow {
+                            logger.error("Buffer overflow detected during chunk processing")
+                            await send(.bufferOverflowDetected)
+                        } else {
+                            logger.error("Streaming transcription error: \(error.localizedDescription)")
+                            await send(.finalizationFailed(error.localizedDescription))
+                        }
                     } catch {
                         logger.error("Chunk processing error: \(error.localizedDescription)")
+                        await send(.finalizationFailed(error.localizedDescription))
                     }
                 }
 
@@ -417,6 +429,21 @@ struct StreamingTranscriptionFeature {
             case let .finalizationFailed(message):
                 state.status = .error(message)
                 return .run { _ in await streamingTranscription.reset() }
+
+            case .bufferOverflowDetected:
+                let errorMessage = StreamingTranscriptionError.bufferOverflow.errorDescription
+                    ?? "音声バッファがオーバーフローしました"
+                state.status = .error(errorMessage)
+
+                return .merge(
+                    .cancel(id: CancelID.audioStream),
+                    .cancel(id: CancelID.timer),
+                    .run { send in
+                        await streamingAudio.stopRecording()
+                        await streamingTranscription.reset()
+                        await send(.delegate(.streamingCancelled))
+                    }
+                )
 
             case let .fileSaveCompleted(url):
                 return .run { _ in
