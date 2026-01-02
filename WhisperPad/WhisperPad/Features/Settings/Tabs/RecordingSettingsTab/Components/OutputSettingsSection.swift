@@ -20,8 +20,7 @@ struct OutputSettingsSection: View {
                 SettingSectionHeader(
                     icon: "arrow.up.doc",
                     iconColor: .green,
-                    title: "Output Settings",
-                    helpText: "Choose where to save your transcription results"
+                    title: "Output Settings"
                 )
 
                 // クリップボードにコピー
@@ -76,40 +75,43 @@ struct OutputSettingsSection: View {
                         .labelsHidden()
                         .toggleStyle(.switch)
                         .accessibilityLabel("Save to File")
+                    }
 
-                        if store.settings.output.isEnabled {
+                    if store.settings.output.isEnabled {
+                        HStack(alignment: .top, spacing: 12) {
+                            // Left: Path and format display
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Image(systemName: "folder")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text(store.settings.output.outputDirectory.path)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                        .truncationMode(.middle)
+                                }
+
+                                HStack {
+                                    Image(systemName: "doc.text")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("Format: .\(store.settings.output.fileExtension.rawValue)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.leading, 32)
+
+                            Spacer()
+
+                            // Right: Configure button
                             HoverPopoverButton(
                                 label: "Configure",
                                 icon: "folder.badge.gearshape"
                             ) {
                                 FileOutputDetailsPopover(store: store)
                             }
-                        }
-                    }
-
-                    if store.settings.output.isEnabled {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Image(systemName: "folder")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text(store.settings.output.outputDirectory.path)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(1)
-                                    .truncationMode(.middle)
-                            }
-                            .padding(.leading, 32)
-
-                            HStack {
-                                Image(systemName: "doc.text")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("Format: .\(store.settings.output.fileExtension.rawValue)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.leading, 32)
                         }
                     }
                 }
