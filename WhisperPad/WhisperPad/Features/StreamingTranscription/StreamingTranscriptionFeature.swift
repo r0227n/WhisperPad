@@ -120,8 +120,6 @@ struct StreamingTranscriptionFeature {
         case finalizationCompleted(String)
         /// ファイナライズに失敗した
         case finalizationFailed(String)
-        /// バッファオーバーフローが発生した
-        case bufferOverflowDetected
         /// ファイル保存が完了した
         case fileSaveCompleted(URL)
         /// ファイル保存に失敗した
@@ -185,7 +183,34 @@ struct StreamingTranscriptionFeature {
             // MARK: - ユーザー操作
 
             case .startButtonTapped:
-                return handleStartButtonTapped(state: &state)
+                guard state.status == .idle else { return .none }
+                state.status = .initializing
+                state.confirmedText = ""
+                state.pendingText = ""
+                state.decodingText = ""
+                state.duration = 0
+                state.tokensPerSecond = 0
+
+                return .run { [whisperKitClient, streamingTranscription] send in
+                    do {
+                        // WhisperKitManager が ready なら即座に初期化完了
+                        let isReady = await whisperKitClient.isReady()
+                        if isReady {
+                            // 状態リセットのみ行う
+                            try await streamingTranscription.initialize(nil)
+                            await send(.initializationCompleted)
+                        } else {
+                            // フォールバック: WhisperKit の初期化を実行
+                            try await streamingTranscription.initialize(nil)
+                            await send(.initializationCompleted)
+                        }
+                    } catch {
+                        let message = (error as? StreamingTranscriptionError)?.errorDescription
+                            ?? error.localizedDescription
+                        await send(.initializationFailed(message))
+                    }
+                }
+                .cancellable(id: CancelID.initialization)
 
             case .stopButtonTapped:
                 guard case .recording = state.status else { return .none }
@@ -319,18 +344,8 @@ struct StreamingTranscriptionFeature {
                     do {
                         let progress = try await streamingTranscription.processChunk(samples)
                         await send(.progressUpdated(progress))
-                    } catch let error as StreamingTranscriptionError {
-                        // 型付きエラーハンドリング
-                        if error == .bufferOverflow {
-                            logger.error("Buffer overflow detected during chunk processing")
-                            await send(.bufferOverflowDetected)
-                        } else {
-                            logger.error("Streaming transcription error: \(error.localizedDescription)")
-                            await send(.finalizationFailed(error.localizedDescription))
-                        }
                     } catch {
                         logger.error("Chunk processing error: \(error.localizedDescription)")
-                        await send(.finalizationFailed(error.localizedDescription))
                     }
                 }
 
@@ -403,21 +418,6 @@ struct StreamingTranscriptionFeature {
                 state.status = .error(message)
                 return .run { _ in await streamingTranscription.reset() }
 
-            case .bufferOverflowDetected:
-                let errorMessage = StreamingTranscriptionError.bufferOverflow.errorDescription
-                    ?? "音声バッファがオーバーフローしました"
-                state.status = .error(errorMessage)
-
-                return .merge(
-                    .cancel(id: CancelID.audioStream),
-                    .cancel(id: CancelID.timer),
-                    .run { send in
-                        await streamingAudio.stopRecording()
-                        await streamingTranscription.reset()
-                        await send(.delegate(.streamingCancelled))
-                    }
-                )
-
             case let .fileSaveCompleted(url):
                 return .run { _ in
                     await outputClient.showNotification(
@@ -446,40 +446,5 @@ struct StreamingTranscriptionFeature {
                 return .none
             }
         }
-    }
-}
-
-// MARK: - Private Methods
-
-extension StreamingTranscriptionFeature {
-    private func handleStartButtonTapped(state: inout State) -> Effect<Action> {
-        guard state.status == .idle else { return .none }
-        state.status = .initializing
-        state.confirmedText = ""
-        state.pendingText = ""
-        state.decodingText = ""
-        state.duration = 0
-        state.tokensPerSecond = 0
-
-        return .run { [whisperKitClient, streamingTranscription] send in
-            do {
-                // WhisperKitManager が ready なら即座に初期化完了
-                let isReady = await whisperKitClient.isReady()
-                if isReady {
-                    // 状態リセットのみ行う
-                    try await streamingTranscription.initialize(nil)
-                    await send(.initializationCompleted)
-                } else {
-                    // フォールバック: WhisperKit の初期化を実行
-                    try await streamingTranscription.initialize(nil)
-                    await send(.initializationCompleted)
-                }
-            } catch {
-                let message = (error as? StreamingTranscriptionError)?.errorDescription
-                    ?? error.localizedDescription
-                await send(.initializationFailed(message))
-            }
-        }
-        .cancellable(id: CancelID.initialization)
     }
 }

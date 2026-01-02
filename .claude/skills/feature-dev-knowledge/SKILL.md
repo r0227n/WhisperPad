@@ -1,38 +1,38 @@
 ---
-name: feature-dev-knowledge
+name: feature-dev
 description: 'Git worktree feature development workflow for WhisperPad. Use for: single-feature implementation with TCA layer separation, automatic commit splitting, merge to current branch, test worktree for validation. Keywords: worktree, feature, git gtr, TCA, Models, Clients, Features, commit strategy, merge, test, parallel development.'
 ---
 
 # Feature Development Workflow Skill
 
-このスキルは、git gtr (git-worktree-runner) を使用した feature 開発ワークフローのナレッジベースです。
+このスキルは、git gtr (git-worktree-runner) を使用したfeature開発ワークフローのナレッジベースです。
 
 ## 概要
 
-WhisperPad プロジェクトにおける機能開発の標準ワークフロー:
+WhisperPadプロジェクトにおける機能開発の標準ワークフロー:
 
-1. 独立した worktree で機能を実装
-2. TCA レイヤー別にコミットを分割
+1. 独立したworktreeで機能を実装
+2. TCAレイヤー別にコミットを分割
 3. 元のブランチにマージ
-4. テスト worktree で検証
+4. テストworktreeで検証
 5. テスト完了後に最終マージ
 
 ## 前提条件
 
-- WhisperPad プロジェクト（TCA アーキテクチャ）
+- WhisperPad プロジェクト（TCAアーキテクチャ）
 - git gtr (git-worktree-runner) インストール済み
 
 ## 基本ワークフロー
 
 1. **要件分析** - 機能要件から必要なファイルを特定
-2. **Worktree 作成** - `git gtr new feature/<name>`
-3. **TCA レイヤー別実装** - Models → Clients → Features → App
+2. **Worktree作成** - `git gtr new feature/<name>`
+3. **TCAレイヤー別実装** - Models → Clients → Features → App
 4. **コミット分割** - レイヤーごとに論理的コミット
 5. **マージ** - 実行元ブランチにマージ（`--no-ff`）
-6. **テスト worktree 作成** - `git gtr new test/<current-branch>`
-7. **テスト実行と修正ループ** - 合格するまで繰り返し（最大 5 回）
+6. **テストworktree作成** - `git gtr new test/<current-branch>`
+7. **テスト実行と修正ループ** - 合格するまで繰り返し（最大5回）
 8. **テストブランチマージ** - 実行元ブランチにマージ
-9. **Worktree 削除** - `git gtr rm feature/<name>` と `git gtr rm test/<branch>`
+9. **Worktree削除** - `git gtr rm feature/<name>` と `git gtr rm test/<branch>`
 
 ## TCA Layer Separation Strategy
 
@@ -49,7 +49,7 @@ WhisperPad プロジェクトにおける機能開発の標準ワークフロー
 - **独立性**: 中
 - **変更リスク**: 中
 - **実装順序**: 2nd-3rd
-- **並列実装**: Models 完了後に可能（Interface と Live は並列可）
+- **並列実装**: Models完了後に可能（Interface と Live は並列可）
 - **例**:
   - Interface: `AudioRecorderClient.swift`
   - Live: `AudioRecorderClientLive.swift`
@@ -59,7 +59,7 @@ WhisperPad プロジェクトにおける機能開発の標準ワークフロー
 - **独立性**: 低
 - **変更リスク**: 中
 - **実装順序**: 4th
-- **並列実装**: 不可（Models/Clients 依存）
+- **並列実装**: 不可（Models/Clients依存）
 - **例**: `RecordingFeature.swift`, `SettingsFeature.swift`
 
 ### Layer 4: App
@@ -111,13 +111,13 @@ git gtr ai feature/new-feature
 
 ### 同じファイルの編集
 
-- **ルール**: 同じファイルを編集する場合は、同じ worktree で作業
+- **ルール**: 同じファイルを編集する場合は、同じworktreeで作業
 - **理由**: マージコンフリクトの回避
 - **例**: `SettingsFeature.swift` を複数機能で変更する場合
 
-### 共有 State/Action
+### 共有State/Action
 
-- **ルール**: 共有 State/Action の変更は最終統合フェーズで実施
+- **ルール**: 共有State/Actionの変更は最終統合フェーズで実施
 - **理由**: 複数機能で同時変更するとコンフリクト発生
 - **例**: `AppReducer.State` への新フィールド追加
 
@@ -154,13 +154,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 ### Scope の種類
 
-TCA レイヤーに対応:
+TCAレイヤーに対応:
 
 - `models`: Models layer
-- `clients`: Clients layer 全般
+- `clients`: Clients layer全般
 - `clients-interface`: Client interface
 - `clients-live`: Client live implementation
-- `features`: Features layer 全般
+- `features`: Features layer全般
 - `features-recording`: Recording feature
 - `features-settings`: Settings feature
 - `app`: App layer
@@ -180,9 +180,9 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 ## Test Worktree Strategy
 
-### テスト worktree の目的
+### テストworktreeの目的
 
-1. **独立した環境でテスト** - 実装 worktree と分離
+1. **独立した環境でテスト** - 実装worktreeと分離
 2. **テスト失敗の修正** - 本番ブランチを汚さない
 3. **リグレッション検証** - 既存機能への影響確認
 
@@ -211,10 +211,10 @@ done
 ### テスト失敗時の対応
 
 1. **ログ分析**: エラーメッセージを確認
-2. **Task ツールで修正**: 専門 agent に依頼
+2. **Taskツールで修正**: 専門agentに依頼
 3. **コミット**: 修正内容を記録
 4. **再実行**: 再度テスト実行
-5. **最大 5 回まで**: 無限ループ回避
+5. **最大5回まで**: 無限ループ回避
 
 ## Best Practices
 
@@ -222,7 +222,7 @@ done
 
 - **MVP (Minimum Viable Product)** から開始
 - 大きな機能は複数の小さな機能に分割
-- 各機能ごとに独立した worktree で開発
+- 各機能ごとに独立したworktreeで開発
 
 ### 2. レイヤー順守
 
@@ -239,24 +239,24 @@ done
 ### 4. テスト駆動
 
 - **各レイヤーでテスト**
-- テスト worktree で検証
+- テストworktreeで検証
 - リグレッションテストを実施
 
 ### 5. レビュー
 
-- **マージ前に diff レビュー**
+- **マージ前にdiffレビュー**
 - `git diff develop..feature/xxx` で変更確認
 - 不要な変更がないか確認
 
 ### 6. 並列開発の活用
 
 - **独立したレイヤーは並列実装**
-- TodoWrite で依存関係を管理
+- TodoWriteで依存関係を管理
 - コンフリクトを事前に予防
 
 ## Examples
 
-### Example 1: 新しい Client 追加
+### Example 1: 新しいClient追加
 
 新しい通知機能を追加する例：
 
@@ -311,9 +311,9 @@ git gtr ai test/current-branch
 git merge test/current-branch --no-ff
 ```
 
-### Example 2: 既存 Feature 拡張
+### Example 2: 既存Feature拡張
 
-Recording 機能に無音検出を追加する例：
+Recording機能に無音検出を追加する例：
 
 ```bash
 # 1. worktree作成
@@ -377,13 +377,13 @@ git gtr ai test/integration
 
 ## Troubleshooting
 
-### worktree 作成失敗
+### worktree作成失敗
 
 **症状**: `git gtr new` がエラーで失敗
 
 **原因**:
 
-- 既存 worktree と名前が重複
+- 既存worktreeと名前が重複
 - ディスク容量不足
 
 **対処**:
@@ -405,7 +405,7 @@ df -h
 
 **原因**:
 
-- 同じファイルを複数 worktree で編集
+- 同じファイルを複数worktreeで編集
 - ベースブランチが更新された
 
 **対処**:
@@ -433,7 +433,7 @@ git commit
 
 **対処**:
 
-- 最大試行回数制限（5 回）により自動停止
+- 最大試行回数制限（5回）により自動停止
 - AskUserQuestion でユーザーに確認
 - 手動でテストログをレビュー
 
@@ -475,7 +475,7 @@ git commit -m "feat(features): Add business logic for new feature"
 
 ### Multi-Worktree Development
 
-複数の worktree を同時に使用した開発:
+複数のworktreeを同時に使用した開発:
 
 ```bash
 # Feature開発用
@@ -495,7 +495,7 @@ git merge experiment/new-approach --no-ff
 
 ### Integration with CI/CD
 
-テスト worktree を CI/CD パイプラインと統合:
+テストworktreeをCI/CDパイプラインと統合:
 
 ```bash
 # テストworktreeでCI実行
@@ -512,9 +512,9 @@ git push origin test/ci-integration
 
 ## Related Skills
 
-- `parallel-dev:parallel-dev`: 複数 feature 並列開発
+- `parallel-dev:parallel-dev`: 複数feature並列開発
 - `component-dev`: コンポーネント単位開発
-- `pr-create`: Pull Request 作成
+- `pr-create`: Pull Request作成
 - `commit-strategy`: コミット分割戦略
 
 ## References
