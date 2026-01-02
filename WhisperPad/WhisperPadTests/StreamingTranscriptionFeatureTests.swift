@@ -10,7 +10,7 @@ import XCTest
 
 @testable import WhisperPad
 
-/// StreamingTranscriptionFeature の TCA Reducer テスト
+/// StreamingTranscriptionFeature の TCA Reducer テスト - 開始・停止フロー
 @MainActor
 final class StreamingTranscriptionFeatureTests: XCTestCase {
     // MARK: - 開始フローテスト
@@ -288,9 +288,11 @@ final class StreamingTranscriptionFeatureTests: XCTestCase {
         // fileSaveCompleted アクションを受信
         await store.receive(\.fileSaveCompleted, timeout: .seconds(1))
     }
+}
 
-    // MARK: - 状態プロパティテスト
-
+/// StreamingTranscriptionFeature の TCA Reducer テスト - 状態プロパティ
+@MainActor
+final class StreamingTranscriptionFeatureStateTests: XCTestCase {
     /// displayText が正しく結合されることを確認
     func testDisplayText_combinesAllTextFields() {
         let state = StreamingTranscriptionFeature.State(
@@ -347,5 +349,147 @@ final class StreamingTranscriptionFeatureTests: XCTestCase {
 
         state.status = .completed(text: "テスト")
         XCTAssertFalse(state.isError)
+    }
+
+    /// isActiveOperation が正しく判定されることを確認
+    func testIsActiveOperation_returnsCorrectValue() {
+        var state = StreamingTranscriptionFeature.State(status: .idle)
+        XCTAssertFalse(state.isActiveOperation)
+
+        state.status = .initializing
+        XCTAssertFalse(state.isActiveOperation)
+
+        state.status = .recording(duration: 0, tokensPerSecond: 0)
+        XCTAssertTrue(state.isActiveOperation)
+
+        state.status = .processing
+        XCTAssertTrue(state.isActiveOperation)
+
+        state.status = .completed(text: "テスト")
+        XCTAssertFalse(state.isActiveOperation)
+
+        state.status = .error("エラー")
+        XCTAssertFalse(state.isActiveOperation)
+    }
+}
+
+/// StreamingTranscriptionFeature の TCA Reducer テスト - 確認ダイアログ
+@MainActor
+final class StreamingTranscriptionFeatureConfirmationTests: XCTestCase {
+    /// closeButtonTapped が録音中に確認ダイアログを表示することを確認
+    func testCloseButtonTapped_showsConfirmationDuringRecording() async {
+        let store = TestStore(
+            initialState: StreamingTranscriptionFeature.State(
+                status: .recording(duration: 5, tokensPerSecond: 10.0)
+            )
+        ) {
+            StreamingTranscriptionFeature()
+        } withDependencies: {
+            $0.streamingTranscription = .testValue
+            $0.streamingAudio = .testValue
+            $0.continuousClock = ImmediateClock()
+            $0.outputClient = .testValue
+        }
+
+        await store.send(.closeButtonTapped) { state in
+            state.showCancelConfirmation = true
+        }
+    }
+
+    /// closeButtonTapped が処理中に確認ダイアログを表示することを確認
+    func testCloseButtonTapped_showsConfirmationDuringProcessing() async {
+        let store = TestStore(
+            initialState: StreamingTranscriptionFeature.State(
+                status: .processing
+            )
+        ) {
+            StreamingTranscriptionFeature()
+        } withDependencies: {
+            $0.streamingTranscription = .testValue
+            $0.streamingAudio = .testValue
+            $0.continuousClock = ImmediateClock()
+            $0.outputClient = .testValue
+        }
+
+        await store.send(.closeButtonTapped) { state in
+            state.showCancelConfirmation = true
+        }
+    }
+
+    /// closeButtonTapped が非アクティブ状態で即座にキャンセルすることを確認
+    func testCloseButtonTapped_immediatelyCancelsForInactiveStates() async {
+        // Test for idle
+        let idleStore = TestStore(
+            initialState: StreamingTranscriptionFeature.State(status: .idle)
+        ) {
+            StreamingTranscriptionFeature()
+        } withDependencies: {
+            $0.streamingTranscription = .testValue
+            $0.streamingAudio = .testValue
+            $0.continuousClock = ImmediateClock()
+            $0.outputClient = .testValue
+        }
+        idleStore.exhaustivity = .off
+
+        await idleStore.send(.closeButtonTapped)
+        await idleStore.receive(\.cancelButtonTapped)
+
+        // Test for completed
+        let completedStore = TestStore(
+            initialState: StreamingTranscriptionFeature.State(
+                status: .completed(text: "完了")
+            )
+        ) {
+            StreamingTranscriptionFeature()
+        } withDependencies: {
+            $0.streamingTranscription = .testValue
+            $0.streamingAudio = .testValue
+            $0.continuousClock = ImmediateClock()
+            $0.outputClient = .testValue
+        }
+        completedStore.exhaustivity = .off
+
+        await completedStore.send(.closeButtonTapped)
+        await completedStore.receive(\.cancelButtonTapped)
+    }
+
+    /// 処理中から確認ダイアログ経由でキャンセルできることを確認
+    func testConfirmationFlow_fromProcessingState() async {
+        let store = TestStore(
+            initialState: StreamingTranscriptionFeature.State(
+                status: .processing,
+                confirmedText: "処理中のテキスト"
+            )
+        ) {
+            StreamingTranscriptionFeature()
+        } withDependencies: {
+            $0.streamingTranscription = .testValue
+            $0.streamingAudio = .testValue
+            $0.continuousClock = ImmediateClock()
+            $0.outputClient = .testValue
+        }
+        store.exhaustivity = .off
+
+        // Step 1: Close button shows confirmation
+        await store.send(.closeButtonTapped) { state in
+            state.showCancelConfirmation = true
+        }
+
+        // Step 2: User confirms cancellation
+        await store.send(.cancelConfirmationConfirmed) { state in
+            state.showCancelConfirmation = false
+        }
+
+        // Step 3: Actual cancellation
+        await store.receive(\.cancelButtonTapped) { state in
+            state.status = .idle
+            state.confirmedText = ""
+            state.pendingText = ""
+            state.decodingText = ""
+            state.duration = 0
+            state.tokensPerSecond = 0
+        }
+
+        await store.receive(\.delegate)
     }
 }
