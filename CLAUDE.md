@@ -81,6 +81,8 @@ Clients/
 
 ### Git Usage
 
+- 「worktree」は `git worktree` を指す
+- Worktree 操作には [git gtr](https://github.com/coderabbitai/git-worktree-runner) を使用する
 - The `git -C` option is not prohibited, but avoid using it whenever possible
 - Instead, operate in the current directory or use `cd` to navigate before running commands
 

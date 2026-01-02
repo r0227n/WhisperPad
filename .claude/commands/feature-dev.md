@@ -7,28 +7,28 @@ allowed-tools: Bash(git gtr:*), Bash(git add:*), Bash(git branch:*), Bash(git co
 # Feature Development: Git Worktree ベースの機能開発
 
 Git worktree を使用した機能開発ワークフローを自動化します。
-`git gtr` (git-worktree-runner) を使用して、独立した環境で機能を実装し、TCAレイヤー別にコミットを分割して、メインセッションにマージします。
+`git gtr` (git-worktree-runner) を使用して、独立した環境で機能を実装し、TCA レイヤー別にコミットを分割して、メインセッションにマージします。
 
 ## 引数
 
 - `<feature-name>`: 機能名（必須） - `feature/` プレフィックスは自動付与
 - `--skip-planning`: 計画フェーズをスキップして即実装
-- `--no-merge`: マージせずにworktree内で作業のみ
-- `--skip-test`: テストworktreeをスキップ
+- `--no-merge`: マージせずに worktree 内で作業のみ
+- `--skip-test`: テスト worktree をスキップ
 
 ## 処理フロー概要
 
 1. 現在のブランチ情報取得
 2. ブランチ名生成と確認
-3. worktree作成（git gtr new）
+3. worktree 作成（git gtr new）
 4. 機能実装（git gtr ai で実装）
-5. コミット戦略立案（TCAレイヤー別）
+5. コミット戦略立案（TCA レイヤー別）
 6. 自動コミット実行
 7. 現在のブランチへマージ
-8. テスト用worktree作成
-9. テスト実行とfix loop
+8. テスト用 worktree 作成
+9. テスト実行と fix loop
 10. テスト完了後メインセッションにマージ
-11. worktree削除確認
+11. worktree 削除確認
 
 ---
 
@@ -92,7 +92,7 @@ options:
 
 ## Step 3: worktree 作成（git gtr new）
 
-`git gtr new` コマンドでworktreeを作成します。
+`git gtr new` コマンドで worktree を作成します。
 
 ```bash
 # worktree 作成
@@ -104,6 +104,7 @@ git gtr list
 ```
 
 **git gtr の利点**:
+
 - 自動でベースディレクトリ構造を作成
 - エディタ統合（`git gtr editor <branch-name>` で切り替え可能）
 - 設定ファイルの自動コピー
@@ -116,24 +117,25 @@ git gtr list
 
 ```markdown
 Task(
-  subagent_type="Plan",
-  prompt="""
+subagent_type="Plan",
+prompt="""
 機能要件: {FEATURE_NAME}
 現在のブランチ: {CURRENT_BRANCH}
-対象worktree: {BRANCH_NAME}
+対象 worktree: {BRANCH_NAME}
 
-TCAアーキテクチャに基づいて実装計画を立案してください。
+TCA アーキテクチャに基づいて実装計画を立案してください。
 
 必須項目:
+
 - 変更が必要なファイルのリスト
 - レイヤー別の実装順序（Models → Clients → Features → App）
 - 各ステップの詳細説明
 - 並列実装可能な部分の特定
-"""
-)
+  """
+  )
 ```
 
-### 4.2 worktree内での実装
+### 4.2 worktree 内での実装
 
 ```bash
 # worktree内でClaude Codeを起動
@@ -148,31 +150,31 @@ git gtr ai $BRANCH_NAME
 
 **並列開発戦略**:
 
-| レイヤー | 独立性 | 実装タイミング |
-|---------|--------|---------------|
-| Models | 高 | 最初に実装可能 |
-| Clients | 中 | Models後に実装可能 |
-| Features | 低 | Models/Clients完了後 |
-| App | 最低 | すべて完了後 |
+| レイヤー | 独立性 | 実装タイミング        |
+| -------- | ------ | --------------------- |
+| Models   | 高     | 最初に実装可能        |
+| Clients  | 中     | Models 後に実装可能   |
+| Features | 低     | Models/Clients 完了後 |
+| App      | 最低   | すべて完了後          |
 
 独立性の高い Models と Clients は並列実装可能です。
 
 ---
 
-## Step 5: コミット戦略立案（TCAレイヤー別）
+## Step 5: コミット戦略立案（TCA レイヤー別）
 
-実装完了後、変更ファイルをTCAレイヤー別に分類します。
+実装完了後、変更ファイルを TCA レイヤー別に分類します。
 
 ### レイヤー分類
 
-| 優先度 | レイヤー | パスパターン | コミット順序 |
-|--------|----------|--------------|--------------|
-| 1 | Models | `*/Models/*.swift` | 1st commit |
-| 2 | Clients (Interface) | `*/Clients/*Client.swift` | 2nd commit |
-| 2 | Clients (Live) | `*/Clients/*ClientLive.swift` | 3rd commit |
-| 3 | Features | `*/Features/*/` | 4th commit |
-| 4 | App | `*/App/*.swift` | 5th commit |
-| 5 | Misc | その他（tests, docs, etc） | 6th commit |
+| 優先度 | レイヤー            | パスパターン                  | コミット順序 |
+| ------ | ------------------- | ----------------------------- | ------------ |
+| 1      | Models              | `*/Models/*.swift`            | 1st commit   |
+| 2      | Clients (Interface) | `*/Clients/*Client.swift`     | 2nd commit   |
+| 2      | Clients (Live)      | `*/Clients/*ClientLive.swift` | 3rd commit   |
+| 3      | Features            | `*/Features/*/`               | 4th commit   |
+| 4      | App                 | `*/App/*.swift`               | 5th commit   |
+| 5      | Misc                | その他（tests, docs, etc）    | 6th commit   |
 
 ### コミットメッセージ形式
 
@@ -187,6 +189,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 ```
 
 **type の種類**:
+
 - `feat`: 新機能追加
 - `fix`: バグ修正
 - `refactor`: リファクタリング
@@ -197,7 +200,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 ## Step 6: 自動コミット実行
 
-worktree内のClaude Codeセッションでレイヤー別にコミットを実行します。
+worktree 内の Claude Code セッションでレイヤー別にコミットを実行します。
 
 ```bash
 # worktree内でClaude Codeを起動（まだ起動していない場合）
@@ -248,14 +251,15 @@ git log --oneline -5
 ```
 
 **フラグによる制御**:
+
 - `--no-merge` フラグが指定されている場合、このステップをスキップします
-- マージせずにworktree内で作業を継続できます
+- マージせずに worktree 内で作業を継続できます
 
 ---
 
-## Step 8: テスト用worktree作成
+## Step 8: テスト用 worktree 作成
 
-`--skip-test` フラグが指定されていない場合、テスト専用のworktreeを作成します。
+`--skip-test` フラグが指定されていない場合、テスト専用の worktree を作成します。
 
 ```bash
 # テスト用ブランチ名生成
@@ -274,9 +278,9 @@ git gtr list
 
 ---
 
-## Step 9: テスト実行とfix loop
+## Step 9: テスト実行と fix loop
 
-テストworktree内で、テストが合格するまで修正を繰り返します。
+テスト worktree 内で、テストが合格するまで修正を繰り返します。
 
 ```bash
 # テストworktree内でClaude Codeを起動
@@ -315,11 +319,12 @@ done
 ```
 
 **修正プロセス**:
+
 1. テスト失敗ログを分析
-2. Taskツールで原因特定と修正実施
+2. Task ツールで原因特定と修正実施
 3. 修正内容をコミット
 4. 再度テスト実行
-5. 最大5回まで繰り返し（無限ループ回避）
+5. 最大 5 回まで繰り返し（無限ループ回避）
 
 ---
 
@@ -344,7 +349,7 @@ git log --oneline -5
 
 ## Step 11: worktree 削除確認
 
-作業完了後、worktreeを削除するかユーザーに確認します。
+作業完了後、worktree を削除するかユーザーに確認します。
 
 ### ユーザー確認
 
@@ -407,6 +412,7 @@ WhisperPad/
 ### 除外ファイル
 
 git gtr が自動で除外するファイル:
+
 - `*.xcuserstate`
 - `xcschememanagement.plist`
 - `.claude/`（設定ファイルは別途同期）
@@ -423,16 +429,17 @@ git gtr が自動で除外するファイル:
 ```
 
 実行フロー:
+
 1. ブランチ名確認（`feature/shortcut-customization`）
-2. worktree作成
+2. worktree 作成
 3. 実装計画立案
 4. `git gtr ai feature/shortcut-customization` で実装
-5. TCAレイヤー別にコミット分割
+5. TCA レイヤー別にコミット分割
 6. 現在のブランチにマージ
-7. テストworktree作成
+7. テスト worktree 作成
 8. テスト実行と修正
 9. テスト完了後マージ
-10. worktree削除確認
+10. worktree 削除確認
 
 ### フラグ付き使用
 
@@ -454,7 +461,7 @@ git gtr が自動で除外するファイル:
 
 ## トラブルシューティング
 
-### worktree作成に失敗する
+### worktree 作成に失敗する
 
 ```bash
 # エラー確認
@@ -468,7 +475,7 @@ git gtr rm <existing-branch>
 
 ### テストが無限ループする
 
-- 最大試行回数制限（5回）により自動停止
+- 最大試行回数制限（5 回）により自動停止
 - 手動でレビューが必要な場合は AskUserQuestion で確認
 
 ### マージコンフリクトが発生
