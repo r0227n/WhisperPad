@@ -59,8 +59,7 @@ struct IconSettingsTab: View {
         IconDetailPanel(
             status: selectedStatus,
             config: binding(for: selectedStatus),
-            onReset: { store.send(.resetIconSetting(selectedStatus)) },
-            onResetAll: { store.send(.resetMenuBarIconSettings) }
+            onReset: { store.send(.resetIconSetting(selectedStatus)) }
         )
     }
 
@@ -120,7 +119,6 @@ private struct IconDetailPanel: View {
     let status: IconConfigStatus
     @Binding var config: StatusIconConfig
     let onReset: () -> Void
-    let onResetAll: () -> Void
 
     /// SwiftUI Color として管理（NSColor との同期用）
     @State private var selectedColor: Color
@@ -139,13 +137,11 @@ private struct IconDetailPanel: View {
     init(
         status: IconConfigStatus,
         config: Binding<StatusIconConfig>,
-        onReset: @escaping () -> Void,
-        onResetAll: @escaping () -> Void
+        onReset: @escaping () -> Void
     ) {
         self.status = status
         self._config = config
         self.onReset = onReset
-        self.onResetAll = onResetAll
         self._selectedColor = State(initialValue: Color(nsColor: config.wrappedValue.color))
     }
 
@@ -210,19 +206,13 @@ private struct IconDetailPanel: View {
 
             Spacer()
 
-            // リセットメニュー
-            Menu {
-                Button("この状態をリセット") {
-                    onReset()
-                }
-                Button("すべてリセット") {
-                    onResetAll()
-                }
+            Button {
+                onReset()
             } label: {
                 Image(systemName: "arrow.counterclockwise")
             }
-            .menuStyle(.borderlessButton)
-            .help("リセットオプション")
+            .buttonStyle(.borderless)
+            .help("この状態をリセット")
         }
     }
 
