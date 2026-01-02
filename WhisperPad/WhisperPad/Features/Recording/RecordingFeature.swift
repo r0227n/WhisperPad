@@ -26,6 +26,8 @@ struct RecordingFeature {
         var recordingURL: URL?
         /// マイク権限ステータス
         var permissionStatus: PermissionStatus = .undetermined
+        /// WhisperKit初期化中フラグ
+        var whisperKitInitializing: Bool = false
 
         /// 録音中かどうか
         var isRecording: Bool {
@@ -72,6 +74,16 @@ struct RecordingFeature {
         case requestPermission
         /// 権限要求の結果
         case permissionResponse(Bool)
+        /// WhisperKit準備状態確認
+        case checkWhisperKitReady
+        /// WhisperKit準備完了
+        case whisperKitReady
+        /// WhisperKit初期化開始
+        case initializeWhisperKit
+        /// WhisperKit初期化完了
+        case whisperKitInitialized
+        /// WhisperKit初期化失敗
+        case whisperKitInitFailed(Error)
         /// 録音を準備
         case prepareRecording
         /// 録音が開始された
@@ -103,6 +115,8 @@ struct RecordingFeature {
     @Dependency(\.audioRecorder) var audioRecorder
     @Dependency(\.continuousClock) var clock
     @Dependency(\.uuid) var uuid
+    @Dependency(\.whisperKitClient) var whisperKitClient
+    @Dependency(\.userDefaultsClient) var userDefaultsClient
 
     // MARK: - Reducer Body
 
@@ -116,7 +130,7 @@ struct RecordingFeature {
                 case .denied:
                     return .send(.delegate(.recordingFailed(.permissionDenied)))
                 case .granted:
-                    return .send(.prepareRecording)
+                    return .send(.checkWhisperKitReady)
                 }
 
             case .requestPermission:
@@ -128,10 +142,44 @@ struct RecordingFeature {
             case let .permissionResponse(granted):
                 state.permissionStatus = granted ? .granted : .denied
                 if granted {
-                    return .send(.prepareRecording)
+                    return .send(.checkWhisperKitReady)
                 } else {
                     return .send(.delegate(.recordingFailed(.permissionDenied)))
                 }
+
+            case .checkWhisperKitReady:
+                return .run { send in
+                    let isReady = await whisperKitClient.isReady()
+                    if isReady {
+                        await send(.whisperKitReady)
+                    } else {
+                        await send(.initializeWhisperKit)
+                    }
+                }
+
+            case .whisperKitReady:
+                return .send(.prepareRecording)
+
+            case .initializeWhisperKit:
+                state.whisperKitInitializing = true
+                return .run { [whisperKitClient, userDefaultsClient] send in
+                    do {
+                        let settings = await userDefaultsClient.loadSettings()
+                        let modelName = settings.transcription.modelName
+                        try await whisperKitClient.initialize(modelName)
+                        await send(.whisperKitInitialized)
+                    } catch {
+                        await send(.whisperKitInitFailed(error))
+                    }
+                }
+
+            case .whisperKitInitialized:
+                state.whisperKitInitializing = false
+                return .send(.prepareRecording)
+
+            case let .whisperKitInitFailed(error):
+                state.whisperKitInitializing = false
+                return .send(.delegate(.recordingFailed(.recordingFailed(error.localizedDescription))))
 
             case .prepareRecording:
                 state.status = .preparing

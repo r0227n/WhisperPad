@@ -2,18 +2,17 @@
 //  StreamingTranscriptionFeature.swift
 //  WhisperPad
 //
-
 import ComposableArchitecture
 import Foundation
 import OSLog
 
 private let logger = Logger(subsystem: "com.whisperpad", category: "StreamingTranscriptionFeature")
-
 /// ストリーミング文字起こし機能の TCA Reducer
 ///
 /// リアルタイム音声入力から文字起こしを行うライフサイクル
 /// （初期化、録音開始/停止、文字起こし処理、結果出力）を管理します。
 @Reducer
+// swiftlint:disable:next type_body_length
 struct StreamingTranscriptionFeature {
     // MARK: - State
 
@@ -76,6 +75,9 @@ struct StreamingTranscriptionFeature {
         var popupSaveToFileShortcut: String = HotKeySettings.KeyComboSettings.popupSaveToFileDefault.displayString
         var popupCopyAndCloseShortcut: String = HotKeySettings.KeyComboSettings.popupCopyAndCloseDefault.displayString
         var popupCloseShortcut: String = HotKeySettings.KeyComboSettings.popupCloseDefault.displayString
+
+        /// WhisperKit初期化中フラグ
+        var whisperKitInitializing: Bool = false
     }
 
     // MARK: - Action
@@ -106,10 +108,22 @@ struct StreamingTranscriptionFeature {
         case binding(BindingAction<State>)
 
         // 内部アクション
-        /// 初期化が完了した
-        case initializationCompleted
-        /// 初期化に失敗した
-        case initializationFailed(String)
+        /// WhisperKit準備状態確認
+        case checkWhisperKitReady
+        /// WhisperKit準備完了
+        case whisperKitReady
+        /// WhisperKit初期化開始
+        case initializeWhisperKit
+        /// WhisperKit初期化完了
+        case whisperKitInitialized
+        /// WhisperKit初期化失敗
+        case whisperKitInitFailed(Error)
+        /// Service初期化開始
+        case initializeStreamingService
+        /// Service初期化完了
+        case serviceInitializationCompleted
+        /// Service初期化失敗
+        case serviceInitializationFailed(String)
         /// 進捗が更新された
         case progressUpdated(TranscriptionProgress)
         /// 音声チャンクを受信した
@@ -191,26 +205,8 @@ struct StreamingTranscriptionFeature {
                 state.duration = 0
                 state.tokensPerSecond = 0
 
-                return .run { [whisperKitClient, streamingTranscription] send in
-                    do {
-                        // WhisperKitManager が ready なら即座に初期化完了
-                        let isReady = await whisperKitClient.isReady()
-                        if isReady {
-                            // 状態リセットのみ行う
-                            try await streamingTranscription.initialize(nil)
-                            await send(.initializationCompleted)
-                        } else {
-                            // フォールバック: WhisperKit の初期化を実行
-                            try await streamingTranscription.initialize(nil)
-                            await send(.initializationCompleted)
-                        }
-                    } catch {
-                        let message = (error as? StreamingTranscriptionError)?.errorDescription
-                            ?? error.localizedDescription
-                        await send(.initializationFailed(message))
-                    }
-                }
-                .cancellable(id: CancelID.initialization)
+                // RecordingFeatureと同様に、まずWhisperKit準備状態をチェック
+                return .send(.checkWhisperKitReady)
 
             case .stopButtonTapped:
                 guard case .recording = state.status else { return .none }
@@ -306,7 +302,61 @@ struct StreamingTranscriptionFeature {
 
             // MARK: - 内部アクション
 
-            case .initializationCompleted:
+            case .checkWhisperKitReady:
+                return .run { send in
+                    let isReady = await whisperKitClient.isReady()
+                    if isReady {
+                        await send(.whisperKitReady)
+                    } else {
+                        await send(.initializeWhisperKit)
+                    }
+                }
+
+            case .whisperKitReady:
+                // WhisperKitが準備完了したので、Service初期化へ進む
+                return .send(.initializeStreamingService)
+
+            case .initializeWhisperKit:
+                state.whisperKitInitializing = true
+                return .run { [whisperKitClient, userDefaultsClient] send in
+                    do {
+                        let settings = await userDefaultsClient.loadSettings()
+                        let modelName = settings.transcription.modelName
+                        try await whisperKitClient.initialize(modelName)
+                        await send(.whisperKitInitialized)
+                    } catch {
+                        await send(.whisperKitInitFailed(error))
+                    }
+                }
+
+            case .whisperKitInitialized:
+                state.whisperKitInitializing = false
+                // WhisperKit初期化完了後、Service初期化へ進む
+                return .send(.initializeStreamingService)
+
+            case let .whisperKitInitFailed(error):
+                state.whisperKitInitializing = false
+                let message = (error as? WhisperKitManagerError)?.errorDescription
+                    ?? error.localizedDescription
+                state.status = .error(message)
+                return .none
+
+            case .initializeStreamingService:
+                // ここでWhisperKitは必ず初期化済み
+                return .run { [streamingTranscription] send in
+                    do {
+                        // Service層は状態リセットのみ（WhisperKit初期化は不要）
+                        try await streamingTranscription.initialize(nil)
+                        await send(.serviceInitializationCompleted)
+                    } catch {
+                        let message = (error as? StreamingTranscriptionError)?.errorDescription
+                            ?? error.localizedDescription
+                        await send(.serviceInitializationFailed(message))
+                    }
+                }
+                .cancellable(id: CancelID.initialization)
+
+            case .serviceInitializationCompleted:
                 state.status = .recording(duration: 0, tokensPerSecond: 0)
 
                 // 音声ストリーミングとタイマーを開始
@@ -333,7 +383,7 @@ struct StreamingTranscriptionFeature {
                     .cancellable(id: CancelID.timer)
                 )
 
-            case let .initializationFailed(message):
+            case let .serviceInitializationFailed(message):
                 state.status = .error(message)
                 return .none
 
