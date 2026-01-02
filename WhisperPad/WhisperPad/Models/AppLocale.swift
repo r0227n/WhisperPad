@@ -46,4 +46,16 @@ enum AppLocale: String, Codable, Equatable, Sendable, CaseIterable {
 
     /// デフォルト値
     static let `default` = AppLocale.system
+
+    /// SwiftUI の Locale オブジェクトに変換
+    var locale: Locale {
+        switch self {
+        case .system:
+            Locale.current // システムのロケールを使用
+        case .en:
+            Locale(identifier: "en")
+        case .ja:
+            Locale(identifier: "ja")
+        }
+    }
 }

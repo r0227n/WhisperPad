@@ -159,6 +159,7 @@ struct GeneralSettingsTab: View {
         }
         .formStyle(.grouped)
         .padding()
+        .environment(\.locale, store.settings.general.preferredLocale.locale)
     }
 }
 
