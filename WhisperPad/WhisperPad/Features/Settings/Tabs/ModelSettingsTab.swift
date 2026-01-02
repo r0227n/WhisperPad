@@ -303,10 +303,11 @@ struct ModelSettingsTab: View {
     /// フィルタリング済みのモデル一覧
     private var filteredModels: [WhisperModel] {
         store.availableModels.filter { model in
-            // 検索テキストでフィルタリング
+            // 検索テキストでフィルタリング（部分一致、大文字小文字を無視）
+            let searchLower = searchText.lowercased()
             let matchesSearch = searchText.isEmpty ||
-                model.displayName.localizedCaseInsensitiveContains(searchText) ||
-                model.id.localizedCaseInsensitiveContains(searchText)
+                model.displayName.lowercased().contains(searchLower) ||
+                model.id.lowercased().contains(searchLower)
 
             // ダウンロード状態フィルター
             let matchesDownload = downloadFilter.matches(isDownloaded: model.isDownloaded)
