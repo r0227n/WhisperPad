@@ -39,7 +39,6 @@ enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
     case recording
     case streaming
     case cancel
-    case recordingToggle
     case recordingPause
 
     var id: String { rawValue }
@@ -59,7 +58,7 @@ extension HotkeyType {
         var hotkeyTypes: [HotkeyType] {
             switch self {
             case .recording:
-                [.recording, .recordingToggle, .recordingPause, .streaming]
+                [.recording, .recordingPause, .streaming]
             case .cancel:
                 [.cancel]
             }
@@ -69,7 +68,7 @@ extension HotkeyType {
     /// ショートカットのカテゴリ
     var category: Category {
         switch self {
-        case .recording, .recordingToggle, .recordingPause, .streaming:
+        case .recording, .recordingPause, .streaming:
             .recording
         case .cancel:
             .cancel
@@ -81,8 +80,6 @@ extension HotkeyType {
         switch self {
         case .recording:
             "録音開始/停止"
-        case .recordingToggle:
-            "録音開始/終了"
         case .recordingPause:
             "一時停止/再開"
         case .cancel:
@@ -97,8 +94,6 @@ extension HotkeyType {
         switch self {
         case .recording:
             "録音を開始または停止します"
-        case .recordingToggle:
-            "録音を開始または終了します（トグル動作）"
         case .recordingPause:
             "録音を一時停止または再開します"
         case .cancel:
@@ -113,8 +108,6 @@ extension HotkeyType {
         switch self {
         case .recording:
             .recordingDefault
-        case .recordingToggle:
-            .recordingToggleDefault
         case .recordingPause:
             .recordingPauseDefault
         case .cancel:
@@ -129,8 +122,6 @@ extension HotkeyType {
         switch self {
         case .recording:
             "mic.fill"
-        case .recordingToggle:
-            "record.circle"
         case .recordingPause:
             "pause.fill"
         case .cancel:
@@ -143,7 +134,7 @@ extension HotkeyType {
     /// 対応するアイコン設定ステータス
     var correspondingIconStatus: IconConfigStatus {
         switch self {
-        case .recording, .recordingToggle:
+        case .recording:
             .recording
         case .recordingPause:
             .paused

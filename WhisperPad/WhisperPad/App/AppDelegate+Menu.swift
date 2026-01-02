@@ -37,9 +37,9 @@ extension AppDelegate {
         let recordingItem = NSMenuItem(
             title: "録音開始",
             action: #selector(startRecording),
-            keyEquivalent: hotKey.recordingToggleHotKey.keyEquivalentCharacter
+            keyEquivalent: hotKey.recordingHotKey.keyEquivalentCharacter
         )
-        recordingItem.keyEquivalentModifierMask = hotKey.recordingToggleHotKey.keyEquivalentModifierMask
+        recordingItem.keyEquivalentModifierMask = hotKey.recordingHotKey.keyEquivalentModifierMask
         recordingItem.tag = MenuItemTag.recording.rawValue
         recordingItem.target = self
         recordingItem.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
@@ -170,7 +170,7 @@ extension AppDelegate {
         _ cancelItem: NSMenuItem,
         _ hotKey: HotKeySettings
     ) {
-        let toggleKey = hotKey.recordingToggleHotKey
+        let toggleKey = hotKey.recordingHotKey
         configureMenuItem(
             recordingItem,
             title: "録音開始",
@@ -191,7 +191,7 @@ extension AppDelegate {
         _ cancelItem: NSMenuItem,
         _ hotKey: HotKeySettings
     ) {
-        let toggleKey = hotKey.recordingToggleHotKey
+        let toggleKey = hotKey.recordingHotKey
         let pauseKey = hotKey.recordingPauseHotKey
         let cancelKey = hotKey.cancelHotKey
         configureMenuItem(
@@ -230,7 +230,7 @@ extension AppDelegate {
         _ cancelItem: NSMenuItem,
         _ hotKey: HotKeySettings
     ) {
-        let toggleKey = hotKey.recordingToggleHotKey
+        let toggleKey = hotKey.recordingHotKey
         let pauseKey = hotKey.recordingPauseHotKey
         let cancelKey = hotKey.cancelHotKey
         configureMenuItem(

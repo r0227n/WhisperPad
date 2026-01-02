@@ -97,8 +97,6 @@ struct HotkeySettingsTab: View {
         switch type {
         case .recording:
             store.settings.hotKey.recordingHotKey
-        case .recordingToggle:
-            store.settings.hotKey.recordingToggleHotKey
         case .recordingPause:
             store.settings.hotKey.recordingPauseHotKey
         case .cancel:
@@ -117,8 +115,6 @@ struct HotkeySettingsTab: View {
                 switch type {
                 case .recording:
                     hotKey.recordingHotKey = newValue
-                case .recordingToggle:
-                    hotKey.recordingToggleHotKey = newValue
                 case .recordingPause:
                     hotKey.recordingPauseHotKey = newValue
                 case .cancel:
@@ -137,8 +133,6 @@ struct HotkeySettingsTab: View {
         switch type {
         case .recording:
             hotKey.recordingHotKey = .recordingDefault
-        case .recordingToggle:
-            hotKey.recordingToggleHotKey = .recordingToggleDefault
         case .recordingPause:
             hotKey.recordingPauseHotKey = .recordingPauseDefault
         case .cancel:

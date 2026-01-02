@@ -25,7 +25,6 @@ private final class HotKeyManager {
     private var recordingToggleHotKey: HotKey?
     private var cancelHotKey: HotKey?
     private var streamingHotKey: HotKey?
-    private var recordingToggleKey: HotKey?
     private var recordingPauseHotKey: HotKey?
 
     private init() {}
@@ -140,28 +139,6 @@ private final class HotKeyManager {
         logger.info("Streaming hotkey unregistered")
     }
 
-    // MARK: - Recording Toggle (⌥⇧S)
-
-    /// 動的キーコンボで録音開始/終了トグルホットキーを登録
-    /// - Parameters:
-    ///   - combo: キーコンボ設定
-    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
-    func registerRecordingToggleWithCombo(
-        _ combo: HotKeySettings.KeyComboSettings,
-        handler: @escaping () -> Void
-    ) {
-        recordingToggleKey = nil
-        let hotKey = HotKey(
-            carbonKeyCode: combo.carbonKeyCode,
-            carbonModifiers: combo.carbonModifiers
-        )
-        hotKey.keyDownHandler = handler
-        recordingToggleKey = hotKey
-        logger.info(
-            "Recording toggle hotkey registered: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
-        )
-    }
-
     // MARK: - Recording Pause (⌥⇧P)
 
     /// 動的キーコンボで録音一時停止ホットキーを登録
@@ -189,7 +166,6 @@ private final class HotKeyManager {
         recordingToggleHotKey = nil
         cancelHotKey = nil
         streamingHotKey = nil
-        recordingToggleKey = nil
         recordingPauseHotKey = nil
         logger.info("All hotkeys unregistered")
     }
@@ -257,11 +233,6 @@ extension HotKeyClient: DependencyKey {
             unregisterStreaming: {
                 await MainActor.run {
                     HotKeyManager.shared.unregisterStreaming()
-                }
-            },
-            registerRecordingToggleWithCombo: { combo, handler in
-                await MainActor.run {
-                    HotKeyManager.shared.registerRecordingToggleWithCombo(combo, handler: handler)
                 }
             },
             registerRecordingPauseWithCombo: { combo, handler in
