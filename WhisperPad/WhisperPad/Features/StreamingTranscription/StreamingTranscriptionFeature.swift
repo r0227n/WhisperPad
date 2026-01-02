@@ -191,19 +191,19 @@ struct StreamingTranscriptionFeature {
                 state.duration = 0
                 state.tokensPerSecond = 0
 
-                return .run { [whisperKitClient, streamingTranscription] send in
+                return .run { [whisperKitClient, streamingTranscription, userDefaultsClient] send in
                     do {
-                        // WhisperKitManager が ready なら即座に初期化完了
+                        // WhisperKitが準備完了しているか確認
                         let isReady = await whisperKitClient.isReady()
-                        if isReady {
-                            // 状態リセットのみ行う
-                            try await streamingTranscription.initialize(nil)
-                            await send(.initializationCompleted)
-                        } else {
-                            // フォールバック: WhisperKit の初期化を実行
-                            try await streamingTranscription.initialize(nil)
-                            await send(.initializationCompleted)
+                        if !isReady {
+                            // WhisperKitを初期化
+                            let settings = await userDefaultsClient.loadSettings()
+                            let modelName = settings.transcription.modelName
+                            try await whisperKitClient.initialize(modelName)
                         }
+                        // ストリーミング文字起こしサービスを初期化
+                        try await streamingTranscription.initialize(nil)
+                        await send(.initializationCompleted)
                     } catch {
                         let message = (error as? StreamingTranscriptionError)?.errorDescription
                             ?? error.localizedDescription
