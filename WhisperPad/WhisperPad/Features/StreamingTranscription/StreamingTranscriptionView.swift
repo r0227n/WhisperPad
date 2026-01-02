@@ -75,9 +75,11 @@ private struct HeaderView: View {
             } label: {
                 Image(systemName: "xmark")
                     .foregroundColor(.secondary)
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .help("閉じる")
+            .hoverTooltip(store.popupCloseShortcut, alignment: .bottom)
             .accessibilityLabel("閉じる")
         }
         .padding(.horizontal, 16)
@@ -422,14 +424,17 @@ private struct FooterView: View {
 
 private struct HoverTooltipModifier: ViewModifier {
     let text: String
+    let alignment: VerticalAlignment
+
     @State private var isHovering = false
 
     func body(content: Content) -> some View {
         content
+            .contentShape(Rectangle())
             .onHover { hovering in
                 isHovering = hovering
             }
-            .overlay(alignment: .top) {
+            .overlay(alignment: alignment == .bottom ? .bottom : .top) {
                 if isHovering, !text.isEmpty {
                     Text(text)
                         .font(.caption)
@@ -440,16 +445,17 @@ private struct HoverTooltipModifier: ViewModifier {
                                 .fill(Color(nsColor: .controlBackgroundColor))
                                 .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
                         )
-                        .offset(y: -28)
+                        .offset(y: alignment == .bottom ? 28 : -28)
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                         .animation(.easeOut(duration: 0.15), value: isHovering)
+                        .allowsHitTesting(false)
                 }
             }
     }
 }
 
 extension View {
-    func hoverTooltip(_ text: String) -> some View {
-        modifier(HoverTooltipModifier(text: text))
+    func hoverTooltip(_ text: String, alignment: VerticalAlignment = .top) -> some View {
+        modifier(HoverTooltipModifier(text: text, alignment: alignment))
     }
 }
