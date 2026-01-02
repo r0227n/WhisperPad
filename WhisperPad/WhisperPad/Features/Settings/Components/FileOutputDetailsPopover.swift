@@ -19,7 +19,7 @@ struct FileOutputDetailsPopover: View {
             HStack {
                 Image(systemName: "doc.text")
                     .foregroundStyle(.blue)
-                Text("ファイル出力設定")
+                Text("file_output.title", comment: "File Output Settings")
                     .font(.headline)
             }
 
@@ -29,7 +29,7 @@ struct FileOutputDetailsPopover: View {
             VStack(alignment: .leading, spacing: 12) {
                 // 保存先
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("保存先")
+                    Text("file_output.location", comment: "Location")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     HStack {
@@ -46,16 +46,18 @@ struct FileOutputDetailsPopover: View {
                                     .fill(Color(nsColor: .textBackgroundColor))
                             )
 
-                        Button("変更...") {
+                        Button(String(localized: "common.change", comment: "Change...")) {
                             selectOutputDirectory()
                         }
-                        .accessibilityLabel("保存先を変更")
+                        .accessibilityLabel(
+                            String(localized: "file_output.change_location", comment: "Change location")
+                        )
                     }
                 }
 
                 // ファイル名形式
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("ファイル名形式")
+                    Text("file_output.filename_format", comment: "Filename Format")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     Picker(
@@ -69,20 +71,22 @@ struct FileOutputDetailsPopover: View {
                             }
                         )
                     ) {
-                        Text("日時 (WhisperPad_20241201_143052)")
+                        Text("file_output.filename_format.datetime", comment: "Date Time (WhisperPad_20241201_143052)")
                             .tag(FileOutputSettings.FileNameFormat.dateTime)
-                        Text("タイムスタンプ (WhisperPad_1701415852)")
+                        Text("file_output.filename_format.timestamp", comment: "Timestamp (WhisperPad_1701415852)")
                             .tag(FileOutputSettings.FileNameFormat.timestamp)
-                        Text("連番 (WhisperPad_001)")
+                        Text("file_output.filename_format.sequential", comment: "Sequential (WhisperPad_001)")
                             .tag(FileOutputSettings.FileNameFormat.sequential)
                     }
                     .labelsHidden()
-                    .accessibilityLabel("ファイル名形式")
+                    .accessibilityLabel(
+                        String(localized: "file_output.filename_format", comment: "Filename Format")
+                    )
                 }
 
                 // ファイル形式
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("ファイル形式")
+                    Text("file_output.file_format", comment: "File Format")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     Picker(
@@ -102,12 +106,14 @@ struct FileOutputDetailsPopover: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
-                    .accessibilityLabel("ファイル形式")
+                    .accessibilityLabel(
+                        String(localized: "file_output.file_format", comment: "File Format")
+                    )
                 }
 
                 // メタデータ
                 Toggle(
-                    "メタデータを含める",
+                    String(localized: "file_output.include_metadata", comment: "Include Metadata"),
                     isOn: Binding(
                         get: { store.settings.output.includeMetadata },
                         set: { newValue in
@@ -118,14 +124,21 @@ struct FileOutputDetailsPopover: View {
                     )
                 )
                 .font(.subheadline)
-                .accessibilityLabel("メタデータを含める")
-                .accessibilityHint("ファイルに作成日時やアプリ情報を含めます")
+                .accessibilityLabel(
+                    String(localized: "file_output.include_metadata", comment: "Include Metadata")
+                )
+                .accessibilityHint(
+                    String(
+                        localized: "file_output.include_metadata.help",
+                        comment: "Includes creation date and app info in file"
+                    )
+                )
             }
 
             Divider()
 
             // フッター説明
-            Text("文字起こし結果をテキストファイルとして保存します")
+            Text("file_output.footer", comment: "Saves transcription results as text files")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -137,8 +150,11 @@ struct FileOutputDetailsPopover: View {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.message = "ファイルの保存先フォルダを選択してください"
-        panel.prompt = "選択"
+        panel.message = String(
+            localized: "file_output.select_folder.message",
+            comment: "Please select the folder to save files"
+        )
+        panel.prompt = String(localized: "file_output.select_folder.prompt", comment: "Select")
 
         if panel.runModal() == .OK, let url = panel.url {
             var output = store.settings.output

@@ -30,9 +30,12 @@ struct ModelSearchFilterBar: View {
                 .foregroundStyle(.secondary)
                 .font(.system(size: 12))
 
-            TextField("モデルを検索...", text: $searchText)
-                .textFieldStyle(.plain)
-                .font(.system(size: 13))
+            TextField(
+                String(localized: "model.search.placeholder", comment: "Search models..."),
+                text: $searchText
+            )
+            .textFieldStyle(.plain)
+            .font(.system(size: 13))
 
             if !searchText.isEmpty {
                 Button {
@@ -43,7 +46,7 @@ struct ModelSearchFilterBar: View {
                         .font(.system(size: 12))
                 }
                 .buttonStyle(.plain)
-                .help("検索をクリア")
+                .help(String(localized: "model.search.clear", comment: "Clear search"))
             }
         }
         .padding(.horizontal, 8)
@@ -56,7 +59,7 @@ struct ModelSearchFilterBar: View {
 
     private var statusFilterPicker: some View {
         HStack(spacing: 4) {
-            Text("状態")
+            Text("model.filter.status", comment: "Status")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 

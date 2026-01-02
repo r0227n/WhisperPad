@@ -46,22 +46,28 @@ struct ModelSettingsTab: View {
             .padding()
         }
         .confirmationDialog(
-            "モデルを削除しますか？",
+            String(localized: "model.delete.confirm.title", comment: "Delete model?"),
             isPresented: Binding(
                 get: { store.modelToDelete != nil },
                 set: { if !$0 { store.send(.cancelDeleteModel) } }
             ),
             titleVisibility: .visible
         ) {
-            Button("削除", role: .destructive) {
+            Button(String(localized: "common.delete", comment: "Delete"), role: .destructive) {
                 store.send(.confirmDeleteModel)
             }
-            Button("キャンセル", role: .cancel) {
+            Button(String(localized: "common.cancel", comment: "Cancel"), role: .cancel) {
                 store.send(.cancelDeleteModel)
             }
         } message: {
             if let modelName = store.modelToDelete {
-                Text("「\(modelName)」を削除します。再度使用するにはダウンロードが必要です。")
+                Text(
+                    String(
+                        localized: "model.delete.confirm.message",
+                        defaultValue: "「\(modelName)」will be deleted. You will need to download it again to use it.",
+                        comment: "Delete confirmation message"
+                    )
+                )
             }
         }
     }
@@ -70,24 +76,27 @@ struct ModelSettingsTab: View {
 
     private var activeModelSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("使用中のモデル", systemImage: "cpu")
-                .font(.headline)
+            Label(
+                String(localized: "model.active.section", comment: "Active Model"),
+                systemImage: "cpu"
+            )
+            .font(.headline)
 
             HStack(spacing: 20) {
                 // モデル選択
                 HStack {
-                    Text("モデル")
+                    Text("model.active.label", comment: "Model")
                         .foregroundStyle(.secondary)
                     Picker("", selection: validatedModelSelection) {
                         if store.downloadedModels.isEmpty {
-                            Text("モデルをダウンロードしてください")
+                            Text("model.active.empty", comment: "Please download a model")
                                 .tag("")
                         }
                         ForEach(store.downloadedModels, id: \.id) { model in
                             HStack {
                                 Text(model.displayName)
                                 if model.isRecommended {
-                                    Text("推奨")
+                                    Text("model.active.recommended", comment: "Recommended")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -102,7 +111,7 @@ struct ModelSettingsTab: View {
 
                 // 言語選択
                 HStack {
-                    Text("言語")
+                    Text("model.active.language", comment: "Language")
                         .foregroundStyle(.secondary)
                     Picker(
                         "",
@@ -130,7 +139,7 @@ struct ModelSettingsTab: View {
             }
 
             if store.downloadedModels.isEmpty {
-                Text("下のモデル一覧からモデルをダウンロードしてください")
+                Text("model.active.download_prompt", comment: "Download a model from the list below")
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
@@ -144,8 +153,11 @@ struct ModelSettingsTab: View {
 
     private var searchFilterSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("利用可能なモデル", systemImage: "square.stack.3d.up")
-                .font(.headline)
+            Label(
+                String(localized: "model.list.section", comment: "Available Models"),
+                systemImage: "square.stack.3d.up"
+            )
+            .font(.headline)
 
             ModelSearchFilterBar(
                 searchText: $searchText,
@@ -173,7 +185,7 @@ struct ModelSettingsTab: View {
             Spacer()
             ProgressView()
                 .scaleEffect(0.8)
-            Text("モデル一覧を取得中...")
+            Text("model.list.loading", comment: "Loading models...")
                 .foregroundStyle(.secondary)
             Spacer()
         }
@@ -185,9 +197,9 @@ struct ModelSettingsTab: View {
             Image(systemName: "magnifyingglass")
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
-            Text("条件に一致するモデルがありません")
+            Text("model.list.no_results", comment: "No models match the criteria")
                 .foregroundStyle(.secondary)
-            Button("フィルターをリセット") {
+            Button(String(localized: "model.filter.reset", comment: "Reset filters")) {
                 searchText = ""
                 downloadFilter = .all
             }
@@ -225,13 +237,16 @@ struct ModelSettingsTab: View {
 
     private var storageSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("ストレージ", systemImage: "internaldrive")
-                .font(.headline)
+            Label(
+                String(localized: "model.storage.section", comment: "Storage"),
+                systemImage: "internaldrive"
+            )
+            .font(.headline)
 
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("使用量")
+                        Text("model.storage.usage", comment: "Usage")
                             .foregroundStyle(.secondary)
                         Text(ByteCountFormatter.string(
                             fromByteCount: store.storageUsage,
@@ -241,14 +256,14 @@ struct ModelSettingsTab: View {
                     }
 
                     HStack {
-                        Text("保存先")
+                        Text("model.storage.location", comment: "Location")
                             .foregroundStyle(.secondary)
                         if let customURL = store.settings.transcription.customStorageURL {
                             Text(customURL.path)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                         } else {
-                            Text("デフォルト")
+                            Text("model.storage.default", comment: "Default")
                         }
                     }
                 }
@@ -256,14 +271,14 @@ struct ModelSettingsTab: View {
                 Spacer()
 
                 HStack(spacing: 8) {
-                    Button("変更...") {
+                    Button(String(localized: "common.change", comment: "Change...")) {
                         store.send(.selectStorageLocation)
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
 
                     if store.settings.transcription.customStorageURL != nil {
-                        Button("リセット") {
+                        Button(String(localized: "common.reset", comment: "Reset")) {
                             store.send(.resetStorageLocation)
                         }
                         .buttonStyle(.bordered)
@@ -272,7 +287,7 @@ struct ModelSettingsTab: View {
                 }
             }
 
-            Text("モデルはデバイス上に保存され、オフラインで使用できます")
+            Text("model.storage.footer", comment: "Models are stored on device and can be used offline")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

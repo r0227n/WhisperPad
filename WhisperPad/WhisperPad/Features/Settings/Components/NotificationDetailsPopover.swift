@@ -18,7 +18,7 @@ struct NotificationDetailsPopover: View {
             HStack {
                 Image(systemName: "bell.badge")
                     .foregroundStyle(.orange)
-                Text("通知メッセージ")
+                Text("notification.custom.title", comment: "Notification Message")
                     .font(.headline)
             }
 
@@ -27,11 +27,14 @@ struct NotificationDetailsPopover: View {
             // 設定フィールド
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("タイトル")
+                    Text("notification.custom.notification_title", comment: "Title")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     TextField(
-                        "通知タイトル",
+                        String(
+                            localized: "notification.custom.notification_title_placeholder",
+                            comment: "Notification Title"
+                        ),
                         text: Binding(
                             get: { store.settings.general.notificationTitle },
                             set: { newValue in
@@ -42,15 +45,23 @@ struct NotificationDetailsPopover: View {
                         )
                     )
                     .textFieldStyle(.roundedBorder)
-                    .accessibilityLabel("通知タイトル")
+                    .accessibilityLabel(
+                        String(
+                            localized: "notification.custom.notification_title",
+                            comment: "Title"
+                        )
+                    )
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("完了メッセージ")
+                    Text("notification.custom.complete_message", comment: "Complete Message")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     TextField(
-                        "通常録音完了時",
+                        String(
+                            localized: "notification.custom.complete_message_placeholder",
+                            comment: "When normal recording completes"
+                        ),
                         text: Binding(
                             get: { store.settings.general.transcriptionCompleteMessage },
                             set: { newValue in
@@ -61,15 +72,23 @@ struct NotificationDetailsPopover: View {
                         )
                     )
                     .textFieldStyle(.roundedBorder)
-                    .accessibilityLabel("完了メッセージ")
+                    .accessibilityLabel(
+                        String(
+                            localized: "notification.custom.complete_message",
+                            comment: "Complete Message"
+                        )
+                    )
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("リアルタイム完了メッセージ")
+                    Text("notification.custom.streaming_message", comment: "Streaming Complete Message")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     TextField(
-                        "リアルタイム文字起こし完了時",
+                        String(
+                            localized: "notification.custom.streaming_message_placeholder",
+                            comment: "When streaming transcription completes"
+                        ),
                         text: Binding(
                             get: { store.settings.general.streamingCompleteMessage },
                             set: { newValue in
@@ -80,7 +99,12 @@ struct NotificationDetailsPopover: View {
                         )
                     )
                     .textFieldStyle(.roundedBorder)
-                    .accessibilityLabel("リアルタイム完了メッセージ")
+                    .accessibilityLabel(
+                        String(
+                            localized: "notification.custom.streaming_message",
+                            comment: "Streaming Complete Message"
+                        )
+                    )
                 }
             }
 
@@ -89,17 +113,28 @@ struct NotificationDetailsPopover: View {
             // デフォルトに戻すボタン
             HStack {
                 Spacer()
-                Button("デフォルトに戻す") {
+                Button(String(localized: "notification.custom.reset", comment: "Reset to Default")) {
                     var general = store.settings.general
                     general.notificationTitle = "WhisperPad"
-                    general.transcriptionCompleteMessage = "文字起こしが完了しました"
-                    general.streamingCompleteMessage = "リアルタイム文字起こしが完了しました"
+                    general.transcriptionCompleteMessage = String(
+                        localized: "notification.transcription.complete.message"
+                    )
+                    general.streamingCompleteMessage = String(
+                        localized: "notification.streaming.complete.message"
+                    )
                     store.send(.updateGeneralSettings(general))
                 }
                 .buttonStyle(.link)
                 .font(.caption)
-                .accessibilityLabel("デフォルトに戻す")
-                .accessibilityHint("通知設定を初期値に戻します")
+                .accessibilityLabel(
+                    String(localized: "notification.custom.reset", comment: "Reset to Default")
+                )
+                .accessibilityHint(
+                    String(
+                        localized: "notification.custom.reset.help",
+                        comment: "Resets notification settings to initial values"
+                    )
+                )
             }
         }
     }

@@ -84,7 +84,7 @@ struct HotkeySettingsTab: View {
     private var placeholderView: some View {
         VStack {
             Spacer()
-            Text("ショートカットを選択してください")
+            Text("hotkey.select_prompt", comment: "Please select a shortcut")
                 .foregroundColor(.secondary)
             Spacer()
         }
@@ -187,7 +187,13 @@ private struct ShortcutListRow: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .accessibilityLabel("\(hotkeyType.displayName)、ショートカット: \(keyCombo.displayString)")
+        .accessibilityLabel(
+            String(
+                localized: "hotkey.accessibility.label",
+                defaultValue: "\(hotkeyType.displayName), Shortcut: \(keyCombo.displayString)",
+                comment: "Hotkey row accessibility label"
+            )
+        )
     }
 }
 
@@ -255,9 +261,12 @@ private struct ShortcutDetailPanel: View {
     /// 説明セクション
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("説明", systemImage: "info.circle")
-                .font(.headline)
-                .foregroundColor(.secondary)
+            Label(
+                String(localized: "hotkey.description", comment: "Description"),
+                systemImage: "info.circle"
+            )
+            .font(.headline)
+            .foregroundColor(.secondary)
 
             Text(hotkeyType.hotkeyDescription)
                 .foregroundColor(.primary)
@@ -267,9 +276,12 @@ private struct ShortcutDetailPanel: View {
     /// ショートカット入力セクション
     private var shortcutInputSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("ショートカットキー", systemImage: "keyboard")
-                .font(.headline)
-                .foregroundColor(.secondary)
+            Label(
+                String(localized: "hotkey.shortcut_key", comment: "Shortcut Key"),
+                systemImage: "keyboard"
+            )
+            .font(.headline)
+            .foregroundColor(.secondary)
 
             // キー設定ボタン
             ShortcutKeyButton(
@@ -287,11 +299,17 @@ private struct ShortcutDetailPanel: View {
                 Label(conflict, systemImage: "exclamationmark.triangle.fill")
                     .foregroundColor(.red)
                     .font(.footnote)
-                    .accessibilityLabel("ショートカット競合警告: \(conflict)")
+                    .accessibilityLabel(
+                        String(
+                            localized: "hotkey.conflict.warning",
+                            defaultValue: "Shortcut conflict warning: \(conflict)",
+                            comment: "Conflict warning accessibility label"
+                        )
+                    )
             }
 
             // 注意メッセージ
-            Text("他のアプリと競合する場合は変更してください")
+            Text("hotkey.conflict.help", comment: "Change if conflicts with other apps")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

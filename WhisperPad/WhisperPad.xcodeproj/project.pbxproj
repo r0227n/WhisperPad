@@ -64,6 +64,7 @@
 		F70A48ED2EFEFCC800CBD639 = {
 			isa = PBXGroup;
 			children = (
+				F7987A3C2F081264002DC40A /* Resources */,
 				F70A48F82EFEFCC800CBD639 /* WhisperPad */,
 				F70A490F2EFEFD0200CBD639 /* WhisperPadTests */,
 				F70A48F72EFEFCC800CBD639 /* Products */,
@@ -77,6 +78,13 @@
 				F70A490E2EFEFD0200CBD639 /* WhisperPadTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		F7987A3C2F081264002DC40A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -156,6 +164,7 @@
 			knownRegions = (
 				en,
 				Base,
+				ja,
 			);
 			mainGroup = F70A48ED2EFEFCC800CBD639;
 			minimizedProjectReferenceProxies = 1;
