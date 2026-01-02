@@ -18,10 +18,7 @@ struct RecordingSettingsTab: View {
         ScrollView {
             VStack(spacing: 16) {
                 // オーディオ入力セクション
-                AudioInputSection(
-                    store: store,
-                    currentLevel: currentAudioLevel
-                )
+                AudioInputSection(store: store)
 
                 // 出力設定セクション
                 OutputSettingsSection(store: store)

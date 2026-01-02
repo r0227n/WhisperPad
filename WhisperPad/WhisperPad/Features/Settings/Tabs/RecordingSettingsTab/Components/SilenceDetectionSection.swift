@@ -51,11 +51,6 @@ struct SilenceDetectionSection: View {
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
 
-                            InfoPopoverButton(
-                                helpText: "Recording will stop if silence continues for this duration",
-                                title: "Silence Duration"
-                            )
-
                             Spacer()
 
                             TextField(
@@ -86,14 +81,6 @@ struct SilenceDetectionSection: View {
                             Text("Threshold")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
-
-                            InfoPopoverButton(
-                                helpText: """
-                                Audio below this level is considered silence. -40 dB is recommended for most \
-                                environments. Lower values (e.g., -50 dB) are more sensitive.
-                                """,
-                                title: "Silence Threshold"
-                            )
 
                             Spacer()
 

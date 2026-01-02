@@ -47,6 +47,8 @@ struct SettingSectionHeader: View {
             Text(title)
                 .font(.system(size: fontSize, weight: .semibold))
 
+            Spacer()
+
             // ヘルプボタン
             if let helpText {
                 Button {
@@ -59,8 +61,6 @@ struct SettingSectionHeader: View {
                 .buttonStyle(.plain)
                 .help(helpText)
             }
-
-            Spacer()
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)
