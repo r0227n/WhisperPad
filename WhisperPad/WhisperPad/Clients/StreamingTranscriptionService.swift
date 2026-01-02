@@ -21,6 +21,12 @@ actor StreamingTranscriptionService {
 
     private static let defaultModelRepo = "argmaxinc/whisperkit-coreml"
 
+    /// バッファサイズの警告閾値（20秒分 = 320,000サンプル）
+    private static let bufferWarningThreshold = 320_000
+
+    /// バッファサイズの最大値（30秒分 = 480,000サンプル）
+    private static let maxBufferSize = 480_000
+
     /// デフォルトのモデル保存先ディレクトリ（TranscriptionServiceと同じパス）
     private static var modelsDirectory: URL {
         guard let appSupport = FileManager.default.urls(
@@ -84,6 +90,22 @@ actor StreamingTranscriptionService {
 
         // サンプルを蓄積
         accumulatedSamples.append(contentsOf: samples)
+
+        // バッファサイズチェック（警告閾値）
+        if accumulatedSamples.count >= Self.bufferWarningThreshold {
+            logger.warning(
+                "Buffer size approaching limit: \(accumulatedSamples.count) samples " +
+                    "(threshold: \(Self.bufferWarningThreshold), max: \(Self.maxBufferSize))"
+            )
+        }
+
+        // バッファサイズチェック（最大値）
+        if accumulatedSamples.count >= Self.maxBufferSize {
+            logger.error(
+                "Buffer overflow: \(accumulatedSamples.count) samples exceeds max \(Self.maxBufferSize)"
+            )
+            throw StreamingTranscriptionError.bufferOverflow
+        }
 
         // 最低限のサンプル数が必要（約1秒分 = 16000サンプル）
         guard accumulatedSamples.count >= 16000 else {
@@ -165,6 +187,9 @@ actor StreamingTranscriptionService {
                 confirmedSegments.append(finalText)
             }
         }
+
+        // バッファをクリア（メモリ解放）
+        accumulatedSamples.removeAll()
 
         let result = confirmedSegments.joined(separator: "\n")
         logger.info("Finalized transcription: \(result.prefix(50))...")
