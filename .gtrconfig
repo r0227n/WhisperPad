@@ -1,6 +1,6 @@
 [copy]
     # Project configuration files
-    include = .claude/**
+    include = .claude/settings.local.json
 
     # TODO files
     include = todo.md
