@@ -9,14 +9,13 @@ import SwiftUI
 /// 録音設定タブ
 ///
 /// 音声録音の設定を行います。
-/// 入力デバイス、出力設定、無音検出などを設定できます。
+/// 入力デバイス、無音検出などを設定できます。
 struct RecordingSettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
 
     var body: some View {
         Form {
-            // MARK: - 録音セクション
-
+            // 入力デバイスセクション
             Section {
                 Picker(
                     "入力デバイス",
@@ -38,81 +37,13 @@ struct RecordingSettingsTab: View {
                 .accessibilityLabel("入力デバイス")
                 .accessibilityHint("録音に使用するマイクを選択します")
             } header: {
-                Label("録音", systemImage: "waveform.circle")
-            } footer: {
-                Text("マイク入力を選択します。システムデフォルトを使用する場合は「システムデフォルト」を選択してください")
-                    .foregroundStyle(.secondary)
+                Text("入力デバイス")
             }
 
-            // MARK: - 出力セクション
-
+            // 無音検出セクション
             Section {
-                SettingRowWithIcon(
-                    icon: "doc.on.clipboard",
-                    iconColor: .blue,
-                    title: "クリップボードにコピー",
-                    isOn: Binding(
-                        get: { store.settings.output.copyToClipboard },
-                        set: { newValue in
-                            var output = store.settings.output
-                            output.copyToClipboard = newValue
-                            store.send(.updateOutputSettings(output))
-                        }
-                    )
-                )
-                .help("文字起こし結果をクリップボードにコピーします")
-                .accessibilityLabel("クリップボードにコピー")
-                .accessibilityHint("オンにすると文字起こし結果をクリップボードにコピーします")
-
-                HStack(spacing: 12) {
-                    Image(systemName: "folder.fill")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.cyan)
-                        .frame(width: 20, alignment: .center)
-
-                    Text("ファイルに保存")
-
-                    Spacer()
-
-                    Toggle(
-                        "",
-                        isOn: Binding(
-                            get: { store.settings.output.isEnabled },
-                            set: { newValue in
-                                var output = store.settings.output
-                                output.isEnabled = newValue
-                                store.send(.updateOutputSettings(output))
-                            }
-                        )
-                    )
-                    .labelsHidden()
-                    .accessibilityLabel("ファイルに保存")
-
-                    if store.settings.output.isEnabled {
-                        HoverPopoverButton(label: "設定", icon: "folder.badge.gearshape") {
-                            FileOutputDetailsPopover(store: store)
-                        }
-                    }
-                }
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("ファイルに保存")
-                .accessibilityHint("文字起こし結果をファイルに保存します")
-            } header: {
-                Label("出力", systemImage: "arrow.up.doc")
-            } footer: {
-                if store.settings.output.copyToClipboard {
-                    Text("文字起こし完了後、すぐに他のアプリにペーストできます")
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            // MARK: - 無音検出セクション
-
-            Section {
-                SettingRowWithIcon(
-                    icon: "mic.slash",
-                    iconColor: .purple,
-                    title: "無音検出で自動停止",
+                Toggle(
+                    "無音検出で自動停止",
                     isOn: Binding(
                         get: { store.settings.recording.silenceDetectionEnabled },
                         set: { enabled in
@@ -158,11 +89,10 @@ struct RecordingSettingsTab: View {
                     }
                 }
             } header: {
-                Label("無音検出", systemImage: "waveform.path.badge.minus")
+                Text("無音検出")
             } footer: {
                 if store.settings.recording.silenceDetectionEnabled {
                     Text("指定した時間、音声レベルがしきい値を下回ると録音を停止します")
-                        .foregroundStyle(.secondary)
                 }
             }
         }
