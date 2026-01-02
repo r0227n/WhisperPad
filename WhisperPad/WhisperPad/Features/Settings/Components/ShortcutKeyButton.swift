@@ -6,24 +6,24 @@
 import AppKit
 import SwiftUI
 
-/// ショートカットキー設定ボタン
+/// Shortcut key setting button
 ///
-/// ダークスタイルの丸角ボタンでキーコンビネーションを表示します。
-/// クリックで編集モード、右クリックでコンテキストメニューを表示します。
+/// Displays key combination in a dark-styled rounded button.
+/// Click to enter edit mode, right-click to show context menu.
 struct ShortcutKeyButton: View {
-    /// 現在のキーコンボ
+    /// Current key combo
     @Binding var keyCombo: HotKeySettings.KeyComboSettings
 
-    /// デフォルトのキーコンボ（リセット用）
+    /// Default key combo (for reset)
     let defaultKeyCombo: HotKeySettings.KeyComboSettings
 
-    /// ショートカットタイプ（popupClose では単独キーを許可）
+    /// Shortcut type (popupClose allows single keys)
     let hotkeyType: HotkeyType
 
-    /// 入力中かどうか
+    /// Whether currently recording
     let isRecording: Bool
 
-    /// popupClose で許可する単独キーのキーコード
+    /// Allowed single key keycodes for popupClose
     private static let allowedSingleKeys: Set<UInt16> = [
         53, // Escape
         36, // Return/Enter
@@ -31,19 +31,19 @@ struct ShortcutKeyButton: View {
         51 // Delete/Backspace
     ]
 
-    /// 入力開始時のコールバック
+    /// Callback when recording starts
     let onStartRecording: () -> Void
 
-    /// 入力終了時のコールバック
+    /// Callback when recording ends
     let onStopRecording: () -> Void
 
-    /// デフォルトにリセット時のコールバック
+    /// Callback when reset to default
     let onResetToDefault: () -> Void
 
-    /// イベントモニター
+    /// Event monitor
     @State private var eventMonitor: Any?
 
-    /// マウスが一度でもホバーしたか（初期状態での誤終了防止）
+    /// Whether mouse has hovered at least once (prevents premature exit on initial state)
     @State private var wasHovered: Bool = false
 
     var body: some View {
@@ -67,10 +67,10 @@ struct ShortcutKeyButton: View {
         }
     }
 
-    /// 録音中の表示
+    /// Recording view
     private var recordingView: some View {
         HStack(spacing: 8) {
-            Text("キーを入力...")
+            Text(L10n.get(.shortcutEnterKey))
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
                 .foregroundColor(.white)
                 .padding(.horizontal, 20)
@@ -82,7 +82,7 @@ struct ShortcutKeyButton: View {
                         .stroke(Color.accentColor.opacity(0.8), lineWidth: 2)
                 )
 
-            Button("キャンセル") {
+            Button(L10n.get(.shortcutCancel)) {
                 onStopRecording()
             }
             .buttonStyle(.borderless)
@@ -96,7 +96,7 @@ struct ShortcutKeyButton: View {
         }
     }
 
-    /// 通常の表示
+    /// Normal display view
     private var displayView: some View {
         Button {
             onStartRecording()
@@ -111,17 +111,17 @@ struct ShortcutKeyButton: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("デフォルトに戻す") {
+            Button(L10n.get(.shortcutResetToDefault)) {
                 onResetToDefault()
             }
         }
-        .accessibilityLabel("ショートカット: \(keyCombo.displayString)。クリックして変更、右クリックでオプション")
+        .accessibilityLabel(L10n.get(.shortcutAccessibilityLabel))
     }
 
-    /// キー入力モニターを開始
+    /// Start key input monitor
     private func startKeyMonitor() {
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { event in
-            // popupClose では特殊キー単体を許可
+            // popupClose allows special key alone
             if hotkeyType == .popupClose && Self.allowedSingleKeys.contains(event.keyCode) {
                 keyCombo = HotKeySettings.KeyComboSettings(
                     carbonKeyCode: UInt32(event.keyCode),
@@ -131,16 +131,16 @@ struct ShortcutKeyButton: View {
                 return nil
             }
 
-            // 他のタイプでは Escape でキャンセル
+            // Other types cancel with Escape
             if event.keyCode == 53 {
                 onStopRecording()
                 return nil
             }
 
-            // 修飾キーを取得
+            // Get modifier keys
             let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 
-            // 修飾キーがない場合は無視（修飾キー + キーの組み合わせを必須とする）
+            // Ignore if no modifier keys (require modifier + key combination)
             let hasModifier = modifiers.contains(.command) ||
                 modifiers.contains(.option) ||
                 modifiers.contains(.control) ||
@@ -150,7 +150,7 @@ struct ShortcutKeyButton: View {
                 return nil
             }
 
-            // キーコードと修飾キーを取得して更新
+            // Get key code and modifiers and update
             let carbonKeyCode = UInt32(event.keyCode)
             let carbonModifiers = modifiers.carbonFlags
 
@@ -164,7 +164,7 @@ struct ShortcutKeyButton: View {
         }
     }
 
-    /// キー入力モニターを削除
+    /// Remove key input monitor
     private func removeKeyMonitor() {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
@@ -175,7 +175,7 @@ struct ShortcutKeyButton: View {
 
 // MARK: - Preview
 
-#Preview("通常状態") {
+#Preview("Normal State") {
     VStack(spacing: 20) {
         ShortcutKeyButton(
             keyCombo: .constant(.recordingDefault),
@@ -211,7 +211,7 @@ struct ShortcutKeyButton: View {
     .background(Color(NSColor.windowBackgroundColor))
 }
 
-#Preview("録音中") {
+#Preview("Recording") {
     ShortcutKeyButton(
         keyCombo: .constant(.recordingDefault),
         defaultKeyCombo: .recordingDefault,

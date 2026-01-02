@@ -5,21 +5,22 @@
 
 import Foundation
 
-/// モデルダウンロード状態フィルター
+/// Model download status filter
 enum ModelDownloadFilter: String, CaseIterable, Sendable {
     case all
     case downloaded
     case notDownloaded
 
+    @MainActor
     var displayName: String {
         switch self {
-        case .all: "すべて"
-        case .downloaded: "ダウンロード済み"
-        case .notDownloaded: "未ダウンロード"
+        case .all: L10n.get(.modelFilterAll)
+        case .downloaded: L10n.get(.modelFilterDownloaded)
+        case .notDownloaded: L10n.get(.modelFilterNotDownloaded)
         }
     }
 
-    /// モデルがこのフィルターに一致するか判定
+    /// Determine if model matches this filter
     func matches(isDownloaded: Bool) -> Bool {
         switch self {
         case .all:

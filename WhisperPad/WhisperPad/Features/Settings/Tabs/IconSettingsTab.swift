@@ -7,24 +7,25 @@ import AppKit
 import ComposableArchitecture
 import SwiftUI
 
-/// アイコン設定タブ
+/// Icon settings tab
 ///
-/// マスター・ディテール形式でメニューバーアイコンの設定を行います。
-/// 左パネル：状態別アイコン一覧
-/// 右パネル：選択した状態の詳細と編集
+/// Configures menu bar icons in master-detail format.
+/// Left panel: Status-based icon list
+/// Right panel: Details and editing of selected status
 struct IconSettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
+    @ObservedObject private var localization = LocalizationManager.shared
 
-    /// 選択中の状態
+    /// Selected status
     @State private var selectedStatus: IconConfigStatus = .idle
 
     var body: some View {
         HSplitView {
-            // 左パネル: アイコン状態一覧
+            // Left panel: Icon status list
             iconListPanel
                 .frame(minWidth: 180, idealWidth: 200, maxWidth: 240)
 
-            // 右パネル: 詳細
+            // Right panel: Details
             detailPanel
                 .frame(minWidth: 300)
         }
@@ -32,7 +33,7 @@ struct IconSettingsTab: View {
 
     // MARK: - Left Panel
 
-    /// アイコン一覧パネル
+    /// Icon list panel
     private var iconListPanel: some View {
         List(selection: $selectedStatus) {
             Section {
@@ -44,7 +45,7 @@ struct IconSettingsTab: View {
                     .tag(status)
                 }
             } header: {
-                Text("アイコン状態")
+                Text(L10n.get(.iconStatus))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -54,7 +55,7 @@ struct IconSettingsTab: View {
 
     // MARK: - Right Panel
 
-    /// 詳細パネル
+    /// Detail panel
     private var detailPanel: some View {
         IconDetailPanel(
             status: selectedStatus,
@@ -65,9 +66,9 @@ struct IconSettingsTab: View {
 
     // MARK: - Helpers
 
-    /// 状態に対応するアイコン設定のバインディングを作成
-    /// - Parameter status: 状態タイプ
-    /// - Returns: StatusIconConfig のバインディング
+    /// Create binding for icon configuration corresponding to status
+    /// - Parameter status: Status type
+    /// - Returns: Binding of StatusIconConfig
     private func binding(for status: IconConfigStatus) -> Binding<StatusIconConfig> {
         Binding(
             get: {
@@ -86,44 +87,44 @@ struct IconSettingsTab: View {
 
 // MARK: - IconListRow
 
-/// アイコン一覧の行
+/// Icon list row
 private struct IconListRow: View {
     let status: IconConfigStatus
     let config: StatusIconConfig
 
     var body: some View {
         HStack(spacing: 12) {
-            // アイコンプレビュー
+            // Icon preview
             Image(systemName: config.symbolName)
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(Color(nsColor: config.color))
                 .font(.system(size: 18))
                 .frame(width: 24, height: 24)
 
-            // 状態名
-            Text(status.rawValue)
+            // Status name
+            Text(status.displayName)
                 .lineLimit(1)
 
             Spacer()
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .accessibilityLabel("\(status.rawValue)のアイコン")
+        .accessibilityLabel("\(status.displayName) \(L10n.get(.iconSection))")
     }
 }
 
 // MARK: - IconDetailPanel
 
-/// アイコン詳細パネル
+/// Icon detail panel
 private struct IconDetailPanel: View {
     let status: IconConfigStatus
     @Binding var config: StatusIconConfig
     let onReset: () -> Void
 
-    /// SwiftUI Color として管理（NSColor との同期用）
+    /// Managed as SwiftUI Color (for synchronization with NSColor)
     @State private var selectedColor: Color
 
-    /// プリセット色
+    /// Preset colors
     private let presetColors: [NSColor] = [
         .systemGray,
         .systemRed,
@@ -148,18 +149,18 @@ private struct IconDetailPanel: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                // ヘッダー: アイコンとタイトル
+                // Header: Icon and title
                 headerSection
 
                 Divider()
 
-                // 説明セクション
+                // Description section
                 descriptionSection
 
-                // アイコン編集セクション
+                // Icon edit section
                 iconEditSection
 
-                // 色編集セクション
+                // Color edit section
                 colorEditSection
 
                 Spacer(minLength: 0)
@@ -183,7 +184,7 @@ private struct IconDetailPanel: View {
 
     // MARK: - Sections
 
-    /// ヘッダーセクション
+    /// Header section
     private var headerSection: some View {
         HStack(spacing: 12) {
             Image(systemName: config.symbolName)
@@ -195,11 +196,11 @@ private struct IconDetailPanel: View {
                 .cornerRadius(8)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(status.rawValue)
+                Text(status.displayName)
                     .font(.title2)
                     .fontWeight(.semibold)
 
-                Text("メニューバーアイコン")
+                Text(L10n.get(.iconMenuBarIcon))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -212,14 +213,14 @@ private struct IconDetailPanel: View {
                 Image(systemName: "arrow.counterclockwise")
             }
             .buttonStyle(.borderless)
-            .help("この状態をリセット")
+            .help(L10n.get(.iconResetState))
         }
     }
 
-    /// 説明セクション
+    /// Description section
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("説明", systemImage: "info.circle")
+            Label(L10n.get(.iconDescription), systemImage: "info.circle")
                 .font(.headline)
                 .foregroundColor(.secondary)
 
@@ -228,10 +229,10 @@ private struct IconDetailPanel: View {
         }
     }
 
-    /// アイコン編集セクション
+    /// Icon edit section
     private var iconEditSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("アイコン", systemImage: "star")
+            Label(L10n.get(.iconSection), systemImage: "star")
                 .font(.headline)
                 .foregroundColor(.secondary)
 
@@ -242,10 +243,10 @@ private struct IconDetailPanel: View {
         .cornerRadius(12)
     }
 
-    /// 色編集セクション
+    /// Color edit section
     private var colorEditSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("色", systemImage: "paintpalette")
+            Label(L10n.get(.iconColor), systemImage: "paintpalette")
                 .font(.headline)
                 .foregroundColor(.secondary)
 
@@ -258,7 +259,7 @@ private struct IconDetailPanel: View {
                 Divider()
                     .frame(height: 24)
 
-                // プリセット色ボタン
+                // Preset color buttons
                 ForEach(presetColors, id: \.self) { presetColor in
                     presetColorButton(for: presetColor)
                 }
@@ -269,7 +270,7 @@ private struct IconDetailPanel: View {
         .cornerRadius(12)
     }
 
-    /// プリセット色ボタン
+    /// Preset color button
     @ViewBuilder
     private func presetColorButton(for presetColor: NSColor) -> some View {
         let isSelected = config.color.isApproximatelyEqual(to: presetColor)
@@ -303,7 +304,7 @@ private struct IconDetailPanel: View {
 // MARK: - NSColor Extension
 
 private extension NSColor {
-    /// 2つの色が近似的に等しいかを判定
+    /// Determine if two colors are approximately equal
     func isApproximatelyEqual(to other: NSColor, tolerance: CGFloat = 0.01) -> Bool {
         guard let selfRGB = self.usingColorSpace(.sRGB),
               let otherRGB = other.usingColorSpace(.sRGB)

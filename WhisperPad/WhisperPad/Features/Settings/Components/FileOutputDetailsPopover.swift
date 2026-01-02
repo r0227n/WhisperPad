@@ -7,29 +7,30 @@ import AppKit
 import ComposableArchitecture
 import SwiftUI
 
-/// ファイル出力詳細設定ポップオーバー
+/// File output details popover
 ///
-/// ファイル保存先やファイル形式をカスタマイズするための設定画面
+/// Settings screen for customizing file save location and file format
 struct FileOutputDetailsPopover: View {
     @Bindable var store: StoreOf<SettingsFeature>
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // ヘッダー
+            // Header
             HStack {
                 Image(systemName: "doc.text")
                     .foregroundStyle(.blue)
-                Text("ファイル出力設定")
+                Text(L10n.get(.fileOutputTitle))
                     .font(.headline)
             }
 
             Divider()
 
-            // 設定フィールド
+            // Settings fields
             VStack(alignment: .leading, spacing: 12) {
-                // 保存先
+                // Save location
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("保存先")
+                    Text(L10n.get(.fileOutputSaveLocation))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     HStack {
@@ -46,16 +47,16 @@ struct FileOutputDetailsPopover: View {
                                     .fill(Color(nsColor: .textBackgroundColor))
                             )
 
-                        Button("変更...") {
+                        Button(L10n.get(.fileOutputChange)) {
                             selectOutputDirectory()
                         }
-                        .accessibilityLabel("保存先を変更")
+                        .accessibilityLabel(L10n.get(.fileOutputChangeSaveLocation))
                     }
                 }
 
-                // ファイル名形式
+                // File name format
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("ファイル名形式")
+                    Text(L10n.get(.fileOutputFileNameFormat))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     Picker(
@@ -69,20 +70,20 @@ struct FileOutputDetailsPopover: View {
                             }
                         )
                     ) {
-                        Text("日時 (WhisperPad_20241201_143052)")
+                        Text(L10n.get(.fileOutputDateTimeFormat))
                             .tag(FileOutputSettings.FileNameFormat.dateTime)
-                        Text("タイムスタンプ (WhisperPad_1701415852)")
+                        Text(L10n.get(.fileOutputTimestampFormat))
                             .tag(FileOutputSettings.FileNameFormat.timestamp)
-                        Text("連番 (WhisperPad_001)")
+                        Text(L10n.get(.fileOutputSequentialFormat))
                             .tag(FileOutputSettings.FileNameFormat.sequential)
                     }
                     .labelsHidden()
-                    .accessibilityLabel("ファイル名形式")
+                    .accessibilityLabel(L10n.get(.fileOutputFileNameFormat))
                 }
 
-                // ファイル形式
+                // File format
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("ファイル形式")
+                    Text(L10n.get(.fileOutputFileFormat))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     Picker(
@@ -102,12 +103,12 @@ struct FileOutputDetailsPopover: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
-                    .accessibilityLabel("ファイル形式")
+                    .accessibilityLabel(L10n.get(.fileOutputFileFormat))
                 }
 
-                // メタデータ
+                // Metadata
                 Toggle(
-                    "メタデータを含める",
+                    L10n.get(.fileOutputIncludeMetadata),
                     isOn: Binding(
                         get: { store.settings.output.includeMetadata },
                         set: { newValue in
@@ -118,27 +119,27 @@ struct FileOutputDetailsPopover: View {
                     )
                 )
                 .font(.subheadline)
-                .accessibilityLabel("メタデータを含める")
-                .accessibilityHint("ファイルに作成日時やアプリ情報を含めます")
+                .accessibilityLabel(L10n.get(.fileOutputIncludeMetadata))
+                .accessibilityHint(L10n.get(.fileOutputMetadataDescription))
             }
 
             Divider()
 
-            // フッター説明
-            Text("文字起こし結果をテキストファイルとして保存します")
+            // Footer description
+            Text(L10n.get(.fileOutputDescription))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
     }
 
-    /// 出力ディレクトリを選択
+    /// Select output directory
     private func selectOutputDirectory() {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.message = "ファイルの保存先フォルダを選択してください"
-        panel.prompt = "選択"
+        panel.message = L10n.get(.fileOutputSelectFolder)
+        panel.prompt = L10n.get(.fileOutputSelect)
 
         if panel.runModal() == .OK, let url = panel.url {
             var output = store.settings.output

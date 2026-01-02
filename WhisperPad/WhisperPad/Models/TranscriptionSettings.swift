@@ -5,78 +5,79 @@
 
 import Foundation
 
-/// 文字起こし設定
+/// Transcription settings
 ///
-/// WhisperKit を使用した音声認識の設定を管理します。
+/// Manages speech recognition settings using WhisperKit.
 struct TranscriptionSettings: Codable, Equatable, Sendable {
-    /// 使用するモデル名
+    /// Model name to use
     var modelName: String = "openai_whisper-small"
 
-    /// 認識言語
+    /// Recognition language
     var language: TranscriptionLanguage = .auto
 
-    /// カスタムストレージ URL（nil の場合はデフォルト）
+    /// Custom storage URL (nil for default)
     var customStorageURL: URL?
 
-    /// Security-Scoped Bookmark データ
+    /// Security-Scoped Bookmark data
     var storageBookmarkData: Data?
 
-    /// デフォルト設定
+    /// Default settings
     static let `default` = TranscriptionSettings()
 }
 
 // MARK: - TranscriptionLanguage
 
 extension TranscriptionSettings {
-    /// 認識言語
+    /// Recognition language
     enum TranscriptionLanguage: String, Codable, CaseIterable, Sendable {
-        /// 自動検出
+        /// Auto detect
         case auto
 
-        /// 日本語
+        /// Japanese
         case ja
 
-        /// 英語
+        /// English
         case en
 
-        /// 中国語
+        /// Chinese
         case zh
 
-        /// 韓国語
+        /// Korean
         case ko
 
-        /// フランス語
+        /// French
         case fr
 
-        /// ドイツ語
+        /// German
         case de
 
-        /// スペイン語
+        /// Spanish
         case es
 
-        /// 表示名
+        /// Display name (native language names are not localized)
+        @MainActor
         var displayName: String {
             switch self {
             case .auto:
-                "自動検出"
+                L10n.get(.transcriptionLanguageAuto)
             case .ja:
-                "日本語"
+                L10n.get(.transcriptionLanguageJapanese)
             case .en:
-                "English"
+                L10n.get(.transcriptionLanguageEnglish)
             case .zh:
-                "中文"
+                L10n.get(.transcriptionLanguageChinese)
             case .ko:
-                "한국어"
+                L10n.get(.transcriptionLanguageKorean)
             case .fr:
-                "Français"
+                L10n.get(.transcriptionLanguageFrench)
             case .de:
-                "Deutsch"
+                L10n.get(.transcriptionLanguageGerman)
             case .es:
-                "Español"
+                L10n.get(.transcriptionLanguageSpanish)
             }
         }
 
-        /// WhisperKit で使用する言語コード
+        /// Language code for WhisperKit
         var whisperCode: String? {
             switch self {
             case .auto:

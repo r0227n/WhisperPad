@@ -7,15 +7,15 @@ import Foundation
 
 // MARK: - Settings Tab
 
-/// 設定タブ
+/// Settings tab
 enum SettingsTab: String, CaseIterable, Sendable {
-    case general = "一般"
-    case icon = "アイコン"
-    case hotkey = "ショートカット"
-    case recording = "録音"
-    case model = "モデル"
+    case general
+    case icon
+    case hotkey
+    case recording
+    case model
 
-    /// SF Symbol 名
+    /// SF Symbol name
     var iconName: String {
         switch self {
         case .general:
@@ -30,11 +30,28 @@ enum SettingsTab: String, CaseIterable, Sendable {
             "cpu"
         }
     }
+
+    /// Localized display name
+    @MainActor
+    var displayName: String {
+        switch self {
+        case .general:
+            L10n.get(.settingsTabGeneral)
+        case .icon:
+            L10n.get(.settingsTabIcon)
+        case .hotkey:
+            L10n.get(.settingsTabHotkey)
+        case .recording:
+            L10n.get(.settingsTabRecording)
+        case .model:
+            L10n.get(.settingsTabModel)
+        }
+    }
 }
 
 // MARK: - Hotkey Type
 
-/// ショートカットタイプ（どのショートカットを編集中か）
+/// Shortcut type (which shortcut is being edited)
 enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
     case recording
     case streaming
@@ -50,15 +67,28 @@ enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
 // MARK: - HotkeyType Metadata
 
 extension HotkeyType {
-    /// ショートカットのカテゴリ
+    /// Shortcut category
     enum Category: String, CaseIterable, Identifiable {
-        case recording = "録音"
-        case cancel = "キャンセル"
-        case popup = "ポップアップ"
+        case recording
+        case cancel
+        case popup
 
         var id: String { rawValue }
 
-        /// このカテゴリに属するショートカットタイプ
+        /// Localized display name
+        @MainActor
+        var displayName: String {
+            switch self {
+            case .recording:
+                L10n.get(.hotkeyCategoryRecording)
+            case .cancel:
+                L10n.get(.hotkeyCategoryCancel)
+            case .popup:
+                L10n.get(.hotkeyCategoryPopup)
+            }
+        }
+
+        /// Hotkey types belonging to this category
         var hotkeyTypes: [HotkeyType] {
             switch self {
             case .recording:
@@ -71,7 +101,7 @@ extension HotkeyType {
         }
     }
 
-    /// ショートカットのカテゴリ
+    /// Shortcut category
     var category: Category {
         switch self {
         case .recording, .recordingPause, .streaming:
@@ -83,47 +113,49 @@ extension HotkeyType {
         }
     }
 
-    /// 表示名
+    /// Localized display name
+    @MainActor
     var displayName: String {
         switch self {
         case .recording:
-            "録音開始/停止"
+            L10n.get(.hotkeyTypeRecording)
         case .recordingPause:
-            "一時停止/再開"
+            L10n.get(.hotkeyTypePause)
         case .cancel:
-            "録音キャンセル"
+            L10n.get(.hotkeyTypeCancel)
         case .streaming:
-            "ストリーミング"
+            L10n.get(.hotkeyTypeStreaming)
         case .popupCopyAndClose:
-            "コピーして閉じる"
+            L10n.get(.hotkeyTypeCopyAndClose)
         case .popupSaveToFile:
-            "ファイル保存"
+            L10n.get(.hotkeyTypeSaveToFile)
         case .popupClose:
-            "閉じる"
+            L10n.get(.hotkeyTypeClose)
         }
     }
 
-    /// 説明
+    /// Localized description
+    @MainActor
     var hotkeyDescription: String {
         switch self {
         case .recording:
-            "録音を開始または停止します"
+            L10n.get(.hotkeyTypeRecordingDescription)
         case .recordingPause:
-            "録音を一時停止または再開します"
+            L10n.get(.hotkeyTypePauseDescription)
         case .cancel:
-            "進行中の録音をキャンセルします"
+            L10n.get(.hotkeyTypeCancelDescription)
         case .streaming:
-            "リアルタイム文字起こしを開始します"
+            L10n.get(.hotkeyTypeStreamingDescription)
         case .popupCopyAndClose:
-            "文字起こしをクリップボードにコピーしてポップアップを閉じます"
+            L10n.get(.hotkeyTypeCopyAndCloseDescription)
         case .popupSaveToFile:
-            "文字起こしをファイルに保存します"
+            L10n.get(.hotkeyTypeSaveToFileDescription)
         case .popupClose:
-            "ポップアップを閉じます"
+            L10n.get(.hotkeyTypeCloseDescription)
         }
     }
 
-    /// デフォルトのキーコンボ
+    /// Default key combo
     var defaultKeyCombo: HotKeySettings.KeyComboSettings {
         switch self {
         case .recording:
@@ -143,7 +175,7 @@ extension HotkeyType {
         }
     }
 
-    /// SF Symbol アイコン名
+    /// SF Symbol icon name
     var iconName: String {
         switch self {
         case .recording:
@@ -163,7 +195,7 @@ extension HotkeyType {
         }
     }
 
-    /// 対応するアイコン設定ステータス
+    /// Corresponding icon status
     var correspondingIconStatus: IconConfigStatus {
         switch self {
         case .recording:
@@ -186,10 +218,10 @@ extension HotkeyType {
 
 // MARK: - Delegate Action
 
-/// 設定機能のデリゲートアクション
+/// Settings feature delegate action
 enum SettingsDelegateAction: Sendable, Equatable {
-    /// 設定が変更された
+    /// Settings changed
     case settingsChanged(AppSettings)
-    /// モデルが変更された
+    /// Model changed
     case modelChanged(String)
 }

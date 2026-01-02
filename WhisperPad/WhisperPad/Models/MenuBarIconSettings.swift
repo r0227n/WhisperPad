@@ -6,17 +6,17 @@
 import AppKit
 import Foundation
 
-/// 各状態のアイコン設定
+/// Icon configuration for each status
 ///
-/// メニューバーに表示するSF Symbolと色を管理します。
+/// Manages SF Symbol and color displayed in menu bar.
 struct StatusIconConfig: Codable, Equatable, Sendable {
-    /// SF Symbol 名
+    /// SF Symbol name
     var symbolName: String
 
-    /// 色のデータ (NSColor を Data に変換して保存)
+    /// Color data (NSColor converted to Data for storage)
     var colorData: Data
 
-    /// NSColor を取得・設定
+    /// Get/set NSColor
     var color: NSColor {
         get {
             guard let color = try? NSKeyedUnarchiver.unarchivedObject(
@@ -35,10 +35,10 @@ struct StatusIconConfig: Codable, Equatable, Sendable {
         }
     }
 
-    /// イニシャライザ
+    /// Initializer
     /// - Parameters:
-    ///   - symbolName: SF Symbol 名
-    ///   - color: アイコンの色
+    ///   - symbolName: SF Symbol name
+    ///   - color: Icon color
     init(symbolName: String, color: NSColor) {
         self.symbolName = symbolName
         self.colorData = (try? NSKeyedArchiver.archivedData(
@@ -48,38 +48,38 @@ struct StatusIconConfig: Codable, Equatable, Sendable {
     }
 }
 
-/// メニューバーアイコン設定
+/// Menu bar icon settings
 ///
-/// 各アプリ状態ごとのアイコンと色を管理します。
+/// Manages icons and colors for each app state.
 struct MenuBarIconSettings: Codable, Equatable, Sendable {
-    /// 待機中のアイコン設定
+    /// Idle icon configuration
     var idle: StatusIconConfig
 
-    /// 録音中のアイコン設定
+    /// Recording icon configuration
     var recording: StatusIconConfig
 
-    /// 一時停止中のアイコン設定
+    /// Paused icon configuration
     var paused: StatusIconConfig
 
-    /// 文字起こし中のアイコン設定
+    /// Transcribing icon configuration
     var transcribing: StatusIconConfig
 
-    /// 完了時のアイコン設定
+    /// Completed icon configuration
     var completed: StatusIconConfig
 
-    /// ストリーミング文字起こし中のアイコン設定
+    /// Streaming transcribing icon configuration
     var streamingTranscribing: StatusIconConfig
 
-    /// ストリーミング完了時のアイコン設定
+    /// Streaming completed icon configuration
     var streamingCompleted: StatusIconConfig
 
-    /// エラー時のアイコン設定
+    /// Error icon configuration
     var error: StatusIconConfig
 
-    /// キャンセル時のアイコン設定
+    /// Cancel icon configuration
     var cancel: StatusIconConfig
 
-    /// デフォルト設定
+    /// Default settings
     static let `default` = MenuBarIconSettings(
         idle: StatusIconConfig(symbolName: "mic", color: .systemGray),
         recording: StatusIconConfig(symbolName: "mic.fill", color: .systemRed),
@@ -95,23 +95,39 @@ struct MenuBarIconSettings: Codable, Equatable, Sendable {
 
 // MARK: - IconConfigStatus
 
-/// 編集対象の状態タイプ
+/// Status type for editing
 ///
-/// 設定画面で表示するための状態識別子です。
+/// Status identifier for display in settings screen.
 enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
-    case idle = "待機中"
-    case recording = "録音中"
-    case paused = "一時停止中"
-    case transcribing = "文字起こし中"
-    case completed = "完了"
-    case streamingTranscribing = "ストリーミング中"
-    case streamingCompleted = "ストリーミング完了"
-    case error = "エラー"
-    case cancel = "キャンセル"
+    case idle
+    case recording
+    case paused
+    case transcribing
+    case completed
+    case streamingTranscribing
+    case streamingCompleted
+    case error
+    case cancel
 
     var id: String { rawValue }
 
-    /// 対応する AppStatus のシンボル名（デフォルト）
+    /// Localized display name
+    @MainActor
+    var displayName: String {
+        switch self {
+        case .idle: L10n.get(.iconStatusIdle)
+        case .recording: L10n.get(.iconStatusRecording)
+        case .paused: L10n.get(.iconStatusPaused)
+        case .transcribing: L10n.get(.iconStatusTranscribing)
+        case .completed: L10n.get(.iconStatusCompleted)
+        case .streamingTranscribing: L10n.get(.iconStatusStreamingTranscribing)
+        case .streamingCompleted: L10n.get(.iconStatusStreamingCompleted)
+        case .error: L10n.get(.iconStatusError)
+        case .cancel: L10n.get(.iconStatusCancel)
+        }
+    }
+
+    /// Default symbol name for corresponding AppStatus
     var defaultSymbolName: String {
         switch self {
         case .idle: "mic"
@@ -126,27 +142,19 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
         }
     }
 
-    /// 状態の詳細説明（設定画面の右パネル表示用）
+    /// Localized detailed description for settings screen right panel
+    @MainActor
     var detailedDescription: String {
         switch self {
-        case .idle:
-            "アプリが起動していて、録音や文字起こしを行っていない待機状態です。ショートカットキーを押すといつでも録音を開始できます。"
-        case .recording:
-            "音声を録音している状態です。マイクから入力される音声がリアルタイムで記録されています。録音を停止すると文字起こし処理が始まります。"
-        case .paused:
-            "録音を一時停止している状態です。録音を再開するか、停止して文字起こしを開始できます。"
-        case .transcribing:
-            "録音した音声データをWhisperモデルで文字起こししている状態です。処理にはデバイスの性能やモデルサイズに応じて時間がかかります。"
-        case .completed:
-            "文字起こしが正常に完了した状態です。結果はクリップボードにコピーされ、設定に応じてファイルにも保存されます。"
-        case .streamingTranscribing:
-            "ストリーミングモードで録音と文字起こしを同時に行っている状態です。話しながらリアルタイムで文字起こし結果が表示されます。"
-        case .streamingCompleted:
-            "ストリーミング文字起こしが正常に完了した状態です。リアルタイム処理された結果がクリップボードにコピーされます。"
-        case .error:
-            "録音または文字起こし中にエラーが発生した状態です。マイクへのアクセス権限やモデルのダウンロード状態を確認してください。"
-        case .cancel:
-            "録音または文字起こしがユーザーによってキャンセルされた状態です。録音データは破棄され、文字起こしは行われません。"
+        case .idle: L10n.get(.iconStatusIdleDescription)
+        case .recording: L10n.get(.iconStatusRecordingDescription)
+        case .paused: L10n.get(.iconStatusPausedDescription)
+        case .transcribing: L10n.get(.iconStatusTranscribingDescription)
+        case .completed: L10n.get(.iconStatusCompletedDescription)
+        case .streamingTranscribing: L10n.get(.iconStatusStreamingTranscribingDescription)
+        case .streamingCompleted: L10n.get(.iconStatusStreamingCompletedDescription)
+        case .error: L10n.get(.iconStatusErrorDescription)
+        case .cancel: L10n.get(.iconStatusCancelDescription)
         }
     }
 }
@@ -154,9 +162,9 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
 // MARK: - MenuBarIconSettings Extension
 
 extension MenuBarIconSettings {
-    /// 状態に対応する設定を取得
-    /// - Parameter status: 状態タイプ
-    /// - Returns: 対応するアイコン設定
+    /// Get configuration for status
+    /// - Parameter status: Status type
+    /// - Returns: Corresponding icon configuration
     func config(for status: IconConfigStatus) -> StatusIconConfig {
         switch status {
         case .idle: idle
@@ -171,10 +179,10 @@ extension MenuBarIconSettings {
         }
     }
 
-    /// 状態に対応する設定を更新
+    /// Update configuration for status
     /// - Parameters:
-    ///   - config: 新しいアイコン設定
-    ///   - status: 状態タイプ
+    ///   - config: New icon configuration
+    ///   - status: Status type
     mutating func setConfig(_ config: StatusIconConfig, for status: IconConfigStatus) {
         switch status {
         case .idle: idle = config

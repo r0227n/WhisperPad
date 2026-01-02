@@ -6,32 +6,33 @@
 import ComposableArchitecture
 import SwiftUI
 
-/// 通知詳細設定ポップオーバー
+/// Notification details popover
 ///
-/// 通知のタイトルやメッセージをカスタマイズするための設定画面
+/// Settings screen for customizing notification title and messages
 struct NotificationDetailsPopover: View {
     @Bindable var store: StoreOf<SettingsFeature>
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // ヘッダー
+            // Header
             HStack {
                 Image(systemName: "bell.badge")
                     .foregroundStyle(.orange)
-                Text("通知メッセージ")
+                Text(L10n.get(.notificationMessage))
                     .font(.headline)
             }
 
             Divider()
 
-            // 設定フィールド
+            // Settings fields
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("タイトル")
+                    Text(L10n.get(.notificationTitle))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     TextField(
-                        "通知タイトル",
+                        L10n.get(.notificationTitlePlaceholder),
                         text: Binding(
                             get: { store.settings.general.notificationTitle },
                             set: { newValue in
@@ -42,15 +43,15 @@ struct NotificationDetailsPopover: View {
                         )
                     )
                     .textFieldStyle(.roundedBorder)
-                    .accessibilityLabel("通知タイトル")
+                    .accessibilityLabel(L10n.get(.notificationTitlePlaceholder))
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("完了メッセージ")
+                    Text(L10n.get(.notificationCompletionMessage))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     TextField(
-                        "通常録音完了時",
+                        L10n.get(.notificationOnRegularCompletion),
                         text: Binding(
                             get: { store.settings.general.transcriptionCompleteMessage },
                             set: { newValue in
@@ -61,15 +62,15 @@ struct NotificationDetailsPopover: View {
                         )
                     )
                     .textFieldStyle(.roundedBorder)
-                    .accessibilityLabel("完了メッセージ")
+                    .accessibilityLabel(L10n.get(.notificationCompletionMessage))
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("リアルタイム完了メッセージ")
+                    Text(L10n.get(.notificationStreamingMessage))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     TextField(
-                        "リアルタイム文字起こし完了時",
+                        L10n.get(.notificationOnStreamingCompletion),
                         text: Binding(
                             get: { store.settings.general.streamingCompleteMessage },
                             set: { newValue in
@@ -80,26 +81,26 @@ struct NotificationDetailsPopover: View {
                         )
                     )
                     .textFieldStyle(.roundedBorder)
-                    .accessibilityLabel("リアルタイム完了メッセージ")
+                    .accessibilityLabel(L10n.get(.notificationStreamingMessage))
                 }
             }
 
             Divider()
 
-            // デフォルトに戻すボタン
+            // Reset to default button
             HStack {
                 Spacer()
-                Button("デフォルトに戻す") {
+                Button(L10n.get(.notificationResetToDefault)) {
                     var general = store.settings.general
-                    general.notificationTitle = "WhisperPad"
-                    general.transcriptionCompleteMessage = "文字起こしが完了しました"
-                    general.streamingCompleteMessage = "リアルタイム文字起こしが完了しました"
+                    general.notificationTitle = L10n.get(.notificationDefaultTitle)
+                    general.transcriptionCompleteMessage = L10n.get(.notificationDefaultMessage)
+                    general.streamingCompleteMessage = L10n.get(.notificationDefaultStreamingMessage)
                     store.send(.updateGeneralSettings(general))
                 }
                 .buttonStyle(.link)
                 .font(.caption)
-                .accessibilityLabel("デフォルトに戻す")
-                .accessibilityHint("通知設定を初期値に戻します")
+                .accessibilityLabel(L10n.get(.notificationResetToDefault))
+                .accessibilityHint(L10n.get(.notificationResetDescription))
             }
         }
     }

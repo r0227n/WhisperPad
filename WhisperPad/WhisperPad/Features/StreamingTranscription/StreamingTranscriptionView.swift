@@ -6,9 +6,10 @@
 import ComposableArchitecture
 import SwiftUI
 
-/// ストリーミング文字起こしポップアップのビュー
+/// Streaming transcription popup view
 struct StreamingTranscriptionView: View {
     @Bindable var store: StoreOf<StreamingTranscriptionFeature>
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,17 +29,17 @@ struct StreamingTranscriptionView: View {
             store.send(.onAppear)
         }
         .alert(
-            "録音を中止しますか？",
+            L10n.get(.streamingStopConfirmTitle),
             isPresented: $store.showCancelConfirmation
         ) {
-            Button("続ける", role: .cancel) {
+            Button(L10n.get(.streamingContinue), role: .cancel) {
                 store.send(.cancelConfirmationDismissed)
             }
-            Button("中止して閉じる", role: .destructive) {
+            Button(L10n.get(.streamingStopAndClose), role: .destructive) {
                 store.send(.cancelConfirmationConfirmed)
             }
         } message: {
-            Text("録音中のデータは破棄されます。")
+            Text(L10n.get(.streamingStopConfirmMessage))
         }
     }
 }
@@ -50,14 +51,14 @@ private struct HeaderView: View {
 
     var body: some View {
         HStack {
-            // ステータスインジケーター
+            // Status indicator
             StatusIndicator(status: store.status)
 
             Spacer()
 
-            // 経過時間
+            // Elapsed time
             HStack(spacing: 4) {
-                Text("経過時間")
+                Text(L10n.get(.streamingElapsedTime))
                     .foregroundColor(.secondary)
                     .font(.caption)
                 Text(formatDuration(store.duration))
@@ -65,11 +66,11 @@ private struct HeaderView: View {
                     .foregroundColor(.primary)
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("経過時間 \(formatDurationAccessible(store.duration))")
+            .accessibilityLabel("\(L10n.get(.streamingElapsedTime)) \(formatDurationAccessible(store.duration))")
 
             Spacer()
 
-            // 閉じるボタン
+            // Close button
             Button {
                 store.send(.closeButtonTapped)
             } label: {
@@ -80,7 +81,7 @@ private struct HeaderView: View {
             }
             .buttonStyle(.plain)
             .hoverTooltip(store.popupCloseShortcut, alignment: .bottom)
-            .accessibilityLabel("閉じる")
+            .accessibilityLabel(L10n.get(.streamingClose))
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -96,9 +97,9 @@ private struct HeaderView: View {
         let minutes = Int(duration) / 60
         let seconds = Int(duration) % 60
         if minutes > 0 {
-            return "\(minutes)分\(seconds)秒"
+            return "\(minutes)m \(seconds)s"
         } else {
-            return "\(seconds)秒"
+            return "\(seconds)s"
         }
     }
 }
@@ -121,7 +122,7 @@ private struct StatusIndicator: View {
                 .foregroundColor(statusColor)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(statusText)、\(statusColorName)インジケーター")
+        .accessibilityLabel("\(statusText), \(statusColorName)")
     }
 
     private var statusColor: Color {
@@ -144,17 +145,17 @@ private struct StatusIndicator: View {
     private var statusText: String {
         switch status {
         case .idle:
-            "待機中"
+            L10n.get(.streamingStatusIdle)
         case .initializing:
-            "初期化中"
+            L10n.get(.streamingStatusInitializing)
         case .recording:
-            "録音中"
+            L10n.get(.streamingStatusRecording)
         case .processing:
-            "処理中"
+            L10n.get(.streamingStatusProcessing)
         case .completed:
-            "完了"
+            L10n.get(.streamingStatusCompleted)
         case .error:
-            "エラー"
+            L10n.get(.streamingStatusError)
         }
     }
 
@@ -166,17 +167,17 @@ private struct StatusIndicator: View {
     private var statusColorName: String {
         switch status {
         case .idle:
-            "グレー"
+            L10n.get(.streamingColorGray)
         case .initializing:
-            "黄色"
+            L10n.get(.streamingColorYellow)
         case .recording:
-            "赤"
+            L10n.get(.streamingColorRed)
         case .processing:
-            "青"
+            L10n.get(.streamingColorBlue)
         case .completed:
-            "緑"
+            L10n.get(.streamingColorGreen)
         case .error:
-            "オレンジ"
+            L10n.get(.streamingColorOrange)
         }
     }
 }
@@ -215,26 +216,26 @@ private struct TextDisplayView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
-                    // 確定済みテキスト
+                    // Confirmed text
                     if !store.confirmedText.isEmpty {
                         Text(store.confirmedText)
                             .foregroundColor(.primary)
                     }
 
-                    // 未確定テキスト
+                    // Pending text
                     if !store.pendingText.isEmpty {
                         Text(store.pendingText)
                             .foregroundColor(.secondary)
                     }
 
-                    // デコード中テキスト
+                    // Decoding text
                     if !store.decodingText.isEmpty {
                         Text(store.decodingText)
                             .foregroundColor(.secondary)
                             .opacity(0.7)
                     }
 
-                    // カーソル（録音中のみ）
+                    // Cursor (recording only)
                     if store.isRecording {
                         Text("▋")
                             .foregroundColor(.secondary)
@@ -242,7 +243,7 @@ private struct TextDisplayView: View {
                             .accessibilityHidden(true)
                     }
 
-                    // スクロールアンカー
+                    // Scroll anchor
                     Color.clear
                         .frame(height: 1)
                         .id("bottom")
@@ -285,9 +286,9 @@ private struct TextDisplayView: View {
             parts.append(store.decodingText)
         }
         if parts.isEmpty {
-            return "文字起こしテキストなし"
+            return L10n.get(.streamingNoTranscription)
         }
-        return "文字起こし: " + parts.joined(separator: " ")
+        return L10n.get(.streamingTranscriptionPrefix) + parts.joined(separator: " ")
     }
 }
 
@@ -298,15 +299,15 @@ private struct FooterView: View {
 
     var body: some View {
         HStack {
-            // 処理速度表示
-            Text(String(format: "%.1f tok/s", store.tokensPerSecond))
+            // Processing speed display
+            Text(String(format: "%.1f \(L10n.get(.streamingTokensPerSecond))", store.tokensPerSecond))
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .frame(width: 80, alignment: .leading)
 
             Spacer()
 
-            // ボタン群
+            // Buttons
             footerButtons
         }
         .padding(.horizontal, 16)
@@ -317,53 +318,53 @@ private struct FooterView: View {
     private var footerButtons: some View {
         switch store.status {
         case .idle, .initializing:
-            // 待機中/初期化中はボタンなし
+            // No buttons while idle/initializing
             EmptyView()
 
         case .recording:
-            // 録音中: 停止ボタン
+            // Recording: Stop button
             Button {
                 store.send(.stopButtonTapped)
             } label: {
-                Text("停止")
+                Text(L10n.get(.streamingStop))
             }
             .buttonStyle(.borderedProminent)
             .tint(.red)
-            .accessibilityLabel("停止")
-            .accessibilityHint("録音を停止します")
+            .accessibilityLabel(L10n.get(.streamingStop))
+            .accessibilityHint(L10n.get(.streamingStopRecording))
 
         case .processing:
-            // 処理中: 処理中表示
+            // Processing: Progress display
             ProgressView()
                 .controlSize(.small)
-            Text("処理中...")
+            Text(L10n.get(.streamingProcessing))
                 .font(.caption)
                 .foregroundColor(.secondary)
 
         case .completed:
-            // 完了: ファイル保存とコピーボタン
+            // Completed: Save to file and copy buttons
             Button {
                 store.send(.saveToFileButtonTapped)
             } label: {
-                Text("ファイル保存")
+                Text(L10n.get(.streamingSaveToFile))
             }
             .buttonStyle(.bordered)
             .hoverTooltip(store.popupSaveToFileShortcut)
-            .accessibilityLabel("ファイル保存")
-            .accessibilityHint("文字起こしをファイルに保存します")
+            .accessibilityLabel(L10n.get(.streamingSaveToFile))
+            .accessibilityHint(L10n.get(.streamingSaveDescription))
 
             Button {
                 store.send(.copyAndCloseButtonTapped)
             } label: {
-                Text("コピーして閉じる")
+                Text(L10n.get(.streamingCopyAndClose))
             }
             .buttonStyle(.borderedProminent)
             .hoverTooltip(store.popupCopyAndCloseShortcut)
-            .accessibilityLabel("コピーして閉じる")
-            .accessibilityHint("文字起こしをクリップボードにコピーしてウィンドウを閉じます")
+            .accessibilityLabel(L10n.get(.streamingCopyAndClose))
+            .accessibilityHint(L10n.get(.streamingCopyDescription))
 
         case let .error(message):
-            // エラー: エラーメッセージ表示
+            // Error: Error message display
             Text(message)
                 .font(.caption)
                 .foregroundColor(.red)
@@ -388,9 +389,9 @@ private struct FooterView: View {
         store: Store(
             initialState: StreamingTranscriptionFeature.State(
                 status: .recording(duration: 15, tokensPerSecond: 12.5),
-                confirmedText: "今日の会議では来期の予算について話し合いました。",
-                pendingText: "主な議題は以下の通りです。",
-                decodingText: "マーケティング費用の",
+                confirmedText: "Today's meeting discussed the budget for next term.",
+                pendingText: "The main topics are as follows.",
+                decodingText: "Marketing costs",
                 duration: 15,
                 tokensPerSecond: 12.5
             )
@@ -406,10 +407,10 @@ private struct FooterView: View {
         store: Store(
             initialState: StreamingTranscriptionFeature.State(
                 status: .completed(
-                    text: "今日の会議では来期の予算について話し合いました。主な議題は以下の通りです。"
+                    text: "Today's meeting discussed the budget for next term. The main topics are as follows."
                 ),
                 confirmedText:
-                "今日の会議では来期の予算について話し合いました。主な議題は以下の通りです。",
+                "Today's meeting discussed the budget for next term. The main topics are as follows.",
                 duration: 30,
                 tokensPerSecond: 0
             )

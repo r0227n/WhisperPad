@@ -6,19 +6,20 @@
 import ComposableArchitecture
 import SwiftUI
 
-/// 録音設定タブ
+/// Recording settings tab
 ///
-/// 音声録音の設定を行います。
-/// 入力デバイス、出力設定、無音検出などを設定できます。
+/// Configures audio recording settings.
+/// Allows setting input device, output settings, silence detection, etc.
 struct RecordingSettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
         Form {
-            // 入力デバイスセクション
+            // Input device section
             Section {
                 Picker(
-                    "入力デバイス",
+                    L10n.get(.recordingInputDevice),
                     selection: Binding(
                         get: { store.settings.recording.inputDeviceID },
                         set: { newValue in
@@ -28,25 +29,25 @@ struct RecordingSettingsTab: View {
                         }
                     )
                 ) {
-                    Text("システムデフォルト").tag(nil as String?)
+                    Text(L10n.get(.recordingSystemDefault)).tag(nil as String?)
                     ForEach(store.availableInputDevices) { device in
                         Text(device.name).tag(device.id as String?)
                     }
                 }
-                .help("録音に使用するマイクを選択します")
-                .accessibilityLabel("入力デバイス")
-                .accessibilityHint("録音に使用するマイクを選択します")
+                .help(L10n.get(.recordingInputDeviceDescription))
+                .accessibilityLabel(L10n.get(.recordingInputDevice))
+                .accessibilityHint(L10n.get(.recordingInputDeviceDescription))
             } header: {
-                Text("入力デバイス")
+                Text(L10n.get(.recordingInputDevice))
             }
 
-            // MARK: - 出力セクション
+            // MARK: - Output Section
 
             Section {
                 SettingRowWithIcon(
                     icon: "doc.on.clipboard",
                     iconColor: .blue,
-                    title: "クリップボードにコピー",
+                    title: L10n.get(.recordingCopyToClipboard),
                     isOn: Binding(
                         get: { store.settings.output.copyToClipboard },
                         set: { newValue in
@@ -56,9 +57,9 @@ struct RecordingSettingsTab: View {
                         }
                     )
                 )
-                .help("文字起こし結果をクリップボードにコピーします")
-                .accessibilityLabel("クリップボードにコピー")
-                .accessibilityHint("オンにすると文字起こし結果をクリップボードにコピーします")
+                .help(L10n.get(.recordingCopyToClipboardDescription))
+                .accessibilityLabel(L10n.get(.recordingCopyToClipboard))
+                .accessibilityHint(L10n.get(.recordingCopyToClipboardToggleDescription))
 
                 HStack(spacing: 12) {
                     Image(systemName: "folder.fill")
@@ -66,7 +67,7 @@ struct RecordingSettingsTab: View {
                         .foregroundStyle(.cyan)
                         .frame(width: 20, alignment: .center)
 
-                    Text("ファイルに保存")
+                    Text(L10n.get(.recordingSaveToFile))
 
                     Spacer()
 
@@ -82,30 +83,30 @@ struct RecordingSettingsTab: View {
                         )
                     )
                     .labelsHidden()
-                    .accessibilityLabel("ファイルに保存")
+                    .accessibilityLabel(L10n.get(.recordingSaveToFile))
 
                     if store.settings.output.isEnabled {
-                        HoverPopoverButton(label: "設定", icon: "folder.badge.gearshape") {
+                        HoverPopoverButton(label: L10n.get(.recordingSettings), icon: "folder.badge.gearshape") {
                             FileOutputDetailsPopover(store: store)
                         }
                     }
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("ファイルに保存")
-                .accessibilityHint("文字起こし結果をファイルに保存します")
+                .accessibilityLabel(L10n.get(.recordingSaveToFile))
+                .accessibilityHint(L10n.get(.recordingCopyToClipboardDescription))
             } header: {
-                Label("出力", systemImage: "arrow.up.doc")
+                Label(L10n.get(.recordingOutput), systemImage: "arrow.up.doc")
             } footer: {
                 if store.settings.output.copyToClipboard {
-                    Text("文字起こし完了後、すぐに他のアプリにペーストできます")
+                    Text(L10n.get(.recordingPasteDescription))
                         .foregroundStyle(.secondary)
                 }
             }
 
-            // 無音検出セクション
+            // Silence detection section
             Section {
                 Toggle(
-                    "無音検出で自動停止",
+                    L10n.get(.recordingAutoStopOnSilence),
                     isOn: Binding(
                         get: { store.settings.recording.silenceDetectionEnabled },
                         set: { enabled in
@@ -115,16 +116,16 @@ struct RecordingSettingsTab: View {
                         }
                     )
                 )
-                .help("一定時間無音が続くと録音を自動停止します")
-                .accessibilityLabel("無音検出で自動停止")
-                .accessibilityHint("一定時間無音が続くと録音を自動停止します")
+                .help(L10n.get(.recordingAutoStopDescription))
+                .accessibilityLabel(L10n.get(.recordingAutoStopOnSilence))
+                .accessibilityHint(L10n.get(.recordingAutoStopDescription))
 
                 if store.settings.recording.silenceDetectionEnabled {
                     HStack {
-                        Text("無音判定時間")
+                        Text(L10n.get(.recordingSilenceDuration))
                         Spacer()
                         TextField(
-                            "秒",
+                            L10n.get(.recordingSeconds),
                             value: Binding(
                                 get: { store.settings.recording.silenceDuration },
                                 set: { newValue in
@@ -137,24 +138,25 @@ struct RecordingSettingsTab: View {
                         )
                         .frame(width: 80)
                         .textFieldStyle(.roundedBorder)
-                        .accessibilityLabel("無音判定時間")
-                        .accessibilityHint("無音判定時間を秒単位で入力します")
-                        Text("秒")
+                        .accessibilityLabel(L10n.get(.recordingSilenceDuration))
+                        Text(L10n.get(.recordingSeconds))
                     }
 
                     HStack {
-                        Text("無音判定しきい値")
+                        Text(L10n.get(.recordingSilenceThreshold))
                         Spacer()
-                        Text("\(Int(store.settings.recording.silenceThreshold)) dB")
+                        Text("\(Int(store.settings.recording.silenceThreshold)) \(L10n.get(.recordingDecibels))")
                             .foregroundColor(.secondary)
-                            .accessibilityLabel("無音判定しきい値: \(Int(store.settings.recording.silenceThreshold)) デシベル")
+                            .accessibilityLabel(
+                                "\(L10n.get(.recordingSilenceThreshold)): \(Int(store.settings.recording.silenceThreshold)) \(L10n.get(.recordingDecibels))"
+                            )
                     }
                 }
             } header: {
-                Text("無音検出")
+                Text(L10n.get(.recordingSilenceDetection))
             } footer: {
                 if store.settings.recording.silenceDetectionEnabled {
-                    Text("指定した時間、音声レベルがしきい値を下回ると録音を停止します")
+                    Text(L10n.get(.recordingSilenceDescription))
                 }
             }
         }

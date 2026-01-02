@@ -6,12 +6,13 @@
 import ComposableArchitecture
 import SwiftUI
 
-/// モデル設定タブ
+/// Model settings tab
 ///
-/// WhisperKit モデルの選択、ダウンロード、ストレージ管理を行います。
-/// 検索・フィルタリング機能付きのリスト型UIを提供します。
+/// Manages WhisperKit model selection, download, and storage.
+/// Provides list-type UI with search and filtering functionality.
 struct ModelSettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
+    @ObservedObject private var localization = LocalizationManager.shared
 
     // MARK: - Local State for Filtering
 
@@ -46,22 +47,22 @@ struct ModelSettingsTab: View {
             .padding()
         }
         .confirmationDialog(
-            "モデルを削除しますか？",
+            L10n.get(.modelDeleteConfirmTitle),
             isPresented: Binding(
                 get: { store.modelToDelete != nil },
                 set: { if !$0 { store.send(.cancelDeleteModel) } }
             ),
             titleVisibility: .visible
         ) {
-            Button("削除", role: .destructive) {
+            Button(L10n.get(.modelDelete), role: .destructive) {
                 store.send(.confirmDeleteModel)
             }
-            Button("キャンセル", role: .cancel) {
+            Button(L10n.get(.modelCancel), role: .cancel) {
                 store.send(.cancelDeleteModel)
             }
         } message: {
             if let modelName = store.modelToDelete {
-                Text("「\(modelName)」を削除します。再度使用するにはダウンロードが必要です。")
+                Text("\"\(modelName)\" \(L10n.get(.modelDeleteConfirmMessage))")
             }
         }
     }
@@ -70,24 +71,24 @@ struct ModelSettingsTab: View {
 
     private var activeModelSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("使用中のモデル", systemImage: "cpu")
+            Label(L10n.get(.modelActiveModel), systemImage: "cpu")
                 .font(.headline)
 
             HStack(spacing: 20) {
-                // モデル選択
+                // Model selection
                 HStack {
-                    Text("モデル")
+                    Text(L10n.get(.modelModel))
                         .foregroundStyle(.secondary)
                     Picker("", selection: validatedModelSelection) {
                         if store.downloadedModels.isEmpty {
-                            Text("モデルをダウンロードしてください")
+                            Text(L10n.get(.modelDownloadPrompt))
                                 .tag("")
                         }
                         ForEach(store.downloadedModels, id: \.id) { model in
                             HStack {
                                 Text(model.displayName)
                                 if model.isRecommended {
-                                    Text("推奨")
+                                    Text(L10n.get(.modelRecommended))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -100,9 +101,9 @@ struct ModelSettingsTab: View {
                     .frame(minWidth: 120)
                 }
 
-                // 言語選択
+                // Language selection
                 HStack {
-                    Text("言語")
+                    Text(L10n.get(.modelLanguage))
                         .foregroundStyle(.secondary)
                     Picker(
                         "",
@@ -130,7 +131,7 @@ struct ModelSettingsTab: View {
             }
 
             if store.downloadedModels.isEmpty {
-                Text("下のモデル一覧からモデルをダウンロードしてください")
+                Text(L10n.get(.modelDownloadPrompt))
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
@@ -144,7 +145,7 @@ struct ModelSettingsTab: View {
 
     private var searchFilterSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("利用可能なモデル", systemImage: "square.stack.3d.up")
+            Label(L10n.get(.modelAvailableModels), systemImage: "square.stack.3d.up")
                 .font(.headline)
 
             ModelSearchFilterBar(
@@ -173,7 +174,7 @@ struct ModelSettingsTab: View {
             Spacer()
             ProgressView()
                 .scaleEffect(0.8)
-            Text("モデル一覧を取得中...")
+            Text(L10n.get(.modelLoading))
                 .foregroundStyle(.secondary)
             Spacer()
         }
@@ -185,9 +186,9 @@ struct ModelSettingsTab: View {
             Image(systemName: "magnifyingglass")
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
-            Text("条件に一致するモデルがありません")
+            Text(L10n.get(.modelNoMatches))
                 .foregroundStyle(.secondary)
-            Button("フィルターをリセット") {
+            Button(L10n.get(.modelResetFilter)) {
                 searchText = ""
                 downloadFilter = .all
             }
@@ -225,13 +226,13 @@ struct ModelSettingsTab: View {
 
     private var storageSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("ストレージ", systemImage: "internaldrive")
+            Label(L10n.get(.modelStorage), systemImage: "internaldrive")
                 .font(.headline)
 
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("使用量")
+                        Text(L10n.get(.modelUsage))
                             .foregroundStyle(.secondary)
                         Text(ByteCountFormatter.string(
                             fromByteCount: store.storageUsage,
@@ -241,14 +242,14 @@ struct ModelSettingsTab: View {
                     }
 
                     HStack {
-                        Text("保存先")
+                        Text(L10n.get(.modelSaveLocation))
                             .foregroundStyle(.secondary)
                         if let customURL = store.settings.transcription.customStorageURL {
                             Text(customURL.path)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                         } else {
-                            Text("デフォルト")
+                            Text(L10n.get(.modelDefault))
                         }
                     }
                 }
@@ -256,14 +257,14 @@ struct ModelSettingsTab: View {
                 Spacer()
 
                 HStack(spacing: 8) {
-                    Button("変更...") {
+                    Button(L10n.get(.modelChange)) {
                         store.send(.selectStorageLocation)
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
 
                     if store.settings.transcription.customStorageURL != nil {
-                        Button("リセット") {
+                        Button(L10n.get(.modelReset)) {
                             store.send(.resetStorageLocation)
                         }
                         .buttonStyle(.bordered)
@@ -272,7 +273,7 @@ struct ModelSettingsTab: View {
                 }
             }
 
-            Text("モデルはデバイス上に保存され、オフラインで使用できます")
+            Text(L10n.get(.modelStorageDescription))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -283,7 +284,7 @@ struct ModelSettingsTab: View {
 
     // MARK: - Computed Properties
 
-    /// 検証済みのモデル選択 Binding
+    /// Validated model selection Binding
     private var validatedModelSelection: Binding<String> {
         Binding(
             get: {
@@ -300,16 +301,16 @@ struct ModelSettingsTab: View {
         )
     }
 
-    /// フィルタリング済みのモデル一覧
+    /// Filtered model list
     private var filteredModels: [WhisperModel] {
         store.availableModels.filter { model in
-            // 検索テキストでフィルタリング（部分一致、大文字小文字を無視）
+            // Filter by search text (partial match, case insensitive)
             let searchLower = searchText.lowercased()
             let matchesSearch = searchText.isEmpty ||
                 model.displayName.lowercased().contains(searchLower) ||
                 model.id.lowercased().contains(searchLower)
 
-            // ダウンロード状態フィルター
+            // Download status filter
             let matchesDownload = downloadFilter.matches(isDownloaded: model.isDownloaded)
 
             return matchesSearch && matchesDownload

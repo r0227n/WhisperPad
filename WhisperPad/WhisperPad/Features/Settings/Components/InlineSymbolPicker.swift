@@ -5,18 +5,18 @@
 
 import SwiftUI
 
-/// インラインでSF Symbolを選択するピッカー
+/// Inline SF Symbol picker
 ///
-/// 推奨シンボルをコンパクトなグリッドで表示し、
-/// 追加のシンボルはフルピッカーで選択できます。
+/// Displays recommended symbols in a compact grid,
+/// and additional symbols can be selected via full picker.
 struct InlineSymbolPicker: View {
-    /// 選択されたシンボル名
+    /// Selected symbol name
     @Binding var selection: String
 
-    /// フルピッカー表示状態
+    /// Full picker display state
     @State private var showFullPicker = false
 
-    /// クイック選択用の推奨シンボル（2行分 = 14個）
+    /// Recommended symbols for quick selection (2 rows = 14 items)
     private let quickSymbols = [
         "mic", "mic.fill", "mic.circle", "waveform", "waveform.badge.mic",
         "record.circle", "pause.fill",
@@ -26,7 +26,7 @@ struct InlineSymbolPicker: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // クイック選択グリッド
+            // Quick selection grid
             LazyVGrid(
                 columns: Array(repeating: GridItem(.fixed(36), spacing: 4), count: 7),
                 spacing: 4
@@ -36,13 +36,13 @@ struct InlineSymbolPicker: View {
                 }
             }
 
-            // その他のシンボルボタン
+            // More symbols button
             Button {
                 showFullPicker = true
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "ellipsis.circle")
-                    Text("その他のシンボル...")
+                    Text(L10n.get(.symbolPickerMore))
                 }
                 .font(.caption)
                 .foregroundColor(.accentColor)
@@ -57,7 +57,7 @@ struct InlineSymbolPicker: View {
         }
     }
 
-    /// シンボル選択ボタン
+    /// Symbol selection button
     @ViewBuilder
     private func symbolButton(for symbol: String) -> some View {
         let isCurrentSelection = selection == symbol
@@ -95,12 +95,12 @@ struct InlineSymbolPicker: View {
     @Previewable @State var selection = "mic"
 
     VStack(alignment: .leading, spacing: 16) {
-        Text("アイコン選択")
+        Text("Icon Selection")
             .font(.headline)
 
         InlineSymbolPicker(selection: $selection)
 
-        Text("選択中: \(selection)")
+        Text("Selected: \(selection)")
             .font(.caption)
             .foregroundColor(.secondary)
     }

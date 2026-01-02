@@ -6,26 +6,27 @@
 import ComposableArchitecture
 import SwiftUI
 
-/// ショートカット設定タブ
+/// Shortcut settings tab
 ///
-/// マスター・ディテール形式でグローバルショートカットの設定を行います。
-/// 左パネル：カテゴリ別ショートカット一覧
-/// 右パネル：選択したショートカットの詳細と編集
+/// Configures global shortcuts in master-detail format.
+/// Left panel: Category-based shortcut list
+/// Right panel: Details and editing of selected shortcut
 struct HotkeySettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
         HSplitView {
-            // 左パネル: ショートカット一覧
+            // Left panel: Shortcut list
             shortcutListPanel
                 .frame(minWidth: 180, idealWidth: 200, maxWidth: 240)
 
-            // 右パネル: 詳細
+            // Right panel: Details
             detailPanel
                 .frame(minWidth: 280)
         }
         .onAppear {
-            // 初期選択
+            // Initial selection
             if store.selectedShortcut == nil {
                 store.send(.selectShortcut(.recording))
             }
@@ -34,7 +35,7 @@ struct HotkeySettingsTab: View {
 
     // MARK: - Left Panel
 
-    /// ショートカット一覧パネル
+    /// Shortcut list panel
     private var shortcutListPanel: some View {
         List(selection: Binding(
             get: { store.selectedShortcut },
@@ -50,7 +51,7 @@ struct HotkeySettingsTab: View {
                         .tag(hotkeyType)
                     }
                 } header: {
-                    Text(category.rawValue)
+                    Text(category.displayName)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -61,7 +62,7 @@ struct HotkeySettingsTab: View {
 
     // MARK: - Right Panel
 
-    /// 詳細パネル
+    /// Detail panel
     @ViewBuilder
     private var detailPanel: some View {
         if let selected = store.selectedShortcut {
@@ -80,11 +81,11 @@ struct HotkeySettingsTab: View {
         }
     }
 
-    /// プレースホルダービュー
+    /// Placeholder view
     private var placeholderView: some View {
         VStack {
             Spacer()
-            Text("ショートカットを選択してください")
+            Text(L10n.get(.hotkeySelectShortcut))
                 .foregroundColor(.secondary)
             Spacer()
         }
@@ -92,7 +93,7 @@ struct HotkeySettingsTab: View {
 
     // MARK: - Helpers
 
-    /// 指定されたショートカットタイプのキーコンボを取得
+    /// Get key combo for the specified shortcut type
     private func keyCombo(for type: HotkeyType) -> HotKeySettings.KeyComboSettings {
         switch type {
         case .recording:
@@ -112,7 +113,7 @@ struct HotkeySettingsTab: View {
         }
     }
 
-    /// 指定されたショートカットタイプのキーコンボBindingを取得
+    /// Get key combo Binding for the specified shortcut type
     private func keyComboBinding(for type: HotkeyType) -> Binding<HotKeySettings.KeyComboSettings> {
         Binding(
             get: { keyCombo(for: type) },
@@ -139,7 +140,7 @@ struct HotkeySettingsTab: View {
         )
     }
 
-    /// デフォルトにリセット
+    /// Reset to default
     private func resetToDefault(_ type: HotkeyType) {
         var hotKey = store.settings.hotKey
         switch type {
@@ -164,7 +165,7 @@ struct HotkeySettingsTab: View {
 
 // MARK: - ShortcutListRow
 
-/// ショートカット一覧の行
+/// Shortcut list row
 private struct ShortcutListRow: View {
     let hotkeyType: HotkeyType
     let keyCombo: HotKeySettings.KeyComboSettings
@@ -176,7 +177,7 @@ private struct ShortcutListRow: View {
 
             Spacer()
 
-            // キーコンボをバッジスタイルで表示
+            // Display key combo in badge style
             Text(keyCombo.displayString)
                 .font(.system(.caption, design: .monospaced))
                 .foregroundColor(.secondary)
@@ -187,13 +188,13 @@ private struct ShortcutListRow: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .accessibilityLabel("\(hotkeyType.displayName)、ショートカット: \(keyCombo.displayString)")
+        .accessibilityLabel("\(hotkeyType.displayName), \(L10n.get(.hotkeyShortcutKey)): \(keyCombo.displayString)")
     }
 }
 
 // MARK: - ShortcutDetailPanel
 
-/// ショートカット詳細パネル
+/// Shortcut detail panel
 private struct ShortcutDetailPanel: View {
     let hotkeyType: HotkeyType
     @Binding var keyCombo: HotKeySettings.KeyComboSettings
@@ -204,7 +205,7 @@ private struct ShortcutDetailPanel: View {
     let onResetToDefault: () -> Void
     let hotkeyConflict: String?
 
-    /// アイコン設定
+    /// Icon configuration
     private var iconConfig: StatusIconConfig {
         menuBarIconSettings.config(for: hotkeyType.correspondingIconStatus)
     }
@@ -212,15 +213,15 @@ private struct ShortcutDetailPanel: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                // ヘッダー：アイコンとタイトル
+                // Header: Icon and title
                 headerSection
 
                 Divider()
 
-                // 説明セクション
+                // Description section
                 descriptionSection
 
-                // ショートカット入力セクション
+                // Shortcut input section
                 shortcutInputSection
 
                 Spacer(minLength: 0)
@@ -230,7 +231,7 @@ private struct ShortcutDetailPanel: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// ヘッダーセクション
+    /// Header section
     private var headerSection: some View {
         HStack(spacing: 12) {
             Image(systemName: iconConfig.symbolName)
@@ -245,17 +246,17 @@ private struct ShortcutDetailPanel: View {
                     .font(.title2)
                     .fontWeight(.semibold)
 
-                Text(hotkeyType.category.rawValue)
+                Text(hotkeyType.category.displayName)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
         }
     }
 
-    /// 説明セクション
+    /// Description section
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("説明", systemImage: "info.circle")
+            Label(L10n.get(.hotkeyDescription), systemImage: "info.circle")
                 .font(.headline)
                 .foregroundColor(.secondary)
 
@@ -264,14 +265,14 @@ private struct ShortcutDetailPanel: View {
         }
     }
 
-    /// ショートカット入力セクション
+    /// Shortcut input section
     private var shortcutInputSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("ショートカットキー", systemImage: "keyboard")
+            Label(L10n.get(.hotkeyShortcutKey), systemImage: "keyboard")
                 .font(.headline)
                 .foregroundColor(.secondary)
 
-            // キー設定ボタン
+            // Key setting button
             ShortcutKeyButton(
                 keyCombo: $keyCombo,
                 defaultKeyCombo: hotkeyType.defaultKeyCombo,
@@ -282,16 +283,16 @@ private struct ShortcutDetailPanel: View {
                 onResetToDefault: onResetToDefault
             )
 
-            // 競合警告
+            // Conflict warning
             if let conflict = hotkeyConflict {
                 Label(conflict, systemImage: "exclamationmark.triangle.fill")
                     .foregroundColor(.red)
                     .font(.footnote)
-                    .accessibilityLabel("ショートカット競合警告: \(conflict)")
+                    .accessibilityLabel("\(L10n.get(.hotkeyShortcutKey)): \(conflict)")
             }
 
-            // 注意メッセージ
-            Text("他のアプリと競合する場合は変更してください")
+            // Note message
+            Text(L10n.get(.hotkeyConflictWarning))
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

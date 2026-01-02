@@ -6,22 +6,59 @@
 import ComposableArchitecture
 import SwiftUI
 
-/// 一般設定タブ
+/// General settings tab
 ///
-/// アプリケーションの基本的な動作設定を行います。
-/// 2つのセクションで構成: 動作、通知
+/// Configures basic application behavior.
+/// Consists of three sections: Language, Behavior, Notification
 struct GeneralSettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
         Form {
-            // MARK: - 動作セクション
+            // MARK: - Language Section
+
+            Section {
+                HStack(spacing: 12) {
+                    Image(systemName: "globe")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.blue)
+                        .frame(width: 20, alignment: .center)
+
+                    Text(L10n.get(.generalLanguage))
+
+                    Spacer()
+
+                    Picker("", selection: Binding(
+                        get: { store.settings.general.appLanguage },
+                        set: { newValue in
+                            var general = store.settings.general
+                            general.appLanguage = newValue
+                            store.send(.updateGeneralSettings(general))
+                            LocalizationManager.shared.setLanguage(newValue)
+                        }
+                    )) {
+                        ForEach(AppLanguage.allCases, id: \.self) { language in
+                            Text(language.displayName).tag(language)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 120)
+                }
+            } header: {
+                Label(L10n.get(.generalLanguage), systemImage: "globe")
+            } footer: {
+                Text(L10n.get(.generalLanguageDescription))
+                    .foregroundStyle(.secondary)
+            }
+
+            // MARK: - Behavior Section
 
             Section {
                 SettingRowWithIcon(
                     icon: "power",
                     iconColor: .green,
-                    title: "ログイン時に起動",
+                    title: L10n.get(.generalLaunchAtLogin),
                     isOn: Binding(
                         get: { store.settings.general.launchAtLogin },
                         set: { newValue in
@@ -31,20 +68,20 @@ struct GeneralSettingsTab: View {
                         }
                     )
                 )
-                .help("macOS 起動時にアプリを自動的に起動します")
-                .accessibilityLabel("ログイン時に起動")
-                .accessibilityHint("macOS 起動時にアプリを自動的に起動します")
+                .help(L10n.get(.generalLaunchAtLoginDescription))
+                .accessibilityLabel(L10n.get(.generalLaunchAtLogin))
+                .accessibilityHint(L10n.get(.generalLaunchAtLoginDescription))
             } header: {
-                Label("動作", systemImage: "gearshape.2")
+                Label(L10n.get(.generalBehavior), systemImage: "gearshape.2")
             }
 
-            // MARK: - 通知セクション
+            // MARK: - Notification Section
 
             Section {
                 SettingRowWithIcon(
                     icon: "bell.fill",
                     iconColor: .orange,
-                    title: "通知を表示",
+                    title: L10n.get(.generalShowNotification),
                     isOn: Binding(
                         get: { store.settings.general.showNotificationOnComplete },
                         set: { newValue in
@@ -54,14 +91,14 @@ struct GeneralSettingsTab: View {
                         }
                     )
                 )
-                .help("文字起こし完了時に通知センターに通知を表示します")
-                .accessibilityLabel("通知を表示")
-                .accessibilityHint("文字起こし完了時に通知センターに通知を表示します")
+                .help(L10n.get(.generalShowNotificationDescription))
+                .accessibilityLabel(L10n.get(.generalShowNotification))
+                .accessibilityHint(L10n.get(.generalShowNotificationDescription))
 
                 SettingRowWithIcon(
                     icon: "speaker.wave.2.fill",
                     iconColor: .pink,
-                    title: "サウンドを再生",
+                    title: L10n.get(.generalPlaySound),
                     isOn: Binding(
                         get: { store.settings.general.playSoundOnComplete },
                         set: { newValue in
@@ -71,9 +108,9 @@ struct GeneralSettingsTab: View {
                         }
                     )
                 )
-                .help("文字起こし完了時にサウンドを再生します")
-                .accessibilityLabel("サウンドを再生")
-                .accessibilityHint("文字起こし完了時にサウンドを再生します")
+                .help(L10n.get(.generalPlaySoundDescription))
+                .accessibilityLabel(L10n.get(.generalPlaySound))
+                .accessibilityHint(L10n.get(.generalPlaySoundDescription))
 
                 HStack(spacing: 12) {
                     Image(systemName: "text.bubble")
@@ -81,18 +118,18 @@ struct GeneralSettingsTab: View {
                         .foregroundStyle(.purple)
                         .frame(width: 20, alignment: .center)
 
-                    Text("メッセージ設定")
+                    Text(L10n.get(.generalNotificationSettings))
 
                     Spacer()
 
-                    HoverPopoverButton(label: "カスタマイズ", icon: "slider.horizontal.3") {
+                    HoverPopoverButton(label: L10n.get(.generalCustomize), icon: "slider.horizontal.3") {
                         NotificationDetailsPopover(store: store)
                     }
                 }
             } header: {
-                Label("通知", systemImage: "bell.badge")
+                Label(L10n.get(.generalNotification), systemImage: "bell.badge")
             } footer: {
-                Text("文字起こし完了時の通知とサウンドを設定します")
+                Text(L10n.get(.generalNotificationSectionDescription))
                     .foregroundStyle(.secondary)
             }
         }

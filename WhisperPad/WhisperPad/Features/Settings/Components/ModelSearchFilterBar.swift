@@ -5,19 +5,20 @@
 
 import SwiftUI
 
-/// モデル検索・フィルターバー
+/// Model search and filter bar
 ///
-/// モデル一覧の検索とフィルタリングを行うコンポーネント。
+/// Component for searching and filtering the model list.
 struct ModelSearchFilterBar: View {
     @Binding var searchText: String
     @Binding var downloadFilter: ModelDownloadFilter
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
         HStack(spacing: 12) {
-            // 検索フィールド
+            // Search field
             searchField
 
-            // 状態フィルター
+            // Status filter
             statusFilterPicker
         }
     }
@@ -30,7 +31,7 @@ struct ModelSearchFilterBar: View {
                 .foregroundStyle(.secondary)
                 .font(.system(size: 12))
 
-            TextField("モデルを検索...", text: $searchText)
+            TextField(L10n.get(.modelSearchPlaceholder), text: $searchText)
                 .textFieldStyle(.plain)
                 .font(.system(size: 13))
 
@@ -43,7 +44,7 @@ struct ModelSearchFilterBar: View {
                         .font(.system(size: 12))
                 }
                 .buttonStyle(.plain)
-                .help("検索をクリア")
+                .help(L10n.get(.modelSearchClear))
             }
         }
         .padding(.horizontal, 8)
@@ -56,7 +57,7 @@ struct ModelSearchFilterBar: View {
 
     private var statusFilterPicker: some View {
         HStack(spacing: 4) {
-            Text("状態")
+            Text(L10n.get(.modelSearchStatus))
                 .font(.caption)
                 .foregroundStyle(.secondary)
 

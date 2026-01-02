@@ -5,32 +5,35 @@
 
 import Foundation
 
-/// 一般設定
+/// General settings
 ///
-/// アプリケーションの基本的な動作設定を管理します。
+/// Manages basic application behavior settings.
 struct GeneralSettings: Equatable, Sendable {
-    /// ログイン時に自動起動するかどうか
+    /// Whether to launch at login
     var launchAtLogin: Bool = false
 
-    /// 文字起こし完了時に通知を表示するかどうか
+    /// Whether to show notification when transcription completes
     var showNotificationOnComplete: Bool = true
 
-    /// 文字起こし完了時にサウンドを再生するかどうか
+    /// Whether to play sound when transcription completes
     var playSoundOnComplete: Bool = true
 
-    /// メニューバーアイコンのカスタム設定
+    /// Menu bar icon custom settings
     var menuBarIconSettings: MenuBarIconSettings = .default
 
-    /// 通知のタイトル
+    /// Notification title
     var notificationTitle: String = "WhisperPad"
 
-    /// 通常録音完了時のメッセージ
-    var transcriptionCompleteMessage: String = "文字起こしが完了しました"
+    /// Message when regular transcription completes
+    var transcriptionCompleteMessage: String = "Transcription completed"
 
-    /// リアルタイム文字起こし完了時のメッセージ
-    var streamingCompleteMessage: String = "リアルタイム文字起こしが完了しました"
+    /// Message when streaming transcription completes
+    var streamingCompleteMessage: String = "Streaming transcription completed"
 
-    /// デフォルト設定
+    /// Application display language
+    var appLanguage: AppLanguage = .english
+
+    /// Default settings
     static let `default` = GeneralSettings()
 }
 
@@ -45,6 +48,7 @@ extension GeneralSettings: Codable {
         case notificationTitle
         case transcriptionCompleteMessage
         case streamingCompleteMessage
+        case appLanguage
     }
 
     init(from decoder: Decoder) throws {
@@ -60,9 +64,10 @@ extension GeneralSettings: Codable {
         notificationTitle = try container.decodeIfPresent(String.self, forKey: .notificationTitle) ?? "WhisperPad"
         transcriptionCompleteMessage = try container.decodeIfPresent(
             String.self, forKey: .transcriptionCompleteMessage
-        ) ?? "文字起こしが完了しました"
+        ) ?? "Transcription completed"
         streamingCompleteMessage = try container.decodeIfPresent(
             String.self, forKey: .streamingCompleteMessage
-        ) ?? "リアルタイム文字起こしが完了しました"
+        ) ?? "Streaming transcription completed"
+        appLanguage = try container.decodeIfPresent(AppLanguage.self, forKey: .appLanguage) ?? .english
     }
 }

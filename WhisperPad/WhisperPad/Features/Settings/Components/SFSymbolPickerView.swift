@@ -5,22 +5,22 @@
 
 import SwiftUI
 
-/// SF Symbol を選択するためのピッカービュー
+/// SF Symbol picker view
 ///
-/// 推奨シンボルのグリッド表示と検索機能を提供します。
+/// Provides grid display of recommended symbols and search functionality.
 struct SFSymbolPickerView: View {
-    /// 選択されたシンボル名
+    /// Selected symbol name
     @Binding var selectedSymbol: String
 
-    /// シートの表示状態
+    /// Sheet display state
     @Binding var isPresented: Bool
 
-    /// 検索テキスト
+    /// Search text
     @State private var searchText = ""
 
-    /// 推奨シンボル（音声・メディア関連）
+    /// Recommended symbols (audio/media related)
     private let recommendedSymbols = [
-        // マイク系
+        // Microphone
         "mic",
         "mic.fill",
         "mic.circle",
@@ -28,13 +28,13 @@ struct SFSymbolPickerView: View {
         "mic.slash",
         "mic.slash.fill",
         "mic.badge.plus",
-        // 波形系
+        // Waveform
         "waveform",
         "waveform.circle",
         "waveform.circle.fill",
         "waveform.badge.mic",
         "waveform.badge.plus",
-        // 再生・停止系
+        // Play/Stop
         "play",
         "play.fill",
         "play.circle",
@@ -49,19 +49,19 @@ struct SFSymbolPickerView: View {
         "stop.circle.fill",
         "record.circle",
         "record.circle.fill",
-        // 歯車・設定系
+        // Gear/Settings
         "gear",
         "gearshape",
         "gearshape.fill",
         "gearshape.2",
         "gearshape.2.fill",
-        // チェックマーク系
+        // Checkmark
         "checkmark",
         "checkmark.circle",
         "checkmark.circle.fill",
         "checkmark.seal",
         "checkmark.seal.fill",
-        // 警告・エラー系
+        // Warning/Error
         "exclamationmark.triangle",
         "exclamationmark.triangle.fill",
         "exclamationmark.circle",
@@ -69,19 +69,19 @@ struct SFSymbolPickerView: View {
         "xmark",
         "xmark.circle",
         "xmark.circle.fill",
-        // テキスト・ドキュメント系
+        // Text/Document
         "doc.text",
         "doc.text.fill",
         "text.bubble",
         "text.bubble.fill",
         "bubble.left",
         "bubble.left.fill",
-        // スピーカー系
+        // Speaker
         "speaker.wave.1",
         "speaker.wave.2",
         "speaker.wave.3",
         "speaker.slash",
-        // その他
+        // Others
         "bolt",
         "bolt.fill",
         "bolt.circle",
@@ -99,12 +99,12 @@ struct SFSymbolPickerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // ヘッダー
+            // Header
             HStack {
-                Text("アイコンを選択")
+                Text(L10n.get(.symbolPickerSelectIcon))
                     .font(.headline)
                 Spacer()
-                Button("閉じる") {
+                Button(L10n.get(.symbolPickerClose)) {
                     isPresented = false
                 }
                 .keyboardShortcut(.cancelAction)
@@ -113,11 +113,11 @@ struct SFSymbolPickerView: View {
 
             Divider()
 
-            // 検索フィールド
+            // Search field
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField("シンボルを検索...", text: $searchText)
+                TextField(L10n.get(.modelSearchPlaceholder), text: $searchText)
                     .textFieldStyle(.plain)
                 if !searchText.isEmpty {
                     Button {
@@ -135,7 +135,7 @@ struct SFSymbolPickerView: View {
             .padding(.horizontal)
             .padding(.vertical, 8)
 
-            // シンボルグリッド
+            // Symbol grid
             ScrollView {
                 LazyVGrid(
                     columns: [GridItem(.adaptive(minimum: 50))],
@@ -177,9 +177,9 @@ struct SFSymbolPickerView: View {
 
             Divider()
 
-            // フッター（現在の選択）
+            // Footer (current selection)
             HStack {
-                Text("選択中:")
+                Text(L10n.get(.symbolPickerSelected))
                     .foregroundColor(.secondary)
                 Image(systemName: selectedSymbol)
                     .font(.system(size: 16))
@@ -192,7 +192,7 @@ struct SFSymbolPickerView: View {
         .frame(width: 400, height: 500)
     }
 
-    /// フィルタリングされたシンボル一覧
+    /// Filtered symbol list
     private var filteredSymbols: [String] {
         if searchText.isEmpty {
             return recommendedSymbols
