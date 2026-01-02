@@ -10,6 +10,7 @@ description: 'Git worktree feature development workflow for WhisperPad. Use for:
 ## 概要
 
 WhisperPadプロジェクトにおける機能開発の標準ワークフロー:
+
 1. 独立したworktreeで機能を実装
 2. TCAレイヤー別にコミットを分割
 3. 元のブランチにマージ
@@ -36,6 +37,7 @@ WhisperPadプロジェクトにおける機能開発の標準ワークフロー:
 ## TCA Layer Separation Strategy
 
 ### Layer 1: Models
+
 - **独立性**: 高
 - **変更リスク**: 低
 - **実装順序**: 1st
@@ -43,6 +45,7 @@ WhisperPadプロジェクトにおける機能開発の標準ワークフロー:
 - **例**: `AppSettings.swift`, `WhisperModel.swift`
 
 ### Layer 2: Clients
+
 - **独立性**: 中
 - **変更リスク**: 中
 - **実装順序**: 2nd-3rd
@@ -52,6 +55,7 @@ WhisperPadプロジェクトにおける機能開発の標準ワークフロー:
   - Live: `AudioRecorderClientLive.swift`
 
 ### Layer 3: Features
+
 - **独立性**: 低
 - **変更リスク**: 中
 - **実装順序**: 4th
@@ -59,6 +63,7 @@ WhisperPadプロジェクトにおける機能開発の標準ワークフロー:
 - **例**: `RecordingFeature.swift`, `SettingsFeature.swift`
 
 ### Layer 4: App
+
 - **独立性**: 最低
 - **変更リスク**: 高
 - **実装順序**: 5th（最後）
@@ -120,7 +125,7 @@ git gtr ai feature/new-feature
 
 - **SettingsFeature.swift**: 最後に編集（多くの機能が依存）
 - **AppDelegate.swift**: 最後に編集（アプリケーション全体に影響）
-- **Models/*.swift**: 最初に編集（他レイヤーが依存）
+- **Models/\*.swift**: 最初に編集（他レイヤーが依存）
 
 ## Commit Message Strategy
 
@@ -150,6 +155,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 ### Scope の種類
 
 TCAレイヤーに対応:
+
 - `models`: Models layer
 - `clients`: Clients layer全般
 - `clients-interface`: Client interface
@@ -376,10 +382,12 @@ git gtr ai test/integration
 **症状**: `git gtr new` がエラーで失敗
 
 **原因**:
+
 - 既存worktreeと名前が重複
 - ディスク容量不足
 
 **対処**:
+
 ```bash
 # 既存worktree確認
 git gtr list
@@ -396,10 +404,12 @@ df -h
 **症状**: マージ時にコンフリクト発生
 
 **原因**:
+
 - 同じファイルを複数worktreeで編集
 - ベースブランチが更新された
 
 **対処**:
+
 ```bash
 # コンフリクト確認
 git status
@@ -417,10 +427,12 @@ git commit
 **症状**: テストが繰り返し失敗
 
 **原因**:
+
 - テストコードのバグ
 - 環境依存の問題
 
 **対処**:
+
 - 最大試行回数制限（5回）により自動停止
 - AskUserQuestion でユーザーに確認
 - 手動でテストログをレビュー
@@ -430,10 +442,12 @@ git commit
 **症状**: `git gtr ai` コマンドが失敗
 
 **原因**:
+
 - git gtr がインストールされていない
 - 設定が不正
 
 **対処**:
+
 ```bash
 # git gtr インストール確認
 which git-gtr

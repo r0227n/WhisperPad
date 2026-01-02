@@ -39,21 +39,26 @@ TCAアーキテクチャに基づいて、機能要件から詳細な実装計�
 ## 機能要件分析
 
 ### 機能名
+
 {FEATURE_NAME}
 
 ### 目的
+
 - ユーザーが何を達成したいか
 - ビジネス価値は何か
 
 ### 必要な機能
+
 - 機能1: 詳細説明
 - 機能2: 詳細説明
 
 ### UI要件
+
 - どのような画面/UIが必要か
 - ユーザーインタラクションは何か
 
 ### データモデル要件
+
 - どのようなデータ構造が必要か
 - 既存モデルの拡張か、新規作成か
 ```
@@ -83,15 +88,18 @@ Glob(pattern="**/Features/**/*.swift")
 #### Layer 1: Models
 
 **対象**:
+
 - 新しいデータ構造
 - 既存モデルの拡張
 
 **判断基準**:
+
 - Codable 準拠の struct/enum
 - ビジネスロジックを含まない
 - 他のレイヤーに依存しない
 
 **例**:
+
 ```swift
 // 新規作成が必要な場合
 struct NotificationSettings: Codable, Equatable {
@@ -109,15 +117,18 @@ extension AppSettings {
 #### Layer 2: Clients
 
 **対象**:
+
 - 外部依存の抽象化
 - API、ファイルシステム、通知などのクライアント
 
 **判断基準**:
+
 - DependencyKey 準拠
 - Interface と Live実装の分離
 - Models に依存可能
 
 **例**:
+
 ```swift
 // Interface
 struct NotificationClient {
@@ -141,16 +152,19 @@ extension NotificationClient: DependencyKey {
 #### Layer 3: Features
 
 **対象**:
+
 - ビジネスロジック
 - State, Action, Reducer
 - UI (View)
 
 **判断基準**:
+
 - Reducer 準拠
 - Models, Clients に依存
 - 他の Features との結合度を最小化
 
 **例**:
+
 ```swift
 // Reducer
 @Reducer
@@ -184,15 +198,18 @@ struct NotificationView: View {
 #### Layer 4: App
 
 **対象**:
+
 - アプリケーション全体の統合
 - 依存性の登録
 - ルートReducer
 
 **判断基準**:
+
 - すべてのレイヤーに依存
 - アプリケーション起動ロジック
 
 **例**:
+
 ```swift
 // AppReducer.swift
 @Reducer
@@ -231,6 +248,7 @@ struct AppReducer {
 ```
 
 **並列実装の判断**:
+
 - Models層: 複数のModelは並列実装可能
 - Clients層: Interface と Live は並列実装可能、複数のClientも並列可
 - Features層: 独立したFeatureは並列実装可能
@@ -242,36 +260,36 @@ struct AppReducer {
 
 ```markdown
 TodoWrite([
-    {
-        "content": "Models: NotificationSettings.swift を作成",
-        "status": "pending",
-        "activeForm": "Models: NotificationSettings.swift を作成中"
-    },
-    {
-        "content": "Clients: NotificationClient.swift を作成",
-        "status": "pending",
-        "activeForm": "Clients: NotificationClient.swift を作成中"
-    },
-    {
-        "content": "Clients: NotificationClientLive.swift を実装",
-        "status": "pending",
-        "activeForm": "Clients: NotificationClientLive.swift を実装中"
-    },
-    {
-        "content": "Features: NotificationFeature.swift を実装",
-        "status": "pending",
-        "activeForm": "Features: NotificationFeature.swift を実装中"
-    },
-    {
-        "content": "Features: NotificationView.swift を作成",
-        "status": "pending",
-        "activeForm": "Features: NotificationView.swift を作成中"
-    },
-    {
-        "content": "App: AppReducer.swift に統合",
-        "status": "pending",
-        "activeForm": "App: AppReducer.swift に統合中"
-    }
+{
+"content": "Models: NotificationSettings.swift を作成",
+"status": "pending",
+"activeForm": "Models: NotificationSettings.swift を作成中"
+},
+{
+"content": "Clients: NotificationClient.swift を作成",
+"status": "pending",
+"activeForm": "Clients: NotificationClient.swift を作成中"
+},
+{
+"content": "Clients: NotificationClientLive.swift を実装",
+"status": "pending",
+"activeForm": "Clients: NotificationClientLive.swift を実装中"
+},
+{
+"content": "Features: NotificationFeature.swift を実装",
+"status": "pending",
+"activeForm": "Features: NotificationFeature.swift を実装中"
+},
+{
+"content": "Features: NotificationView.swift を作成",
+"status": "pending",
+"activeForm": "Features: NotificationView.swift を作成中"
+},
+{
+"content": "App: AppReducer.swift に統合",
+"status": "pending",
+"activeForm": "App: AppReducer.swift に統合中"
+}
 ])
 ```
 
@@ -279,7 +297,7 @@ TodoWrite([
 
 以下のテンプレートを使用して実装計画を出力します。
 
-```markdown
+````markdown
 # {FEATURE_NAME} 実装計画
 
 ## 概要
@@ -289,10 +307,12 @@ TodoWrite([
 ## 影響範囲
 
 ### 新規作成ファイル
+
 - `path/to/file1.swift`: 役割
 - `path/to/file2.swift`: 役割
 
 ### 変更ファイル
+
 - `path/to/existing1.swift`: 変更内容
 - `path/to/existing2.swift`: 変更内容
 
@@ -303,6 +323,7 @@ TodoWrite([
 **並列実装**: 可能
 
 #### ファイル1: `WhisperPad/Models/NotificationSettings.swift`
+
 - **作成/変更**: 新規作成
 - **内容**: 通知設定用のデータモデル
 - **依存**: なし
@@ -314,12 +335,14 @@ TodoWrite([
       var customMessage: String?
   }
   ```
+````
 
 ### Phase 2: Clients (優先度2)
 
 **並列実装**: Interface と Live は並列可能
 
 #### ファイル2: `WhisperPad/Clients/NotificationClient.swift`
+
 - **作成/変更**: 新規作成
 - **内容**: 通知クライアントのインターフェース
 - **依存**: NotificationSettings (Models)
@@ -332,6 +355,7 @@ TodoWrite([
   ```
 
 #### ファイル3: `WhisperPad/Clients/NotificationClientLive.swift`
+
 - **作成/変更**: 新規作成
 - **内容**: 通知クライアントのLive実装
 - **依存**: NotificationClient (Interface)
@@ -342,6 +366,7 @@ TodoWrite([
 **並列実装**: 独立したFeatureは並列可能
 
 #### ファイル4: `WhisperPad/Features/Settings/SettingsFeature.swift`
+
 - **作成/変更**: 変更
 - **内容**: 通知設定用のAction/Stateを追加
 - **依存**: NotificationSettings, NotificationClient
@@ -350,6 +375,7 @@ TodoWrite([
   - Action に `case updateNotificationSettings(NotificationSettings)` を追加
 
 #### ファイル5: `WhisperPad/Features/Settings/GeneralSettingsTab.swift`
+
 - **作成/変更**: 変更
 - **内容**: 通知設定UIを追加
 - **依存**: SettingsFeature
@@ -361,6 +387,7 @@ TodoWrite([
 **並列実装**: 不可
 
 #### ファイル6: `WhisperPad/App/AppReducer.swift`
+
 - **作成/変更**: 変更
 - **内容**: NotificationClientの依存性を登録
 - **依存**: すべて
@@ -370,14 +397,17 @@ TodoWrite([
 ## リスクと注意点
 
 ### リスク1: 既存設定との競合
+
 - **リスク**: SettingsFeature.swift は多くの機能で変更されるため、コンフリクトの可能性
 - **対策**: 最後に編集する、または他のPRを先にマージ
 
 ### リスク2: 通知権限の扱い
+
 - **リスク**: macOS通知権限のリクエストが失敗する可能性
 - **対策**: エラーハンドリングを適切に実装
 
 ### リスク3: テストカバレッジ
+
 - **リスク**: 通知機能のテストが不十分
 - **対策**: NotificationClient.testValue を実装してテスト可能に
 
@@ -423,6 +453,7 @@ TodoWrite([
 - [ ] SwiftFormat適用
 - [ ] コミット分割完了
 - [ ] PR作成準備完了
+
 ```
 
 ## 使用例
@@ -430,30 +461,38 @@ TodoWrite([
 ### 例1: 新機能追加
 
 ```
+
 入力:
+
 - 機能名: ショートカットカスタマイズ
 - 機能要件: ユーザーが録音開始/停止のショートカットキーをカスタマイズできる
 
 出力:
+
 1. Models: ShortcutSettings.swift 新規作成
 2. Clients: HotKeyClient拡張（既存）
 3. Features: ShortcutSettingsTab.swift 新規作成
 4. Features: SettingsFeature.swift 変更
 5. App: AppReducer.swift 統合
+
 ```
 
 ### 例2: 既存機能拡張
 
 ```
+
 入力:
+
 - 機能名: 無音検出の閾値調整
 - 機能要件: 録音時の無音判定閾値をユーザーが調整できる
 
 出力:
+
 1. Models: RecordingSettings拡張（既存モデル）
 2. Clients: AudioRecorderClient拡張
 3. Features: RecordingSettingsTab.swift 変更
 4. App: 変更不要
+
 ```
 
 ## Tips
@@ -488,3 +527,4 @@ TodoWrite([
 - WhisperPad `docs/spec.md`: 詳細仕様
 - TCA公式ドキュメント: アーキテクチャの詳細
 - `feature-dev` skill: 実装ワークフロー
+```
