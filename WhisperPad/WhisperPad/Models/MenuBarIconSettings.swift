@@ -125,6 +125,30 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
         case .cancel: "xmark.circle"
         }
     }
+
+    /// 状態の詳細説明（設定画面の右パネル表示用）
+    var detailedDescription: String {
+        switch self {
+        case .idle:
+            "アプリが起動していて、録音や文字起こしを行っていない待機状態です。ショートカットキーを押すといつでも録音を開始できます。"
+        case .recording:
+            "音声を録音している状態です。マイクから入力される音声がリアルタイムで記録されています。録音を停止すると文字起こし処理が始まります。"
+        case .paused:
+            "録音を一時停止している状態です。録音を再開するか、停止して文字起こしを開始できます。"
+        case .transcribing:
+            "録音した音声データをWhisperモデルで文字起こししている状態です。処理にはデバイスの性能やモデルサイズに応じて時間がかかります。"
+        case .completed:
+            "文字起こしが正常に完了した状態です。結果はクリップボードにコピーされ、設定に応じてファイルにも保存されます。"
+        case .streamingTranscribing:
+            "ストリーミングモードで録音と文字起こしを同時に行っている状態です。話しながらリアルタイムで文字起こし結果が表示されます。"
+        case .streamingCompleted:
+            "ストリーミング文字起こしが正常に完了した状態です。リアルタイム処理された結果がクリップボードにコピーされます。"
+        case .error:
+            "録音または文字起こし中にエラーが発生した状態です。マイクへのアクセス権限やモデルのダウンロード状態を確認してください。"
+        case .cancel:
+            "録音または文字起こしがユーザーによってキャンセルされた状態です。録音データは破棄され、文字起こしは行われません。"
+        }
+    }
 }
 
 // MARK: - MenuBarIconSettings Extension
