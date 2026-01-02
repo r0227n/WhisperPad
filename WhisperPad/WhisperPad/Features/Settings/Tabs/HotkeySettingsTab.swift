@@ -97,14 +97,18 @@ struct HotkeySettingsTab: View {
         switch type {
         case .recording:
             store.settings.hotKey.recordingHotKey
-        case .recordingToggle:
-            store.settings.hotKey.recordingToggleHotKey
         case .recordingPause:
             store.settings.hotKey.recordingPauseHotKey
         case .cancel:
             store.settings.hotKey.cancelHotKey
         case .streaming:
             store.settings.hotKey.streamingHotKey
+        case .popupCopyAndClose:
+            store.settings.hotKey.popupCopyAndCloseHotKey
+        case .popupSaveToFile:
+            store.settings.hotKey.popupSaveToFileHotKey
+        case .popupClose:
+            store.settings.hotKey.popupCloseHotKey
         }
     }
 
@@ -117,14 +121,18 @@ struct HotkeySettingsTab: View {
                 switch type {
                 case .recording:
                     hotKey.recordingHotKey = newValue
-                case .recordingToggle:
-                    hotKey.recordingToggleHotKey = newValue
                 case .recordingPause:
                     hotKey.recordingPauseHotKey = newValue
                 case .cancel:
                     hotKey.cancelHotKey = newValue
                 case .streaming:
                     hotKey.streamingHotKey = newValue
+                case .popupCopyAndClose:
+                    hotKey.popupCopyAndCloseHotKey = newValue
+                case .popupSaveToFile:
+                    hotKey.popupSaveToFileHotKey = newValue
+                case .popupClose:
+                    hotKey.popupCloseHotKey = newValue
                 }
                 store.send(.updateHotKeySettings(hotKey))
             }
@@ -137,14 +145,18 @@ struct HotkeySettingsTab: View {
         switch type {
         case .recording:
             hotKey.recordingHotKey = .recordingDefault
-        case .recordingToggle:
-            hotKey.recordingToggleHotKey = .recordingToggleDefault
         case .recordingPause:
             hotKey.recordingPauseHotKey = .recordingPauseDefault
         case .cancel:
             hotKey.cancelHotKey = .cancelDefault
         case .streaming:
             hotKey.streamingHotKey = .streamingDefault
+        case .popupCopyAndClose:
+            hotKey.popupCopyAndCloseHotKey = .popupCopyAndCloseDefault
+        case .popupSaveToFile:
+            hotKey.popupSaveToFileHotKey = .popupSaveToFileDefault
+        case .popupClose:
+            hotKey.popupCloseHotKey = .popupCloseDefault
         }
         store.send(.updateHotKeySettings(hotKey))
     }
@@ -263,6 +275,7 @@ private struct ShortcutDetailPanel: View {
             ShortcutKeyButton(
                 keyCombo: $keyCombo,
                 defaultKeyCombo: hotkeyType.defaultKeyCombo,
+                hotkeyType: hotkeyType,
                 isRecording: isRecording,
                 onStartRecording: onStartRecording,
                 onStopRecording: onStopRecording,

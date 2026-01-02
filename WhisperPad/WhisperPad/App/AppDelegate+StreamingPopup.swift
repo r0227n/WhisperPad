@@ -40,13 +40,23 @@ extension AppDelegate {
         }
 
         setStreamingPopupWindow(popup)
+
+        // ポップアップ用ホットキーを登録
+        registerPopupHotKeys()
+
         logger.info("Streaming popup window shown")
     }
 
     /// ストリーミングポップアップを閉じる
     func closeStreamingPopup() {
+        guard getStreamingPopupWindow() != nil else { return }
+
         getStreamingPopupWindow()?.close()
         setStreamingPopupWindow(nil)
+
+        // ポップアップ用ホットキーを解除
+        unregisterPopupHotKeys()
+
         logger.info("Streaming popup window closed")
     }
 }

@@ -25,8 +25,10 @@ private final class HotKeyManager {
     private var recordingToggleHotKey: HotKey?
     private var cancelHotKey: HotKey?
     private var streamingHotKey: HotKey?
-    private var recordingToggleKey: HotKey?
     private var recordingPauseHotKey: HotKey?
+    private var popupCopyAndCloseHotKey: HotKey?
+    private var popupSaveToFileHotKey: HotKey?
+    private var popupCloseHotKey: HotKey?
 
     private init() {}
 
@@ -140,28 +142,6 @@ private final class HotKeyManager {
         logger.info("Streaming hotkey unregistered")
     }
 
-    // MARK: - Recording Toggle (⌥⇧S)
-
-    /// 動的キーコンボで録音開始/終了トグルホットキーを登録
-    /// - Parameters:
-    ///   - combo: キーコンボ設定
-    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
-    func registerRecordingToggleWithCombo(
-        _ combo: HotKeySettings.KeyComboSettings,
-        handler: @escaping () -> Void
-    ) {
-        recordingToggleKey = nil
-        let hotKey = HotKey(
-            carbonKeyCode: combo.carbonKeyCode,
-            carbonModifiers: combo.carbonModifiers
-        )
-        hotKey.keyDownHandler = handler
-        recordingToggleKey = hotKey
-        logger.info(
-            "Recording toggle hotkey registered: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
-        )
-    }
-
     // MARK: - Recording Pause (⌥⇧P)
 
     /// 動的キーコンボで録音一時停止ホットキーを登録
@@ -189,9 +169,81 @@ private final class HotKeyManager {
         recordingToggleHotKey = nil
         cancelHotKey = nil
         streamingHotKey = nil
-        recordingToggleKey = nil
         recordingPauseHotKey = nil
+        popupCopyAndCloseHotKey = nil
+        popupSaveToFileHotKey = nil
+        popupCloseHotKey = nil
         logger.info("All hotkeys unregistered")
+    }
+
+    // MARK: - Popup Hotkeys
+
+    /// ポップアップ: コピーして閉じるホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    func registerPopupCopyAndClose(
+        _ combo: HotKeySettings.KeyComboSettings,
+        handler: @escaping () -> Void
+    ) {
+        popupCopyAndCloseHotKey = nil
+        let hotKey = HotKey(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+        hotKey.keyDownHandler = handler
+        popupCopyAndCloseHotKey = hotKey
+        logger.info(
+            "Popup copy & close hotkey registered: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
+        )
+    }
+
+    /// ポップアップ: ファイル保存ホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    func registerPopupSaveToFile(
+        _ combo: HotKeySettings.KeyComboSettings,
+        handler: @escaping () -> Void
+    ) {
+        popupSaveToFileHotKey = nil
+        let hotKey = HotKey(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+        hotKey.keyDownHandler = handler
+        popupSaveToFileHotKey = hotKey
+        logger.info(
+            "Popup save to file hotkey registered: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
+        )
+    }
+
+    /// ポップアップ: 閉じるホットキーを登録
+    /// - Parameters:
+    ///   - combo: キーコンボ設定
+    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
+    func registerPopupClose(
+        _ combo: HotKeySettings.KeyComboSettings,
+        handler: @escaping () -> Void
+    ) {
+        popupCloseHotKey = nil
+        let hotKey = HotKey(
+            carbonKeyCode: combo.carbonKeyCode,
+            carbonModifiers: combo.carbonModifiers
+        )
+        hotKey.keyDownHandler = handler
+        popupCloseHotKey = hotKey
+        logger.info(
+            "Popup close hotkey registered: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
+        )
+    }
+
+    /// ポップアップ用ホットキーをすべて解除
+    func unregisterPopupHotKeys() {
+        popupCopyAndCloseHotKey = nil
+        popupSaveToFileHotKey = nil
+        popupCloseHotKey = nil
+        logger.info("All popup hotkeys unregistered")
     }
 }
 
@@ -259,14 +311,29 @@ extension HotKeyClient: DependencyKey {
                     HotKeyManager.shared.unregisterStreaming()
                 }
             },
-            registerRecordingToggleWithCombo: { combo, handler in
-                await MainActor.run {
-                    HotKeyManager.shared.registerRecordingToggleWithCombo(combo, handler: handler)
-                }
-            },
             registerRecordingPauseWithCombo: { combo, handler in
                 await MainActor.run {
                     HotKeyManager.shared.registerRecordingPauseWithCombo(combo, handler: handler)
+                }
+            },
+            registerPopupCopyAndClose: { combo, handler in
+                await MainActor.run {
+                    HotKeyManager.shared.registerPopupCopyAndClose(combo, handler: handler)
+                }
+            },
+            registerPopupSaveToFile: { combo, handler in
+                await MainActor.run {
+                    HotKeyManager.shared.registerPopupSaveToFile(combo, handler: handler)
+                }
+            },
+            registerPopupClose: { combo, handler in
+                await MainActor.run {
+                    HotKeyManager.shared.registerPopupClose(combo, handler: handler)
+                }
+            },
+            unregisterPopupHotKeys: {
+                await MainActor.run {
+                    HotKeyManager.shared.unregisterPopupHotKeys()
                 }
             }
         )

@@ -58,7 +58,6 @@ extension AppDelegate {
         await registerRecordingHotKey(hotKeySettings)
         await registerCancelHotKey(hotKeySettings)
         await registerStreamingHotKey(hotKeySettings)
-        await registerRecordingToggleHotKey(hotKeySettings)
         await registerRecordingPauseHotKey(hotKeySettings)
 
         logger.info("Hotkeys registered from settings")
@@ -86,13 +85,6 @@ extension AppDelegate {
         )
     }
 
-    private func registerRecordingToggleHotKey(_ settings: HotKeySettings) async {
-        await hotKeyClient.registerRecordingToggleWithCombo(
-            settings.recordingToggleHotKey,
-            { [weak self] in Task { @MainActor in self?.handleRecordingToggleKeyDown() } }
-        )
-    }
-
     private func registerRecordingPauseHotKey(_ settings: HotKeySettings) async {
         await hotKeyClient.registerRecordingPauseWithCombo(
             settings.recordingPauseHotKey,
@@ -112,19 +104,6 @@ extension AppDelegate {
         if store.appStatus == .streamingTranscribing {
             logger.info("Streaming Push-to-Talk: Key up, stopping streaming")
             store.send(.streamingTranscription(.stopButtonTapped))
-        }
-    }
-
-    /// 録音開始/終了トグルキーダウンハンドラー
-    func handleRecordingToggleKeyDown() {
-        logger.info("Recording toggle hotkey pressed: ⌥⇧S")
-        switch store.appStatus {
-        case .idle, .completed, .error, .streamingCompleted:
-            store.send(.startRecording)
-        case .recording, .paused:
-            store.send(.endRecording)
-        default:
-            logger.info("Recording toggle ignored: transcribing")
         }
     }
 

@@ -39,8 +39,10 @@ enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
     case recording
     case streaming
     case cancel
-    case recordingToggle
     case recordingPause
+    case popupCopyAndClose
+    case popupSaveToFile
+    case popupClose
 
     var id: String { rawValue }
 }
@@ -52,6 +54,7 @@ extension HotkeyType {
     enum Category: String, CaseIterable, Identifiable {
         case recording = "録音"
         case cancel = "キャンセル"
+        case popup = "ポップアップ"
 
         var id: String { rawValue }
 
@@ -59,9 +62,11 @@ extension HotkeyType {
         var hotkeyTypes: [HotkeyType] {
             switch self {
             case .recording:
-                [.recording, .recordingToggle, .recordingPause, .streaming]
+                [.recording, .recordingPause, .streaming]
             case .cancel:
                 [.cancel]
+            case .popup:
+                [.popupCopyAndClose, .popupSaveToFile, .popupClose]
             }
         }
     }
@@ -69,10 +74,12 @@ extension HotkeyType {
     /// ショートカットのカテゴリ
     var category: Category {
         switch self {
-        case .recording, .recordingToggle, .recordingPause, .streaming:
+        case .recording, .recordingPause, .streaming:
             .recording
         case .cancel:
             .cancel
+        case .popupCopyAndClose, .popupSaveToFile, .popupClose:
+            .popup
         }
     }
 
@@ -81,14 +88,18 @@ extension HotkeyType {
         switch self {
         case .recording:
             "録音開始/停止"
-        case .recordingToggle:
-            "録音開始/終了"
         case .recordingPause:
             "一時停止/再開"
         case .cancel:
             "録音キャンセル"
         case .streaming:
             "ストリーミング"
+        case .popupCopyAndClose:
+            "コピーして閉じる"
+        case .popupSaveToFile:
+            "ファイル保存"
+        case .popupClose:
+            "閉じる"
         }
     }
 
@@ -97,14 +108,18 @@ extension HotkeyType {
         switch self {
         case .recording:
             "録音を開始または停止します"
-        case .recordingToggle:
-            "録音を開始または終了します（トグル動作）"
         case .recordingPause:
             "録音を一時停止または再開します"
         case .cancel:
             "進行中の録音をキャンセルします"
         case .streaming:
             "リアルタイム文字起こしを開始します"
+        case .popupCopyAndClose:
+            "文字起こしをクリップボードにコピーしてポップアップを閉じます"
+        case .popupSaveToFile:
+            "文字起こしをファイルに保存します"
+        case .popupClose:
+            "ポップアップを閉じます"
         }
     }
 
@@ -113,14 +128,18 @@ extension HotkeyType {
         switch self {
         case .recording:
             .recordingDefault
-        case .recordingToggle:
-            .recordingToggleDefault
         case .recordingPause:
             .recordingPauseDefault
         case .cancel:
             .cancelDefault
         case .streaming:
             .streamingDefault
+        case .popupCopyAndClose:
+            .popupCopyAndCloseDefault
+        case .popupSaveToFile:
+            .popupSaveToFileDefault
+        case .popupClose:
+            .popupCloseDefault
         }
     }
 
@@ -129,27 +148,37 @@ extension HotkeyType {
         switch self {
         case .recording:
             "mic.fill"
-        case .recordingToggle:
-            "record.circle"
         case .recordingPause:
             "pause.fill"
         case .cancel:
             "xmark.circle"
         case .streaming:
             "waveform"
+        case .popupCopyAndClose:
+            "doc.on.clipboard"
+        case .popupSaveToFile:
+            "square.and.arrow.down"
+        case .popupClose:
+            "xmark"
         }
     }
 
     /// 対応するアイコン設定ステータス
     var correspondingIconStatus: IconConfigStatus {
         switch self {
-        case .recording, .recordingToggle:
+        case .recording:
             .recording
         case .recordingPause:
             .paused
         case .cancel:
             .cancel
         case .streaming:
+            .streamingTranscribing
+        case .popupCopyAndClose:
+            .streamingCompleted
+        case .popupSaveToFile:
+            .streamingCompleted
+        case .popupClose:
             .streamingTranscribing
         }
     }
