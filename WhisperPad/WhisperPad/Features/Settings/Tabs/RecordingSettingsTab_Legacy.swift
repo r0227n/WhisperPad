@@ -6,11 +6,12 @@
 import ComposableArchitecture
 import SwiftUI
 
-/// 録音設定タブ
+/// 録音設定タブ（レガシー版）
 ///
 /// 音声録音の設定を行います。
 /// 入力デバイス、出力設定、無音検出などを設定できます。
-struct RecordingSettingsTab: View {
+/// @deprecated 新しいRecordingSettingsTabを使用してください。
+struct RecordingSettingsTabLegacy: View {
     @Bindable var store: StoreOf<SettingsFeature>
 
     var body: some View {
@@ -166,7 +167,7 @@ struct RecordingSettingsTab: View {
 // MARK: - Preview
 
 #Preview {
-    RecordingSettingsTab(
+    RecordingSettingsTabLegacy(
         store: Store(initialState: SettingsFeature.State()) {
             SettingsFeature()
         }

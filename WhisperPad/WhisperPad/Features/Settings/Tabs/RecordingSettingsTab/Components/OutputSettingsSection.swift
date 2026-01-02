@@ -74,6 +74,7 @@ struct OutputSettingsSection: View {
                             )
                         )
                         .labelsHidden()
+                        .toggleStyle(.switch)
                         .accessibilityLabel("Save to File")
 
                         if store.settings.output.isEnabled {
@@ -92,7 +93,7 @@ struct OutputSettingsSection: View {
                                 Image(systemName: "folder")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                Text(store.settings.output.directory?.path ?? "Not selected")
+                                Text(store.settings.output.outputDirectory.path)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .lineLimit(1)
@@ -104,7 +105,7 @@ struct OutputSettingsSection: View {
                                 Image(systemName: "doc.text")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                Text("Format: \(store.settings.output.format.rawValue)")
+                                Text("Format: .\(store.settings.output.fileExtension.rawValue)")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -138,10 +139,12 @@ struct OutputSettingsSection: View {
         store: Store(
             initialState: SettingsFeature.State(
                 settings: AppSettings(
-                    output: FileOutputSettings(
-                        isEnabled: false,
-                        copyToClipboard: true
-                    )
+                    output: {
+                        var settings = FileOutputSettings.default
+                        settings.isEnabled = false
+                        settings.copyToClipboard = true
+                        return settings
+                    }()
                 )
             )
         ) {
@@ -157,10 +160,12 @@ struct OutputSettingsSection: View {
         store: Store(
             initialState: SettingsFeature.State(
                 settings: AppSettings(
-                    output: FileOutputSettings(
-                        isEnabled: true,
-                        copyToClipboard: false
-                    )
+                    output: {
+                        var settings = FileOutputSettings.default
+                        settings.isEnabled = true
+                        settings.copyToClipboard = false
+                        return settings
+                    }()
                 )
             )
         ) {
@@ -176,10 +181,12 @@ struct OutputSettingsSection: View {
         store: Store(
             initialState: SettingsFeature.State(
                 settings: AppSettings(
-                    output: FileOutputSettings(
-                        isEnabled: false,
-                        copyToClipboard: false
-                    )
+                    output: {
+                        var settings = FileOutputSettings.default
+                        settings.isEnabled = false
+                        settings.copyToClipboard = false
+                        return settings
+                    }()
                 )
             )
         ) {

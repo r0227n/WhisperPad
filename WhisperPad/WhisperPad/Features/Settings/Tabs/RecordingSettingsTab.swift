@@ -17,13 +17,6 @@ struct RecordingSettingsTab: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                // 録音状態カード
-                RecordingStatusCard(
-                    status: recordingStatus,
-                    lastRecordingTime: nil,
-                    lastDuration: nil
-                )
-
                 // オーディオ入力セクション
                 AudioInputSection(
                     store: store,
@@ -49,13 +42,6 @@ struct RecordingSettingsTab: View {
     }
 
     // MARK: - Private Methods
-
-    /// RecordingFeature.Status から RecordingStatus にマッピング
-    private var recordingStatus: RecordingStatus {
-        // TODO: SettingsFeature に recordingStatus を追加したら、ここで使用する
-        // 現在は常に idle を返す
-        .idle
-    }
 
     /// オーディオレベルを監視
     private func observeAudioLevels() async {
@@ -88,10 +74,12 @@ struct RecordingSettingsTab: View {
                         silenceThreshold: -40.0,
                         silenceDuration: 3.0
                     ),
-                    output: FileOutputSettings(
-                        isEnabled: true,
-                        copyToClipboard: true
-                    )
+                    output: {
+                        var settings = FileOutputSettings.default
+                        settings.isEnabled = true
+                        settings.copyToClipboard = true
+                        return settings
+                    }()
                 )
             )
         ) {
@@ -109,10 +97,12 @@ struct RecordingSettingsTab: View {
                     recording: RecordingSettings(
                         silenceDetectionEnabled: false
                     ),
-                    output: FileOutputSettings(
-                        isEnabled: false,
-                        copyToClipboard: true
-                    )
+                    output: {
+                        var settings = FileOutputSettings.default
+                        settings.isEnabled = false
+                        settings.copyToClipboard = true
+                        return settings
+                    }()
                 )
             )
         ) {

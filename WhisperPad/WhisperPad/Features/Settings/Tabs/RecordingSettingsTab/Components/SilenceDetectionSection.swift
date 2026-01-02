@@ -38,6 +38,7 @@ struct SilenceDetectionSection: View {
                         }
                     )
                 )
+                .toggleStyle(.switch)
                 .help("Automatically stop recording when silence is detected")
 
                 if store.settings.recording.silenceDetectionEnabled {
