@@ -12,7 +12,6 @@ import SwiftUI
 /// モダンミニマルなデザインで、情報の整理・視覚的な魅力・操作性・状態可視化を改善しました。
 struct RecordingSettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
-    @State private var currentAudioLevel: Float = -60.0
 
     var body: some View {
         ScrollView {
@@ -24,29 +23,11 @@ struct RecordingSettingsTab: View {
                 OutputSettingsSection(store: store)
 
                 // 無音検出セクション
-                SilenceDetectionSection(
-                    store: store,
-                    currentLevel: currentAudioLevel
-                )
+                SilenceDetectionSection(store: store)
             }
             .padding()
         }
         .frame(minWidth: 500, minHeight: 400)
-        .task {
-            // オーディオレベル監視を開始
-            await observeAudioLevels()
-        }
-    }
-
-    // MARK: - Private Methods
-
-    /// オーディオレベルを監視
-    private func observeAudioLevels() async {
-        @Dependency(\.audioRecorder) var audioRecorder
-
-        for await level in audioRecorder.observeAudioLevel() {
-            currentAudioLevel = level
-        }
     }
 }
 
@@ -68,7 +49,6 @@ struct RecordingSettingsTab: View {
                 settings: AppSettings(
                     recording: RecordingSettings(
                         silenceDetectionEnabled: true,
-                        silenceThreshold: -40.0,
                         silenceDuration: 3.0
                     ),
                     output: {
