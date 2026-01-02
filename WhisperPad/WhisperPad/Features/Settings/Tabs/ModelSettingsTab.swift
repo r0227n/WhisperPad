@@ -149,9 +149,7 @@ struct ModelSettingsTab: View {
 
             ModelSearchFilterBar(
                 searchText: $searchText,
-                downloadFilter: $downloadFilter,
-                isLoading: store.isLoadingModels,
-                onRefresh: { store.send(.fetchModels) }
+                downloadFilter: $downloadFilter
             )
         }
     }

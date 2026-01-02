@@ -13,9 +13,9 @@ enum ModelDownloadFilter: String, CaseIterable, Sendable {
 
     var displayName: String {
         switch self {
-        case .all: "全て"
-        case .downloaded: "済"
-        case .notDownloaded: "未"
+        case .all: "すべて"
+        case .downloaded: "ダウンロード済み"
+        case .notDownloaded: "未ダウンロード"
         }
     }
 
