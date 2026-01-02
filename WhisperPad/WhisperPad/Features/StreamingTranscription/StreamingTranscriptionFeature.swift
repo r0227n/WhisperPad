@@ -50,6 +50,13 @@ struct StreamingTranscriptionFeature {
             return false
         }
 
+        /// アクティブな操作中かどうか（録音中または処理中）
+        var isActiveOperation: Bool {
+            if case .recording = status { return true }
+            if case .processing = status { return true }
+            return false
+        }
+
         /// 完了状態かどうか
         var isCompleted: Bool {
             if case .completed = status { return true }
@@ -229,8 +236,8 @@ struct StreamingTranscriptionFeature {
                 )
 
             case .closeButtonTapped:
-                // 録音中のみ確認ダイアログを表示
-                if state.isRecording {
+                // 録音中または処理中は確認ダイアログを表示
+                if state.isActiveOperation {
                     state.showCancelConfirmation = true
                     return .none
                 }
