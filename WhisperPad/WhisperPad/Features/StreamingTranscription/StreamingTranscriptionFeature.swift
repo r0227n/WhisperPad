@@ -180,7 +180,9 @@ struct StreamingTranscriptionFeature {
             switch action {
             case .binding:
                 return .none
+
             // MARK: - ライフサイクル
+
             case .onAppear:
                 return .run { [userDefaultsClient] send in
                     let settings = await userDefaultsClient.loadSettings()
@@ -191,7 +193,9 @@ struct StreamingTranscriptionFeature {
                         close: hotKeySettings.popupCloseHotKey.displayString
                     ))
                 }
+
             // MARK: - ユーザー操作
+
             case .startButtonTapped:
                 guard state.status == .idle else { return .none }
                 state.status = .initializing
@@ -295,7 +299,9 @@ struct StreamingTranscriptionFeature {
                         await send(.fileSaveFailed(error.localizedDescription))
                     }
                 }
+
             // MARK: - 内部アクション
+
             case .checkWhisperKitReady:
                 return .run { send in
                     let isReady = await whisperKitClient.isReady()
