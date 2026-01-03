@@ -84,6 +84,8 @@ struct RecordingFeature {
         case whisperKitInitialized
         /// WhisperKit初期化失敗
         case whisperKitInitFailed(Error)
+        /// WhisperKit初期化中に録音が試行された
+        case whisperKitInitializingAlertShown
         /// 録音を準備
         case prepareRecording
         /// 録音が開始された
@@ -149,10 +151,16 @@ struct RecordingFeature {
 
             case .checkWhisperKitReady:
                 return .run { send in
-                    let isReady = await whisperKitClient.isReady()
-                    if isReady {
+                    let currentState = await whisperKitClient.getState()
+
+                    switch currentState {
+                    case .ready:
                         await send(.whisperKitReady)
-                    } else {
+                    case .initializing:
+                        // 既に初期化中 - アラート表示
+                        await send(.whisperKitInitializingAlertShown)
+                    case .unloaded, .error:
+                        // 未初期化 - 初期化を開始
                         await send(.initializeWhisperKit)
                     }
                 }
@@ -180,6 +188,10 @@ struct RecordingFeature {
             case let .whisperKitInitFailed(error):
                 state.whisperKitInitializing = false
                 return .send(.delegate(.recordingFailed(.recordingFailed(error.localizedDescription))))
+
+            case .whisperKitInitializingAlertShown:
+                // アラートはAppReducerでdelegateを通じて表示
+                return .send(.delegate(.whisperKitInitializing))
 
             case .prepareRecording:
                 state.status = .preparing
@@ -389,5 +401,7 @@ extension RecordingFeature {
         case recordingFailed(RecordingError)
         /// 録音が部分的に成功（セグメント結合失敗時）
         case recordingPartialSuccess(url: URL, usedSegments: Int, totalSegments: Int)
+        /// WhisperKit初期化中
+        case whisperKitInitializing
     }
 }

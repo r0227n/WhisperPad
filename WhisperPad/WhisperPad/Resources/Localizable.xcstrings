@@ -2302,6 +2302,78 @@
         }
       }
     },
+    "recording.partial_success.alert.title": {
+      "comment": "Alert title shown when partial recording segments were saved",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial Recording Saved"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "録音の一部が保存されました"
+          }
+        }
+      }
+    },
+    "recording.partial_success.alert.message": {
+      "comment": "Alert message explaining segment merging failed. Parameters: %d (used segments), %d (total segments)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to merge audio files. Only the first segment (%d/%d) has been saved. Recording content after pause was lost."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音声ファイルの結合に失敗したため、最初のセグメント（%d/%d）のみが保存されました。一時停止後の録音内容は失われています。"
+          }
+        }
+      }
+    },
+    "recording.whisperkit_initializing.alert.title": {
+      "comment": "Alert title shown when user tries to record while WhisperKit is initializing",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhisperKit is Initializing"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhisperKitを初期化中"
+          }
+        }
+      }
+    },
+    "recording.whisperkit_initializing.alert.message": {
+      "comment": "Alert message explaining WhisperKit initialization is in progress",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The speech recognition engine is currently being initialized. Please wait a moment and try recording again."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音声認識エンジンの初期化中です。しばらくお待ちいただいてから、再度録音をお試しください。"
+          }
+        }
+      }
+    },
     "hotkey.recording.cancel": {
       "comment": "Cancel hotkey recording button",
       "extractionState": "manual",
