@@ -210,89 +210,35 @@ private struct PulseModifier: ViewModifier {
 private struct TextDisplayView: View {
     let store: StoreOf<StreamingTranscriptionFeature>
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var lastScrolledText: String = ""
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
-                    switch store.status {
-                    case .idle, .initializing:
-                        // 何も表示しない
-                        EmptyView()
-
-                    case .recording:
-                        // confirmedText + pendingText + decodingText + カーソル
-                        if !store.confirmedText.isEmpty {
-                            Text(store.confirmedText)
-                                .foregroundColor(.primary)
-                        }
-
-                        // 確定待ちテキスト
-                        if !store.pendingText.isEmpty {
-                            Text(store.pendingText)
-                                .foregroundColor(.secondary)
-                        }
-
-                        if !store.decodingText.isEmpty {
-                            Text(store.decodingText)
-                                .foregroundColor(.secondary)
-                                .opacity(0.7)
-                        }
-
-                        // カーソル
-                        Text("▋")
-                            .foregroundColor(.secondary)
-                            .opacity(0.5)
-                            .accessibilityHidden(true)
-
-                    case .processing:
-                        // confirmedText + decodingText（カーソルなし）
-                        if !store.confirmedText.isEmpty {
-                            Text(store.confirmedText)
-                                .foregroundColor(.primary)
-                        }
-
-                        if !store.decodingText.isEmpty {
-                            Text(store.decodingText)
-                                .foregroundColor(.secondary)
-                                .opacity(0.7)
-                        }
-
-                    case .completed, .error:
-                        // confirmedText のみ
-                        if !store.confirmedText.isEmpty {
-                            Text(store.confirmedText)
-                                .foregroundColor(.primary)
-                        }
-                    }
+                    formattedTranscriptionText
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
                     // スクロールアンカー
                     Color.clear
                         .frame(height: 1)
                         .id("bottom")
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel(transcriptionAccessibilityLabel)
+                .accessibilityLabel(accessibilityLabelIfNeeded)
             }
-            .onChange(of: store.confirmedText) { _, _ in
-                scrollToBottom(proxy: proxy)
-            }
-            .onChange(of: store.pendingText) { _, _ in
-                // recording 時にスクロール
-                if case .recording = store.status {
-                    scrollToBottom(proxy: proxy)
-                }
-            }
-            .onChange(of: store.decodingText) { _, _ in
-                // recording と processing 時にスクロール
-                switch store.status {
-                case .recording, .processing:
-                    scrollToBottom(proxy: proxy)
-                default:
-                    break
+            .onChange(of: store.displayText) { _, newValue in
+                // テキストが実際に変更され、かつ録音中または処理中の場合のみスクロール
+                if newValue != lastScrolledText, !newValue.isEmpty {
+                    switch store.status {
+                    case .recording, .processing:
+                        scrollToBottom(proxy: proxy)
+                        lastScrolledText = newValue
+                    default:
+                        break
+                    }
                 }
             }
         }
@@ -309,45 +255,90 @@ private struct TextDisplayView: View {
         }
     }
 
-    private var transcriptionAccessibilityLabel: String {
+    // MARK: - Formatted Text
+
+    private var formattedTranscriptionText: Text {
         switch store.status {
         case .idle, .initializing:
-            return "文字起こしテキストなし"
+            Text("")
 
         case .recording:
-            var parts: [String] = []
-            if !store.confirmedText.isEmpty {
-                parts.append(store.confirmedText)
-            }
-            if !store.pendingText.isEmpty {
-                parts.append(store.pendingText)
-            }
-            if !store.decodingText.isEmpty {
-                parts.append(store.decodingText)
-            }
-            if parts.isEmpty {
-                return "文字起こしテキストなし"
-            }
-            return "文字起こし: " + parts.joined(separator: " ")
+            buildRecordingText()
 
         case .processing:
-            var parts: [String] = []
-            if !store.confirmedText.isEmpty {
-                parts.append(store.confirmedText)
-            }
-            if !store.decodingText.isEmpty {
-                parts.append(store.decodingText)
-            }
-            if parts.isEmpty {
-                return "文字起こしテキストなし"
-            }
-            return "文字起こし: " + parts.joined(separator: " ")
+            buildProcessingText()
 
+        case .completed, .error:
+            buildCompletedText()
+        }
+    }
+
+    // swiftlint:disable shorthand_operator
+    private func buildRecordingText() -> Text {
+        var result = Text("")
+
+        if !store.confirmedText.isEmpty {
+            result = result + Text(store.confirmedText).foregroundColor(.primary)
+        }
+
+        if !store.pendingText.isEmpty {
+            if !store.confirmedText.isEmpty {
+                result = result + Text("\n")
+            }
+            result = result + Text(store.pendingText).foregroundColor(.secondary)
+        }
+
+        if !store.decodingText.isEmpty {
+            if !store.confirmedText.isEmpty || !store.pendingText.isEmpty {
+                result = result + Text("\n")
+            }
+            result = result + Text(store.decodingText).foregroundColor(.secondary).opacity(0.7)
+        }
+
+        // カーソル追加
+        result = result + Text("\n▋").foregroundColor(.secondary).opacity(0.5)
+
+        return result
+    }
+
+    private func buildProcessingText() -> Text {
+        var result = Text("")
+
+        if !store.confirmedText.isEmpty {
+            result = result + Text(store.confirmedText).foregroundColor(.primary)
+        }
+
+        if !store.decodingText.isEmpty {
+            if !store.confirmedText.isEmpty {
+                result = result + Text("\n")
+            }
+            result = result + Text(store.decodingText).foregroundColor(.secondary).opacity(0.7)
+        }
+
+        return result
+    }
+    // swiftlint:enable shorthand_operator
+
+    private func buildCompletedText() -> Text {
+        if !store.confirmedText.isEmpty {
+            return Text(store.confirmedText).foregroundColor(.primary)
+        }
+        return Text("")
+    }
+
+    // MARK: - Accessibility
+
+    private var accessibilityLabelIfNeeded: String {
+        // 完了時またはエラー時のみラベルを提供
+        switch store.status {
         case .completed, .error:
             if !store.confirmedText.isEmpty {
                 return "文字起こし: " + store.confirmedText
             }
             return "文字起こしテキストなし"
+        default:
+            // 録音中・処理中はラベル計算をスキップ
+            return ""
         }
     }
 }

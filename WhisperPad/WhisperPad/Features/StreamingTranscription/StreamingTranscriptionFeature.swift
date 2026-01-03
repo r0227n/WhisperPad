@@ -79,6 +79,9 @@ struct StreamingTranscriptionFeature {
 
         /// WhisperKit初期化中フラグ
         var whisperKitInitializing: Bool = false
+
+        /// UI更新のスロットリング用：最後にUI更新した時刻
+        var lastUIUpdateTime: Date?
     }
 
     // MARK: - Action
@@ -406,9 +409,25 @@ struct StreamingTranscriptionFeature {
                 }
 
             case let .progressUpdated(progress):
-                state.confirmedText = progress.confirmedText
-                state.pendingText = progress.pendingText
-                state.decodingText = progress.decodingText
+                // UI更新のスロットリング: 200ms以上経過している場合のみテキストを更新
+                let now = Date()
+                let shouldUpdate: Bool = if let lastUpdate = state.lastUIUpdateTime {
+                    // 200ms以上経過しているか、確定テキストが変わった場合のみ更新
+                    now.timeIntervalSince(lastUpdate) >= 0.2
+                        || progress.confirmedText != state.confirmedText
+                } else {
+                    true
+                }
+
+                // UI更新が必要な場合のみテキストを更新
+                if shouldUpdate {
+                    state.confirmedText = progress.confirmedText
+                    state.pendingText = progress.pendingText
+                    state.decodingText = progress.decodingText
+                    state.lastUIUpdateTime = now
+                }
+
+                // tokensPerSecondとstatusは常に更新（内部状態として必要）
                 state.tokensPerSecond = progress.tokensPerSecond
                 if case let .recording(duration, _) = state.status {
                     state.status = .recording(duration: duration, tokensPerSecond: progress.tokensPerSecond)
