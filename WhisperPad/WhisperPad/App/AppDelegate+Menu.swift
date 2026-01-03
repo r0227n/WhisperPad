@@ -17,6 +17,8 @@ extension AppDelegate {
         addRecordingItems(to: menu)
         addCancelItem(to: menu)
         menu.addItem(NSMenuItem.separator())
+        addModelSubmenu(to: menu)
+        menu.addItem(NSMenuItem.separator())
         addSettingsItem(to: menu)
         menu.addItem(NSMenuItem.separator())
 
@@ -71,6 +73,50 @@ extension AppDelegate {
         cancelItem.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: nil)
         cancelItem.isHidden = true
         menu.addItem(cancelItem)
+    }
+
+    private func addModelSubmenu(to menu: NSMenu) {
+        let modelSubmenu = NSMenu(title: localizedAppString(forKey: "menu.model.title"))
+
+        // ヘッダー（現在のモデルを表示、無効化）
+        let currentModel = store.settings.settings.transcription.modelName
+        let displayName = WhisperModel.from(id: currentModel).displayName
+        let currentModelItem = NSMenuItem(
+            title: String(
+                format: localizedAppString(forKey: "menu.model.current"),
+                displayName
+            ),
+            action: nil,
+            keyEquivalent: ""
+        )
+        currentModelItem.isEnabled = false
+        modelSubmenu.addItem(currentModelItem)
+
+        modelSubmenu.addItem(NSMenuItem.separator())
+
+        // ダウンロード済みモデルリスト（動的に更新される）
+
+        modelSubmenu.addItem(NSMenuItem.separator())
+
+        // "More models..."項目
+        let moreModelsItem = NSMenuItem(
+            title: localizedAppString(forKey: "menu.model.more"),
+            action: #selector(openSettings),
+            keyEquivalent: ""
+        )
+        moreModelsItem.target = self
+        moreModelsItem.image = NSImage(systemSymbolName: "arrow.down.circle", accessibilityDescription: nil)
+        modelSubmenu.addItem(moreModelsItem)
+
+        let modelItem = NSMenuItem(
+            title: localizedAppString(forKey: "menu.model.title"),
+            action: nil,
+            keyEquivalent: ""
+        )
+        modelItem.tag = MenuItemTag.modelSubmenu.rawValue
+        modelItem.image = NSImage(systemSymbolName: "cpu", accessibilityDescription: nil)
+        modelItem.submenu = modelSubmenu
+        menu.addItem(modelItem)
     }
 
     private func addSettingsItem(to menu: NSMenu) {
@@ -134,6 +180,13 @@ extension AppDelegate {
 
         let hotKey = store.settings.settings.hotKey
 
+        // WhisperKit初期化中は最優先で処理
+        if store.whisperKitState == .initializing {
+            configureMenuForWhisperKitInitializing(recordingItem, pauseResumeItem, cancelItem)
+            updateModelSubmenu()
+            return
+        }
+
         switch store.appStatus {
         case .idle, .completed, .error:
             configureMenuForIdleState(recordingItem, pauseResumeItem, cancelItem, hotKey)
@@ -144,6 +197,9 @@ extension AppDelegate {
         case .transcribing:
             configureMenuForTranscribingState(recordingItem, pauseResumeItem, cancelItem)
         }
+
+        // モデルサブメニューを更新
+        updateModelSubmenu()
     }
 
     private func configureMenuForIdleState(
@@ -253,5 +309,88 @@ extension AppDelegate {
         )
         pauseResumeItem.isHidden = true
         cancelItem.isHidden = true
+    }
+
+    private func configureMenuForWhisperKitInitializing(
+        _ recordingItem: NSMenuItem,
+        _ pauseResumeItem: NSMenuItem,
+        _ cancelItem: NSMenuItem
+    ) {
+        configureMenuItem(
+            recordingItem,
+            title: localizedAppString(forKey: "menu.model.loading"),
+            action: nil,
+            symbol: "gear",
+            isEnabled: false
+        )
+        pauseResumeItem.isHidden = true
+        cancelItem.isHidden = true
+    }
+
+    private func updateModelSubmenu() {
+        guard let menu = statusMenu,
+              let modelMenuItem = menu.item(withTag: MenuItemTag.modelSubmenu.rawValue),
+              let modelSubmenu = modelMenuItem.submenu
+        else { return }
+
+        let currentModel = store.settings.settings.transcription.modelName
+        let downloadedModels = store.downloadedModels
+
+        // ヘッダー項目を更新（最初の項目）
+        if let currentModelHeaderItem = modelSubmenu.items.first {
+            let displayName = WhisperModel.from(id: currentModel).displayName
+            currentModelHeaderItem.title = String(
+                format: localizedAppString(forKey: "menu.model.current"),
+                displayName
+            )
+        }
+
+        // 既存のモデル項目を削除（セパレーター間）
+        let firstSeparatorIndex = modelSubmenu.items.firstIndex { $0.isSeparatorItem } ?? 1
+        let secondSeparatorIndex = modelSubmenu.items.dropFirst(firstSeparatorIndex + 1)
+            .firstIndex { $0.isSeparatorItem }
+            .map { firstSeparatorIndex + 1 + $0 } ?? modelSubmenu.items.count - 2
+
+        for index in (firstSeparatorIndex + 1 ..< secondSeparatorIndex).reversed() {
+            modelSubmenu.removeItem(at: index)
+        }
+
+        let insertionIndex = firstSeparatorIndex + 1
+
+        if downloadedModels.isEmpty {
+            // モデルなし
+            let emptyItem = NSMenuItem(
+                title: localizedAppString(forKey: "menu.model.empty"),
+                action: nil,
+                keyEquivalent: ""
+            )
+            emptyItem.isEnabled = false
+            modelSubmenu.insertItem(emptyItem, at: insertionIndex)
+        } else {
+            // ダウンロード済みモデルを追加
+            for (offset, model) in downloadedModels.enumerated() {
+                let modelItem = NSMenuItem(
+                    title: model.displayName,
+                    action: #selector(selectModelFromMenu(_:)),
+                    keyEquivalent: ""
+                )
+                modelItem.target = self
+                modelItem.representedObject = model.id
+
+                // 現在のモデルにチェックマーク
+                if model.id == currentModel {
+                    modelItem.state = .on
+                }
+
+                // idle状態かつWhisperKit未初期化の場合のみ有効
+                let canSwitch = (store.appStatus == .idle ||
+                    store.appStatus == .completed ||
+                    store.appStatus == .error) &&
+                    store.whisperKitState != .initializing
+                modelItem.isEnabled = canSwitch
+
+                modelSubmenu.insertItem(modelItem, at: insertionIndex + offset)
+            }
+        }
     }
 }

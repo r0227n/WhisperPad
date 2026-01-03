@@ -116,6 +116,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case micPermissionStatus = 400
         case notificationPermissionStatus = 500
         case cancel = 700
+        case modelSubmenu = 800
     }
 
     // MARK: - Initialization
@@ -231,6 +232,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateIconForCurrentState() {
         // カスタムアイコン設定を取得
         let iconSettings = store.settings.settings.general.menuBarIconSettings
+
+        // WhisperKit初期化中は最優先で処理
+        if store.whisperKitState == .initializing {
+            stopPulseAnimation()
+            let config = iconSettings.transcribing // ギアアイコンを再利用
+            startGearAnimation(with: config)
+            clearRecordingTimeDisplay()
+            return
+        }
 
         switch store.appStatus {
         case .idle:
@@ -396,6 +406,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.post(name: .openSettingsRequest, object: nil)
     }
 
+    /// メニューバーからモデルを選択
+    @objc func selectModelFromMenu(_ sender: NSMenuItem) {
+        guard let modelId = sender.representedObject as? String else {
+            logger.warning("Model selection failed: no model ID")
+            return
+        }
+
+        logger.info("Model selected from menu: \(modelId)")
+        store.send(.selectModelFromMenu(modelId))
+    }
+
     /// アプリケーションを終了
     @objc func quitApplication() {
         logger.info("Quit application requested")
@@ -407,6 +428,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
+        // モデルリストを更新
+        store.send(.prepareMenu)
+
         #if DEBUG
         updatePermissionMenuItems()
         updateOutputMenuItems()

@@ -208,7 +208,7 @@ struct AppReducer {
                     .run { [whisperKitClient] _ in
                         await whisperKitClient.unload()
                     },
-                    .send(.prepareMenu)  // モデルリストを更新
+                    .send(.prepareMenu) // モデルリストを更新
                 )
 
             case .settings(.delegate(.settingsChanged)):
@@ -301,8 +301,8 @@ struct AppReducer {
             case let .selectModelFromMenu(modelName):
                 // idle/completed/error状態以外では切り替え不可
                 guard state.appStatus == .idle ||
-                      state.appStatus == .completed ||
-                      state.appStatus == .error
+                    state.appStatus == .completed ||
+                    state.appStatus == .error
                 else {
                     return .none
                 }
