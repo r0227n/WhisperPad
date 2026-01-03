@@ -28,8 +28,6 @@ struct RecordingFeature {
         var permissionStatus: PermissionStatus = .undetermined
         /// WhisperKit初期化中フラグ
         var whisperKitInitializing: Bool = false
-        /// WhisperKit初期化完了後に自動的に録音を開始するか
-        var shouldAutoStartRecording: Bool = false
 
         /// 録音中かどうか
         var isRecording: Bool {
@@ -190,16 +188,11 @@ struct RecordingFeature {
 
             case .whisperKitInitialized:
                 state.whisperKitInitializing = false
-                // フラグをチェックして、自動開始が設定されている場合のみ録音開始
-                if state.shouldAutoStartRecording {
-                    state.shouldAutoStartRecording = false
-                    return .send(.prepareRecording)
-                }
+                // 初期化完了のみ、自動録音開始しない
                 return .none
 
             case let .whisperKitInitFailed(error):
                 state.whisperKitInitializing = false
-                state.shouldAutoStartRecording = false
                 return .send(.delegate(.recordingFailed(.recordingFailed(error.localizedDescription))))
 
             case .whisperKitInitializingAlertShown:
