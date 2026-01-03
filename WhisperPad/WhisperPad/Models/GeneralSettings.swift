@@ -30,6 +30,13 @@ struct GeneralSettings: Equatable, Sendable {
     /// 通常録音完了時のメッセージ
     var transcriptionCompleteMessage: String = ""
 
+    /// WhisperKitのアイドルタイムアウトを有効にするかどうか
+    var whisperKitIdleTimeoutEnabled: Bool = true
+
+    /// WhisperKitのアイドルタイムアウト時間（分）
+    /// 範囲: 5-60分、デフォルト: 15分
+    var whisperKitIdleTimeoutMinutes: Int = 15
+
     /// デフォルト設定
     static let `default` = GeneralSettings()
 }
@@ -45,6 +52,8 @@ extension GeneralSettings: Codable {
         case menuBarIconSettings
         case notificationTitle
         case transcriptionCompleteMessage
+        case whisperKitIdleTimeoutEnabled
+        case whisperKitIdleTimeoutMinutes
     }
 
     init(from decoder: Decoder) throws {
@@ -62,5 +71,11 @@ extension GeneralSettings: Codable {
         transcriptionCompleteMessage = try container.decodeIfPresent(
             String.self, forKey: .transcriptionCompleteMessage
         ) ?? ""
+        whisperKitIdleTimeoutEnabled = try container.decodeIfPresent(
+            Bool.self, forKey: .whisperKitIdleTimeoutEnabled
+        ) ?? true
+        whisperKitIdleTimeoutMinutes = try container.decodeIfPresent(
+            Int.self, forKey: .whisperKitIdleTimeoutMinutes
+        ) ?? 15
     }
 }

@@ -194,8 +194,14 @@ struct AppReducer {
                 }
 
             case .settings(.delegate(.settingsChanged)):
-                // 設定が変更された場合の処理（必要に応じて）
-                return .none
+                // アイドルタイムアウト設定をWhisperKitManagerに反映
+                let generalSettings = state.settings.settings.general
+                return .run { [whisperKitClient] _ in
+                    await whisperKitClient.configureIdleTimeout(
+                        generalSettings.whisperKitIdleTimeoutEnabled,
+                        generalSettings.whisperKitIdleTimeoutMinutes
+                    )
+                }
 
             case .settings:
                 // その他の設定アクションは無視

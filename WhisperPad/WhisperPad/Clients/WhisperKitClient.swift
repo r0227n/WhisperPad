@@ -29,6 +29,9 @@ struct WhisperKitClient: Sendable {
 
     /// リソースを解放
     var unload: @Sendable () async -> Void
+
+    /// アイドルタイムアウト設定を更新
+    var configureIdleTimeout: @Sendable (_ enabled: Bool, _ minutes: Int) async -> Void
 }
 
 // MARK: - DependencyKey
@@ -52,6 +55,10 @@ extension WhisperKitClient: DependencyKey {
             unload: {
                 clientLogger.debug("liveValue.unload called")
                 await WhisperKitManager.shared.unload()
+            },
+            configureIdleTimeout: { enabled, minutes in
+                clientLogger.debug("liveValue.configureIdleTimeout called: enabled=\(enabled), minutes=\(minutes)")
+                await WhisperKitManager.shared.configureIdleTimeout(enabled: enabled, minutes: minutes)
             }
         )
     }
@@ -76,6 +83,9 @@ extension WhisperKitClient: TestDependencyKey {
             },
             unload: {
                 clientLogger.debug("[PREVIEW] unload called")
+            },
+            configureIdleTimeout: { enabled, minutes in
+                clientLogger.debug("[PREVIEW] configureIdleTimeout called: enabled=\(enabled), minutes=\(minutes)")
             }
         )
     }
@@ -96,6 +106,9 @@ extension WhisperKitClient: TestDependencyKey {
             },
             unload: {
                 clientLogger.debug("[TEST] unload called")
+            },
+            configureIdleTimeout: { enabled, minutes in
+                clientLogger.debug("[TEST] configureIdleTimeout called: enabled=\(enabled), minutes=\(minutes)")
             }
         )
     }
