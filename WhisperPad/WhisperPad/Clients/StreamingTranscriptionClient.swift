@@ -83,7 +83,10 @@ extension StreamingTranscriptionClient: TestDependencyKey {
                 let modelStr = modelName ?? "nil"
                 let langStr = language ?? "nil"
                 clientLogger.debug(
-                    "[PREVIEW] initialize called with \(modelStr), confirmationCount: \(confirmationCount), language: \(langStr)"
+                    """
+                    [PREVIEW] initialize called with \(modelStr), \
+                    confirmationCount: \(confirmationCount), language: \(langStr)
+                    """
                 )
             },
             processChunk: { _ in
@@ -111,7 +114,10 @@ extension StreamingTranscriptionClient: TestDependencyKey {
                 let modelStr = modelName ?? "nil"
                 let langStr = language ?? "nil"
                 clientLogger.debug(
-                    "[TEST] initialize called with \(modelStr), confirmationCount: \(confirmationCount), language: \(langStr)"
+                    """
+                    [TEST] initialize called with \(modelStr), \
+                    confirmationCount: \(confirmationCount), language: \(langStr)
+                    """
                 )
             },
             processChunk: { _ in

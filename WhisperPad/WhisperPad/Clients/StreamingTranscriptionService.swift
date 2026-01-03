@@ -96,18 +96,7 @@ actor StreamingTranscriptionService {
         accumulatedSamples.append(contentsOf: samples)
 
         // バッファオーバーフロー検出
-        let bufferSize = accumulatedSamples.count
-        if bufferSize >= BufferLimits.maximumThreshold {
-            logger.error(
-                "Buffer overflow: \(bufferSize) samples exceeds max \(BufferLimits.maximumThreshold)"
-            )
-            accumulatedSamples.removeAll()
-            throw StreamingTranscriptionError.bufferOverflow
-        } else if bufferSize >= BufferLimits.warningThreshold {
-            logger.warning(
-                "Buffer approaching limit: \(bufferSize) samples (warning: \(BufferLimits.warningThreshold))"
-            )
-        }
+        try checkBufferOverflow()
 
         // 最低限のサンプル数が必要（約1秒分 = 16000サンプル）
         guard accumulatedSamples.count >= 16000 else {
@@ -120,48 +109,7 @@ actor StreamingTranscriptionService {
         }
 
         do {
-            var options = DecodingOptions()
-            options.language = language
-            options.task = .transcribe
-            options.verbose = false
-
-            let startTime = CFAbsoluteTimeGetCurrent()
-
-            // 蓄積されたサンプルを文字起こし
-            let results = try await whisperKit.transcribe(
-                audioArray: accumulatedSamples,
-                decodeOptions: options
-            )
-
-            let endTime = CFAbsoluteTimeGetCurrent()
-            let duration = endTime - startTime
-
-            // 結果を結合
-            let transcribedText = results.map(\.text).joined(separator: "\n")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-
-            // トークン数を概算（文字数ベース: 1トークン ≒ 2文字と仮定）
-            let estimatedTokenCount = transcribedText.count / 2
-            let tokensPerSecond = duration > 0 ? Double(estimatedTokenCount) / duration : 0
-
-            // 確定ロジック
-            let isConfirmed = updateConfirmation(newText: transcribedText)
-
-            if isConfirmed, !transcribedText.isEmpty {
-                confirmedSegments.append(transcribedText)
-                pendingSegment = ""
-                previousResults.removeAll()
-                accumulatedSamples.removeAll()
-            } else {
-                pendingSegment = transcribedText
-            }
-
-            return TranscriptionProgress(
-                confirmedText: confirmedSegments.joined(separator: "\n"),
-                pendingText: pendingSegment,
-                decodingText: transcribedText,
-                tokensPerSecond: tokensPerSecond
-            )
+            return try await performTranscription(whisperKit: whisperKit)
         } catch {
             logger.error("Transcription failed: \(error.localizedDescription)")
             // エラー時にバッファをクリアしてメモリリーク防止
@@ -208,6 +156,68 @@ actor StreamingTranscriptionService {
     }
 
     // MARK: - Private Methods
+
+    /// バッファオーバーフローをチェック
+    private func checkBufferOverflow() throws {
+        let bufferSize = accumulatedSamples.count
+        if bufferSize >= BufferLimits.maximumThreshold {
+            logger.error(
+                "Buffer overflow: \(bufferSize) samples exceeds max \(BufferLimits.maximumThreshold)"
+            )
+            accumulatedSamples.removeAll()
+            throw StreamingTranscriptionError.bufferOverflow
+        } else if bufferSize >= BufferLimits.warningThreshold {
+            logger.warning(
+                "Buffer approaching limit: \(bufferSize) samples (warning: \(BufferLimits.warningThreshold))"
+            )
+        }
+    }
+
+    /// 文字起こし処理を実行
+    private func performTranscription(whisperKit: WhisperKit) async throws -> TranscriptionProgress {
+        var options = DecodingOptions()
+        options.language = language
+        options.task = .transcribe
+        options.verbose = false
+
+        let startTime = CFAbsoluteTimeGetCurrent()
+
+        // 蓄積されたサンプルを文字起こし
+        let results = try await whisperKit.transcribe(
+            audioArray: accumulatedSamples,
+            decodeOptions: options
+        )
+
+        let endTime = CFAbsoluteTimeGetCurrent()
+        let duration = endTime - startTime
+
+        // 結果を結合
+        let transcribedText = results.map(\.text).joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // トークン数を概算（文字数ベース: 1トークン ≒ 2文字と仮定）
+        let estimatedTokenCount = transcribedText.count / 2
+        let tokensPerSecond = duration > 0 ? Double(estimatedTokenCount) / duration : 0
+
+        // 確定ロジック
+        let isConfirmed = updateConfirmation(newText: transcribedText)
+
+        if isConfirmed, !transcribedText.isEmpty {
+            confirmedSegments.append(transcribedText)
+            pendingSegment = ""
+            previousResults.removeAll()
+            accumulatedSamples.removeAll()
+        } else {
+            pendingSegment = transcribedText
+        }
+
+        return TranscriptionProgress(
+            confirmedText: confirmedSegments.joined(separator: "\n"),
+            pendingText: pendingSegment,
+            decodingText: transcribedText,
+            tokensPerSecond: tokensPerSecond
+        )
+    }
 
     private func updateConfirmation(newText: String) -> Bool {
         let now = Date()

@@ -180,9 +180,7 @@ struct StreamingTranscriptionFeature {
             switch action {
             case .binding:
                 return .none
-
             // MARK: - ライフサイクル
-
             case .onAppear:
                 return .run { [userDefaultsClient] send in
                     let settings = await userDefaultsClient.loadSettings()
@@ -193,9 +191,7 @@ struct StreamingTranscriptionFeature {
                         close: hotKeySettings.popupCloseHotKey.displayString
                     ))
                 }
-
             // MARK: - ユーザー操作
-
             case .startButtonTapped:
                 guard state.status == .idle else { return .none }
                 state.status = .initializing
@@ -299,9 +295,7 @@ struct StreamingTranscriptionFeature {
                         await send(.fileSaveFailed(error.localizedDescription))
                     }
                 }
-
             // MARK: - 内部アクション
-
             case .checkWhisperKitReady:
                 return .run { send in
                     let isReady = await whisperKitClient.isReady()
@@ -313,7 +307,6 @@ struct StreamingTranscriptionFeature {
                 }
 
             case .whisperKitReady:
-                // WhisperKitが準備完了したので、Service初期化へ進む
                 return .send(.initializeStreamingService)
 
             case .initializeWhisperKit:
@@ -331,7 +324,6 @@ struct StreamingTranscriptionFeature {
 
             case .whisperKitInitialized:
                 state.whisperKitInitializing = false
-                // WhisperKit初期化完了後、Service初期化へ進む
                 return .send(.initializeStreamingService)
 
             case let .whisperKitInitFailed(error):
@@ -342,15 +334,12 @@ struct StreamingTranscriptionFeature {
                 return .none
 
             case .initializeStreamingService:
-                // ここでWhisperKitは必ず初期化済み
                 return .run { [streamingTranscription, userDefaultsClient] send in
                     do {
                         // UserDefaultsから設定を読み込み
                         let settings = await userDefaultsClient.loadSettings()
                         let confirmationCount = settings.streaming.confirmationCount
                         let language = settings.streaming.language
-
-                        // Service層は状態リセットのみ（WhisperKit初期化は不要）
                         try await streamingTranscription.initialize(nil, confirmationCount, language)
                         await send(.serviceInitializationCompleted)
                     } catch {
@@ -363,10 +352,7 @@ struct StreamingTranscriptionFeature {
 
             case .serviceInitializationCompleted:
                 state.status = .recording(duration: 0, tokensPerSecond: 0)
-
-                // 音声ストリーミングとタイマーを開始
                 return .merge(
-                    // 音声ストリームを開始
                     .run { send in
                         do {
                             let stream = try await streamingAudio.startRecording()
@@ -378,8 +364,6 @@ struct StreamingTranscriptionFeature {
                         }
                     }
                     .cancellable(id: CancelID.audioStream),
-
-                    // タイマーを開始
                     .run { send in
                         for await _ in clock.timer(interval: .seconds(1)) {
                             await send(.timerTick)
@@ -419,8 +403,6 @@ struct StreamingTranscriptionFeature {
                 state.pendingText = progress.pendingText
                 state.decodingText = progress.decodingText
                 state.tokensPerSecond = progress.tokensPerSecond
-
-                // statusのtokensPerSecondも更新
                 if case let .recording(duration, _) = state.status {
                     state.status = .recording(duration: duration, tokensPerSecond: progress.tokensPerSecond)
                 }
