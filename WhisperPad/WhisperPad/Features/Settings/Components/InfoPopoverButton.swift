@@ -54,7 +54,7 @@ struct InfoPopoverButton: View {
             .padding()
             .frame(maxWidth: 300)
         }
-        .accessibilityLabel("Help")
+        .accessibilityLabel(String(localized: "accessibility.help", comment: "Help"))
         .accessibilityHint(helpText)
     }
 }

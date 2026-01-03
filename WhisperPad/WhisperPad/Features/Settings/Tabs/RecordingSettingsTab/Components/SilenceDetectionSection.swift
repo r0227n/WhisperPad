@@ -24,7 +24,7 @@ struct SilenceDetectionSection: View {
                         .frame(width: 20)
 
                     // タイトル
-                    Text("Auto-stop on silence")
+                    Text("recording.silence_detection.title", comment: "Auto-stop on silence")
                         .font(.system(size: 14, weight: .semibold))
 
                     Spacer()
@@ -43,11 +43,15 @@ struct SilenceDetectionSection: View {
                     )
                     .toggleStyle(.switch)
                     .labelsHidden()
-                    .help("Automatically stop recording when silence is detected")
+                    .help(String(localized: "recording.silence_detection.help", comment: "Auto-stop help"))
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("Auto-stop on silence")
-                .accessibilityHint("Toggle to enable or disable automatic recording stop on silence detection")
+                .accessibilityLabel(
+                    String(localized: "recording.silence_detection.title", comment: "Auto-stop on silence")
+                )
+                .accessibilityHint(
+                    String(localized: "recording.silence_detection.accessibility_hint", comment: "Toggle hint")
+                )
 
                 if store.settings.recording.silenceDetectionEnabled {
                     Divider()
@@ -55,14 +59,14 @@ struct SilenceDetectionSection: View {
                     // 無音判定時間
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Duration")
+                            Text("recording.silence_detection.duration", comment: "Duration")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
 
                             Spacer()
 
                             TextField(
-                                "seconds",
+                                String(localized: "recording.silence_detection.seconds", comment: "seconds"),
                                 value: Binding(
                                     get: { store.settings.recording.silenceDuration },
                                     set: { newValue in
@@ -75,10 +79,20 @@ struct SilenceDetectionSection: View {
                             )
                             .frame(width: 60)
                             .textFieldStyle(.roundedBorder)
-                            .accessibilityLabel("Silence duration")
-                            .accessibilityHint("Duration in seconds")
+                            .accessibilityLabel(
+                                String(
+                                    localized: "recording.silence_detection.duration_accessibility",
+                                    comment: "Silence duration"
+                                )
+                            )
+                            .accessibilityHint(
+                                String(
+                                    localized: "recording.silence_detection.duration_hint",
+                                    comment: "Duration in seconds"
+                                )
+                            )
 
-                            Text("seconds")
+                            Text("recording.silence_detection.seconds", comment: "seconds")
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -86,7 +100,9 @@ struct SilenceDetectionSection: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Silence detection settings")
+        .accessibilityLabel(
+            String(localized: "recording.silence_detection.accessibility", comment: "Silence detection settings")
+        )
     }
 }
 

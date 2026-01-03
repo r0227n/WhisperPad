@@ -101,10 +101,10 @@ struct SFSymbolPickerView: View {
         VStack(spacing: 0) {
             // ヘッダー
             HStack {
-                Text("アイコンを選択")
+                Text("symbol_picker.title", comment: "Select Icon")
                     .font(.headline)
                 Spacer()
-                Button("閉じる") {
+                Button(String(localized: "common.close", comment: "Close")) {
                     isPresented = false
                 }
                 .keyboardShortcut(.cancelAction)
@@ -117,8 +117,11 @@ struct SFSymbolPickerView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField("シンボルを検索...", text: $searchText)
-                    .textFieldStyle(.plain)
+                TextField(
+                    String(localized: "symbol_picker.search_placeholder", comment: "Search symbols..."),
+                    text: $searchText
+                )
+                .textFieldStyle(.plain)
                 if !searchText.isEmpty {
                     Button {
                         searchText = ""
@@ -179,7 +182,7 @@ struct SFSymbolPickerView: View {
 
             // フッター（現在の選択）
             HStack {
-                Text("選択中:")
+                Text("symbol_picker.selected", comment: "Selected:")
                     .foregroundColor(.secondary)
                 Image(systemName: selectedSymbol)
                     .font(.system(size: 16))

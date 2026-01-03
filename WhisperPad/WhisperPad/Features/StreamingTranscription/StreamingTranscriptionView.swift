@@ -28,17 +28,17 @@ struct StreamingTranscriptionView: View {
             store.send(.onAppear)
         }
         .alert(
-            "録音を中止しますか？",
+            String(localized: "streaming.cancel.title", comment: "Cancel recording?"),
             isPresented: $store.showCancelConfirmation
         ) {
-            Button("続ける", role: .cancel) {
+            Button(String(localized: "streaming.continue", comment: "Continue"), role: .cancel) {
                 store.send(.cancelConfirmationDismissed)
             }
-            Button("中止して閉じる", role: .destructive) {
+            Button(String(localized: "streaming.stop_and_close", comment: "Stop and Close"), role: .destructive) {
                 store.send(.cancelConfirmationConfirmed)
             }
         } message: {
-            Text("録音中のデータは破棄されます。")
+            Text("streaming.cancel.message", comment: "Recording data will be discarded")
         }
     }
 }
@@ -57,7 +57,7 @@ private struct HeaderView: View {
 
             // 経過時間
             HStack(spacing: 4) {
-                Text("経過時間")
+                Text("streaming.elapsed_time", comment: "Elapsed Time")
                     .foregroundColor(.secondary)
                     .font(.caption)
                 Text(formatDuration(store.duration))
@@ -65,7 +65,13 @@ private struct HeaderView: View {
                     .foregroundColor(.primary)
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("経過時間 \(formatDurationAccessible(store.duration))")
+            .accessibilityLabel(
+                String(
+                    localized: "streaming.elapsed_time.label",
+                    defaultValue: "Elapsed Time \(formatDurationAccessible(store.duration))",
+                    comment: "Elapsed time accessibility label"
+                )
+            )
 
             Spacer()
 
@@ -80,7 +86,7 @@ private struct HeaderView: View {
             }
             .buttonStyle(.plain)
             .hoverTooltip(store.popupCloseShortcut, alignment: .bottom)
-            .accessibilityLabel("閉じる")
+            .accessibilityLabel(String(localized: "streaming.close", comment: "Close"))
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -96,9 +102,17 @@ private struct HeaderView: View {
         let minutes = Int(duration) / 60
         let seconds = Int(duration) % 60
         if minutes > 0 {
-            return "\(minutes)分\(seconds)秒"
+            return String(
+                localized: "streaming.duration.minutes_seconds",
+                defaultValue: "\(minutes) minutes \(seconds) seconds",
+                comment: "Duration with minutes and seconds"
+            )
         } else {
-            return "\(seconds)秒"
+            return String(
+                localized: "streaming.duration.seconds",
+                defaultValue: "\(seconds) seconds",
+                comment: "Duration in seconds only"
+            )
         }
     }
 }
@@ -121,7 +135,13 @@ private struct StatusIndicator: View {
                 .foregroundColor(statusColor)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(statusText)、\(statusColorName)インジケーター")
+        .accessibilityLabel(
+            String(
+                localized: "streaming.status.accessibility",
+                defaultValue: "\(statusText), \(statusColorName) indicator",
+                comment: "Status indicator accessibility label"
+            )
+        )
     }
 
     private var statusColor: Color {
@@ -144,17 +164,17 @@ private struct StatusIndicator: View {
     private var statusText: String {
         switch status {
         case .idle:
-            "待機中"
+            String(localized: "streaming.status.idle", comment: "Idle")
         case .initializing:
-            "初期化中"
+            String(localized: "streaming.status.initializing", comment: "Initializing")
         case .recording:
-            "録音中"
+            String(localized: "streaming.status.recording", comment: "Recording")
         case .processing:
-            "処理中"
+            String(localized: "streaming.status.processing", comment: "Processing")
         case .completed:
-            "完了"
+            String(localized: "streaming.status.completed", comment: "Completed")
         case .error:
-            "エラー"
+            String(localized: "streaming.status.error", comment: "Error")
         }
     }
 
@@ -166,17 +186,17 @@ private struct StatusIndicator: View {
     private var statusColorName: String {
         switch status {
         case .idle:
-            "グレー"
+            String(localized: "streaming.status.color.gray", comment: "Gray")
         case .initializing:
-            "黄色"
+            String(localized: "streaming.status.color.yellow", comment: "Yellow")
         case .recording:
-            "赤"
+            String(localized: "streaming.status.color.red", comment: "Red")
         case .processing:
-            "青"
+            String(localized: "streaming.status.color.blue", comment: "Blue")
         case .completed:
-            "緑"
+            String(localized: "streaming.status.color.green", comment: "Green")
         case .error:
-            "オレンジ"
+            String(localized: "streaming.status.color.orange", comment: "Orange")
         }
     }
 }
@@ -285,9 +305,13 @@ private struct TextDisplayView: View {
             parts.append(store.decodingText)
         }
         if parts.isEmpty {
-            return "文字起こしテキストなし"
+            return String(localized: "streaming.transcription.empty", comment: "No transcription text")
         }
-        return "文字起こし: " + parts.joined(separator: " ")
+        return String(
+            localized: "streaming.transcription.label",
+            defaultValue: "Transcription: \(parts.joined(separator: " "))",
+            comment: "Transcription accessibility label"
+        )
     }
 }
 
@@ -325,18 +349,23 @@ private struct FooterView: View {
             Button {
                 store.send(.stopButtonTapped)
             } label: {
-                Text("停止")
+                Text("streaming.stop", comment: "Stop")
             }
             .buttonStyle(.borderedProminent)
             .tint(.red)
-            .accessibilityLabel("停止")
-            .accessibilityHint("録音を停止します")
+            .accessibilityLabel(String(localized: "streaming.stop", comment: "Stop"))
+            .accessibilityHint(
+                String(
+                    localized: "streaming.stop.help",
+                    comment: "Stops recording"
+                )
+            )
 
         case .processing:
             // 処理中: 処理中表示
             ProgressView()
                 .controlSize(.small)
-            Text("処理中...")
+            Text("streaming.processing", comment: "Processing...")
                 .font(.caption)
                 .foregroundColor(.secondary)
 
@@ -345,22 +374,32 @@ private struct FooterView: View {
             Button {
                 store.send(.saveToFileButtonTapped)
             } label: {
-                Text("ファイル保存")
+                Text("streaming.save_to_file", comment: "Save to File")
             }
             .buttonStyle(.bordered)
             .hoverTooltip(store.popupSaveToFileShortcut)
-            .accessibilityLabel("ファイル保存")
-            .accessibilityHint("文字起こしをファイルに保存します")
+            .accessibilityLabel(String(localized: "streaming.save_to_file", comment: "Save to File"))
+            .accessibilityHint(
+                String(
+                    localized: "streaming.save_to_file.help",
+                    comment: "Saves transcription to a file"
+                )
+            )
 
             Button {
                 store.send(.copyAndCloseButtonTapped)
             } label: {
-                Text("コピーして閉じる")
+                Text("streaming.copy_and_close", comment: "Copy and Close")
             }
             .buttonStyle(.borderedProminent)
             .hoverTooltip(store.popupCopyAndCloseShortcut)
-            .accessibilityLabel("コピーして閉じる")
-            .accessibilityHint("文字起こしをクリップボードにコピーしてウィンドウを閉じます")
+            .accessibilityLabel(String(localized: "streaming.copy_and_close", comment: "Copy and Close"))
+            .accessibilityHint(
+                String(
+                    localized: "streaming.copy_and_close.help",
+                    comment: "Copies transcription to clipboard and closes window"
+                )
+            )
 
         case let .error(message):
             // エラー: エラーメッセージ表示

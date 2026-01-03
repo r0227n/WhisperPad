@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// モデルダウンロード状態フィルター
 enum ModelDownloadFilter: String, CaseIterable, Sendable {
@@ -13,9 +14,12 @@ enum ModelDownloadFilter: String, CaseIterable, Sendable {
 
     var displayName: String {
         switch self {
-        case .all: "すべて"
-        case .downloaded: "ダウンロード済み"
-        case .notDownloaded: "未ダウンロード"
+        case .all:
+            String(localized: "model.filter.all", comment: "All")
+        case .downloaded:
+            String(localized: "model.row.downloaded", comment: "Downloaded")
+        case .notDownloaded:
+            String(localized: "model.row.not_downloaded", comment: "Not Downloaded")
         }
     }
 
@@ -28,6 +32,15 @@ enum ModelDownloadFilter: String, CaseIterable, Sendable {
             isDownloaded
         case .notDownloaded:
             !isDownloaded
+        }
+    }
+
+    /// ローカライズキー
+    var localizedKey: LocalizedStringKey {
+        switch self {
+        case .all: "model.filter.all"
+        case .downloaded: "model.row.downloaded"
+        case .notDownloaded: "model.row.not_downloaded"
         }
     }
 }

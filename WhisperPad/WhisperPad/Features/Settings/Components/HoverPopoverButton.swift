@@ -9,7 +9,7 @@ import SwiftUI
 ///
 /// マウスホバーまたはクリックでポップオーバーを表示する設定用コンポーネント
 struct HoverPopoverButton<Content: View>: View {
-    let label: String
+    let label: LocalizedStringKey
     let icon: String
     @ViewBuilder var popoverContent: () -> Content
 
@@ -54,7 +54,7 @@ struct HoverPopoverButton<Content: View>: View {
                 .frame(minWidth: 280)
         }
         .accessibilityLabel(label)
-        .accessibilityHint("詳細設定を表示します")
+        .accessibilityHint(String(localized: "accessibility.show_details", comment: "Show detailed settings"))
         .accessibilityAddTraits(.isButton)
     }
 }

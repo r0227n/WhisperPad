@@ -20,7 +20,7 @@ struct OutputSettingsSection: View {
                 SettingSectionHeader(
                     icon: "arrow.up.doc",
                     iconColor: .green,
-                    title: "Output Settings"
+                    title: String(localized: "recording.output.title", comment: "Output Settings")
                 )
 
                 // クリップボードにコピー
@@ -28,7 +28,7 @@ struct OutputSettingsSection: View {
                     SettingRowWithIcon(
                         icon: "doc.on.clipboard",
                         iconColor: .blue,
-                        title: "Copy to Clipboard",
+                        title: "recording.output.copy_to_clipboard",
                         isOn: Binding(
                             get: { store.settings.output.copyToClipboard },
                             set: { newValue in
@@ -40,10 +40,13 @@ struct OutputSettingsSection: View {
                     )
 
                     if store.settings.output.copyToClipboard {
-                        Text("Transcription results will be copied to clipboard automatically")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .padding(.leading, 32)
+                        Text(
+                            "recording.output.copy_to_clipboard.help",
+                            comment: "Transcription results will be copied to clipboard automatically"
+                        )
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.leading, 32)
                     }
                 }
 
@@ -57,7 +60,7 @@ struct OutputSettingsSection: View {
                             .foregroundStyle(.cyan)
                             .frame(width: 20, alignment: .center)
 
-                        Text("Save to File")
+                        Text("recording.output.save_to_file", comment: "Save to File")
 
                         Spacer()
 
@@ -74,7 +77,9 @@ struct OutputSettingsSection: View {
                         )
                         .labelsHidden()
                         .toggleStyle(.switch)
-                        .accessibilityLabel("Save to File")
+                        .accessibilityLabel(
+                            String(localized: "recording.output.save_to_file", comment: "Save to File")
+                        )
                     }
 
                     if store.settings.output.isEnabled {
@@ -96,9 +101,14 @@ struct OutputSettingsSection: View {
                                     Image(systemName: "doc.text")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
-                                    Text("Format: .\(store.settings.output.fileExtension.rawValue)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                    Text(
+                                        String(
+                                            format: String(localized: "recording.output.format", comment: "Format: %@"),
+                                            store.settings.output.fileExtension.rawValue
+                                        )
+                                    )
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                                 }
                             }
                             .padding(.leading, 32)
@@ -107,7 +117,7 @@ struct OutputSettingsSection: View {
 
                             // Right: Configure button
                             HoverPopoverButton(
-                                label: "Configure",
+                                label: "recording.output.configure",
                                 icon: "folder.badge.gearshape"
                             ) {
                                 FileOutputDetailsPopover(store: store)
@@ -116,11 +126,11 @@ struct OutputSettingsSection: View {
                     }
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("Save to File")
+                .accessibilityLabel(String(localized: "recording.output.save_to_file", comment: "Save to File"))
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Output settings")
+        .accessibilityLabel(String(localized: "recording.output.accessibility", comment: "Output settings"))
     }
 }
 

@@ -42,7 +42,7 @@ struct InlineSymbolPicker: View {
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "ellipsis.circle")
-                    Text("その他のシンボル...")
+                    Text("symbol_picker.more_symbols", comment: "More Symbols...")
                 }
                 .font(.caption)
                 .foregroundColor(.accentColor)

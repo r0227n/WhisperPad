@@ -28,6 +28,7 @@ struct IconSettingsTab: View {
             detailPanel
                 .frame(minWidth: 300)
         }
+        .environment(\.locale, store.settings.general.preferredLocale.locale)
     }
 
     // MARK: - Left Panel
@@ -44,7 +45,7 @@ struct IconSettingsTab: View {
                     .tag(status)
                 }
             } header: {
-                Text("アイコン状態")
+                Text(String(localized: "icon.status", comment: "Icon Status"))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -101,14 +102,20 @@ private struct IconListRow: View {
                 .frame(width: 24, height: 24)
 
             // 状態名
-            Text(status.rawValue)
+            Text(status.localizedKey)
                 .lineLimit(1)
 
             Spacer()
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .accessibilityLabel("\(status.rawValue)のアイコン")
+        .accessibilityLabel(
+            String(
+                localized: "icon.accessibility.label",
+                defaultValue: "\(status.displayName) icon",
+                comment: "Icon status accessibility label"
+            )
+        )
     }
 }
 
@@ -195,13 +202,9 @@ private struct IconDetailPanel: View {
                 .cornerRadius(8)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(status.rawValue)
+                Text(status.localizedKey)
                     .font(.title2)
                     .fontWeight(.semibold)
-
-                Text("メニューバーアイコン")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             }
 
             Spacer()
@@ -212,18 +215,21 @@ private struct IconDetailPanel: View {
                 Image(systemName: "arrow.counterclockwise")
             }
             .buttonStyle(.borderless)
-            .help("この状態をリセット")
+            .help(String(localized: "icon.reset", comment: "Reset this status"))
         }
     }
 
     /// 説明セクション
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("説明", systemImage: "info.circle")
-                .font(.headline)
-                .foregroundColor(.secondary)
+            Label(
+                String(localized: "icon.description", comment: "Description"),
+                systemImage: "info.circle"
+            )
+            .font(.headline)
+            .foregroundColor(.secondary)
 
-            Text(status.detailedDescription)
+            Text(status.descriptionKey)
                 .foregroundColor(.primary)
         }
     }
@@ -231,9 +237,12 @@ private struct IconDetailPanel: View {
     /// アイコン編集セクション
     private var iconEditSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("アイコン", systemImage: "star")
-                .font(.headline)
-                .foregroundColor(.secondary)
+            Label(
+                String(localized: "icon.icon", comment: "Icon"),
+                systemImage: "star"
+            )
+            .font(.headline)
+            .foregroundColor(.secondary)
 
             InlineSymbolPicker(selection: $config.symbolName)
         }
@@ -245,9 +254,12 @@ private struct IconDetailPanel: View {
     /// 色編集セクション
     private var colorEditSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("色", systemImage: "paintpalette")
-                .font(.headline)
-                .foregroundColor(.secondary)
+            Label(
+                String(localized: "icon.color", comment: "Color"),
+                systemImage: "paintpalette"
+            )
+            .font(.headline)
+            .foregroundColor(.secondary)
 
             HStack(spacing: 8) {
                 // ColorPicker

@@ -30,64 +30,101 @@ struct HotkeySettingsTab: View {
                 store.send(.selectShortcut(.recording))
             }
         }
+        .environment(\.locale, store.settings.general.preferredLocale.locale)
         .alert(
-            "ホットキー登録失敗",
+            String(
+                localized: "hotkey.conflict_alert.title",
+                defaultValue: "ホットキー登録失敗",
+                comment: "Hotkey registration failed"
+            ),
             isPresented: Binding(
                 get: { store.showHotkeyConflictAlert },
                 set: { if !$0 { store.send(.dismissConflictAlert) } }
             )
         ) {
-            Button("OK", role: .cancel) {
+            Button(String(localized: "common.ok", defaultValue: "OK", comment: "OK"), role: .cancel) {
                 store.send(.dismissConflictAlert)
             }
         } message: {
             if let type = store.conflictingHotkeyType {
-                Text("\(type.displayName) のショートカットは他のアプリケーションで使用中のため、登録できません。別のキーコンビネーションを選択してください。")
+                Text(String(
+                    localized: "hotkey.conflict_alert.message",
+                    defaultValue: "\(type.displayName) のショートカットは他のアプリケーションで使用中のため、登録できません。別のキーコンビネーションを選択してください。",
+                    comment: "Hotkey conflict with other app message"
+                ))
             } else {
-                Text("他のアプリケーションで使用中のため、登録できません。")
+                Text(String(
+                    localized: "hotkey.conflict_alert.message_generic",
+                    defaultValue: "他のアプリケーションで使用中のため、登録できません。",
+                    comment: "Generic hotkey conflict message"
+                ))
             }
         }
         .alert(
-            "ホットキーが重複しています",
+            String(
+                localized: "hotkey.duplicate_alert.title",
+                defaultValue: "ホットキーが重複しています",
+                comment: "Hotkey duplication alert"
+            ),
             isPresented: Binding(
                 get: { store.showDuplicateHotkeyAlert },
                 set: { if !$0 { store.send(.dismissDuplicateAlert) } }
             )
         ) {
-            Button("OK", role: .cancel) {
+            Button(String(localized: "common.ok", defaultValue: "OK", comment: "OK"), role: .cancel) {
                 store.send(.dismissDuplicateAlert)
             }
         } message: {
             if let targetType = store.conflictingHotkeyType,
                let duplicateType = store.duplicateWithHotkeyType {
-                Text("""
-                \(targetType.displayName) のショートカットは、既に \(duplicateType.displayName) で使用されています。
+                Text(String(
+                    localized: "hotkey.duplicate_alert.message",
+                    defaultValue: """
+                    \(targetType.displayName) のショートカットは、既に \(duplicateType.displayName) で使用されています。
 
-                別のキーコンビネーションを選択してください。
-                """)
+                    別のキーコンビネーションを選択してください。
+                    """,
+                    comment: "Hotkey duplication message"
+                ))
             } else {
-                Text("このショートカットは既に別の機能で使用されています。")
+                Text(String(
+                    localized: "hotkey.duplicate_alert.message_generic",
+                    defaultValue: "このショートカットは既に別の機能で使用されています。",
+                    comment: "Generic duplication message"
+                ))
             }
         }
         .alert(
-            "システムショートカット",
+            String(
+                localized: "hotkey.system_reserved_alert.title",
+                defaultValue: "システムショートカット",
+                comment: "System reserved shortcut"
+            ),
             isPresented: Binding(
                 get: { store.showSystemReservedAlert },
                 set: { if !$0 { store.send(.dismissSystemReservedAlert) } }
             )
         ) {
-            Button("OK", role: .cancel) {
+            Button(String(localized: "common.ok", defaultValue: "OK", comment: "OK"), role: .cancel) {
                 store.send(.dismissSystemReservedAlert)
             }
         } message: {
             if let type = store.conflictingHotkeyType {
-                Text("""
-                \(type.displayName) のショートカットには、システムで予約されているキーコンビネーション（Cmd+C、Cmd+Vなど）を使用できません。
+                Text(String(
+                    localized: "hotkey.system_reserved_alert.message",
+                    defaultValue: """
+                    \(type.displayName) のショートカットには、システムで予約されているキーコンビネーション（Cmd+C、Cmd+Vなど）を使用できません。
 
-                別のキーコンビネーションを選択してください。
-                """)
+                    別のキーコンビネーションを選択してください。
+                    """,
+                    comment: "System reserved shortcut message"
+                ))
             } else {
-                Text("このショートカットはシステムで予約されています。")
+                Text(String(
+                    localized: "hotkey.system_reserved_alert.message_generic",
+                    defaultValue: "このショートカットはシステムで予約されています。",
+                    comment: "Generic system reserved message"
+                ))
             }
         }
     }
@@ -110,7 +147,7 @@ struct HotkeySettingsTab: View {
                         .tag(hotkeyType)
                     }
                 } header: {
-                    Text(category.rawValue)
+                    Text(category.localizedKey)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -144,7 +181,7 @@ struct HotkeySettingsTab: View {
     private var placeholderView: some View {
         VStack {
             Spacer()
-            Text("ショートカットを選択してください")
+            Text(String(localized: "hotkey.select_prompt", comment: "Please select a shortcut"))
                 .foregroundColor(.secondary)
             Spacer()
         }
@@ -215,7 +252,7 @@ private struct ShortcutListRow: View {
 
     var body: some View {
         HStack {
-            Text(hotkeyType.displayName)
+            Text(hotkeyType.localizedKey)
                 .lineLimit(1)
 
             Spacer()
@@ -231,7 +268,11 @@ private struct ShortcutListRow: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .accessibilityLabel("\(hotkeyType.displayName)、ショートカット: \(keyCombo.displayString)")
+        .accessibilityLabel(
+            hotkeyType.displayName + ", " +
+                String(localized: "hotkey.accessibility.shortcut_label", comment: "Shortcut: ") +
+                keyCombo.displayString
+        )
     }
 }
 
@@ -285,11 +326,11 @@ private struct ShortcutDetailPanel: View {
                 .cornerRadius(8)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(hotkeyType.displayName)
+                Text(hotkeyType.localizedKey)
                     .font(.title2)
                     .fontWeight(.semibold)
 
-                Text(hotkeyType.category.rawValue)
+                Text(hotkeyType.category.localizedKey)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -309,11 +350,14 @@ private struct ShortcutDetailPanel: View {
     /// 説明セクション
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("説明", systemImage: "info.circle")
-                .font(.headline)
-                .foregroundColor(.secondary)
+            Label(
+                String(localized: "hotkey.description", comment: "Description"),
+                systemImage: "info.circle"
+            )
+            .font(.headline)
+            .foregroundColor(.secondary)
 
-            Text(hotkeyType.hotkeyDescription)
+            Text(hotkeyType.descriptionKey)
                 .foregroundColor(.primary)
         }
     }
@@ -321,9 +365,12 @@ private struct ShortcutDetailPanel: View {
     /// ショートカット入力セクション
     private var shortcutInputSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("ショートカットキー", systemImage: "keyboard")
-                .font(.headline)
-                .foregroundColor(.secondary)
+            Label(
+                String(localized: "hotkey.shortcut_key", comment: "Shortcut Key"),
+                systemImage: "keyboard"
+            )
+            .font(.headline)
+            .foregroundColor(.secondary)
 
             // キー設定ボタン
             ShortcutKeyButton(
@@ -341,11 +388,16 @@ private struct ShortcutDetailPanel: View {
                 Label(conflict, systemImage: "exclamationmark.triangle.fill")
                     .foregroundColor(.red)
                     .font(.footnote)
-                    .accessibilityLabel("ショートカット競合警告: \(conflict)")
+                    .accessibilityLabel(
+                        String(
+                            localized: "hotkey.accessibility.conflict_warning",
+                            comment: "Shortcut conflict warning: "
+                        ) + conflict
+                    )
             }
 
             // 注意メッセージ
-            Text("他のアプリと競合する場合は変更してください")
+            Text(String(localized: "hotkey.conflict.help", comment: "Change if conflicts with other apps"))
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
