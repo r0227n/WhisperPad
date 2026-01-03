@@ -13,18 +13,16 @@ private let logger = Logger(subsystem: "com.whisperpad", category: "UserDefaults
 
 extension UserDefaultsClient: DependencyKey {
     static var liveValue: Self {
-        let userDefaults = UserDefaults.standard
-        let encoder = JSONEncoder()
-        let decoder = JSONDecoder()
-
-        return Self(
+        Self(
             loadSettings: {
+                let userDefaults = UserDefaults.standard
                 guard let data = userDefaults.data(forKey: AppSettings.Keys.settings) else {
                     logger.info("No saved settings found, returning defaults")
                     return .default
                 }
 
                 do {
+                    let decoder = JSONDecoder()
                     let settings = try decoder.decode(AppSettings.self, from: data)
                     logger.info("Settings loaded successfully")
                     return settings
@@ -34,6 +32,9 @@ extension UserDefaultsClient: DependencyKey {
                 }
             },
             saveSettings: { settings in
+                let userDefaults = UserDefaults.standard
+                let encoder = JSONEncoder()
+
                 do {
                     let data = try encoder.encode(settings)
                     userDefaults.set(data, forKey: AppSettings.Keys.settings)
@@ -44,10 +45,12 @@ extension UserDefaultsClient: DependencyKey {
                 }
             },
             saveStorageBookmark: { bookmarkData in
+                let userDefaults = UserDefaults.standard
                 userDefaults.set(bookmarkData, forKey: AppSettings.Keys.storageBookmark)
                 logger.info("Storage bookmark saved (\(bookmarkData.count) bytes)")
             },
             loadStorageBookmark: {
+                let userDefaults = UserDefaults.standard
                 let data = userDefaults.data(forKey: AppSettings.Keys.storageBookmark)
                 if data != nil {
                     logger.info("Storage bookmark loaded")
