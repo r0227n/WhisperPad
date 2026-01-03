@@ -64,7 +64,7 @@ struct HotkeyRecorderView: View {
     /// 録音中の表示
     private var recordingView: some View {
         HStack(spacing: 8) {
-            Text("キーを入力...")
+            Text(String(localized: "hotkey.input.waiting", comment: "Type key..."))
                 .foregroundColor(.secondary)
                 .frame(minWidth: 80)
                 .padding(.horizontal, 8)
@@ -75,14 +75,14 @@ struct HotkeyRecorderView: View {
                     RoundedRectangle(cornerRadius: 6)
                         .stroke(Color.accentColor, lineWidth: 2)
                 )
-                .accessibilityLabel("キーを入力中")
+                .accessibilityLabel(String(localized: "hotkey.input.recording", comment: "Recording key"))
 
-            Button("キャンセル") {
+            Button(String(localized: "common.cancel", comment: "Cancel")) {
                 onStopRecording()
             }
             .buttonStyle(.borderless)
-            .accessibilityLabel("キャンセル")
-            .accessibilityHint("ホットキーの入力をキャンセルします")
+            .accessibilityLabel(String(localized: "common.cancel", comment: "Cancel"))
+            .accessibilityHint(String(localized: "hotkey.input.cancel", comment: "Cancel hotkey input"))
         }
         .onHover { hovering in
             if hovering {
@@ -107,14 +107,20 @@ struct HotkeyRecorderView: View {
                     .cornerRadius(6)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(label)のホットキー: \(displayString(keyCombo))。クリックして変更")
+            .accessibilityLabel(
+                String(
+                    localized: "hotkey.display.label",
+                    defaultValue: "\(label) hotkey: \(displayString(keyCombo)). Click to change",
+                    comment: "Hotkey display accessibility label"
+                )
+            )
 
-            Button("クリア") {
+            Button(String(localized: "common.clear", comment: "Clear")) {
                 onClear()
             }
             .buttonStyle(.borderless)
-            .accessibilityLabel("クリア")
-            .accessibilityHint("ホットキーをデフォルトに戻します")
+            .accessibilityLabel(String(localized: "common.clear", comment: "Clear"))
+            .accessibilityHint(String(localized: "hotkey.input.clear", comment: "Reset hotkey to default"))
         }
     }
 

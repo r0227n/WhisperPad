@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// アプリケーションの言語設定
 ///
@@ -56,6 +57,15 @@ enum AppLocale: String, Codable, Equatable, Sendable, CaseIterable {
             Locale(identifier: "en")
         case .ja:
             Locale(identifier: "ja")
+        }
+    }
+
+    /// ローカライズキー
+    var localizedKey: LocalizedStringKey {
+        switch self {
+        case .system: "locale.system"
+        case .en: "locale.english"
+        case .ja: "locale.japanese"
         }
     }
 }

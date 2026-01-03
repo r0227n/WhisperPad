@@ -37,7 +37,7 @@ struct GeneralSettingsTab: View {
                         }
                     )) {
                         ForEach(AppLocale.allCases, id: \.self) { locale in
-                            Text(locale.displayName).tag(locale)
+                            Text(locale.localizedKey).tag(locale)
                         }
                     }
                     .pickerStyle(.menu)
@@ -56,7 +56,7 @@ struct GeneralSettingsTab: View {
                 SettingRowWithIcon(
                     icon: "power",
                     iconColor: .green,
-                    title: String(localized: "settings.general.launch_at_login", comment: "Launch at Login"),
+                    title: "settings.general.launch_at_login",
                     isOn: Binding(
                         get: { store.settings.general.launchAtLogin },
                         set: { newValue in
@@ -85,7 +85,7 @@ struct GeneralSettingsTab: View {
                 SettingRowWithIcon(
                     icon: "bell.fill",
                     iconColor: .orange,
-                    title: String(localized: "settings.general.show_notification", comment: "Show Notifications"),
+                    title: "settings.general.show_notification",
                     isOn: Binding(
                         get: { store.settings.general.showNotificationOnComplete },
                         set: { newValue in
@@ -114,7 +114,7 @@ struct GeneralSettingsTab: View {
                 SettingRowWithIcon(
                     icon: "speaker.wave.2.fill",
                     iconColor: .pink,
-                    title: String(localized: "settings.general.play_sound", comment: "Play Sound"),
+                    title: "settings.general.play_sound",
                     isOn: Binding(
                         get: { store.settings.general.playSoundOnComplete },
                         set: { newValue in
@@ -141,10 +141,7 @@ struct GeneralSettingsTab: View {
                     Spacer()
 
                     HoverPopoverButton(
-                        label: String(
-                            localized: "settings.general.notification.message.customize",
-                            comment: "Customize"
-                        ),
+                        label: "settings.general.notification.message.customize",
                         icon: "slider.horizontal.3"
                     ) {
                         NotificationDetailsPopover(store: store)

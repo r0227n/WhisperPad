@@ -51,7 +51,7 @@ struct HotkeySettingsTab: View {
                         .tag(hotkeyType)
                     }
                 } header: {
-                    Text(category.displayName)
+                    Text(category.localizedKey)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -85,7 +85,7 @@ struct HotkeySettingsTab: View {
     private var placeholderView: some View {
         VStack {
             Spacer()
-            Text("hotkey.select_prompt", comment: "Please select a shortcut")
+            Text(String(localized: "hotkey.select_prompt", comment: "Please select a shortcut"))
                 .foregroundColor(.secondary)
             Spacer()
         }
@@ -172,7 +172,7 @@ private struct ShortcutListRow: View {
 
     var body: some View {
         HStack {
-            Text(hotkeyType.displayName)
+            Text(hotkeyType.localizedKey)
                 .lineLimit(1)
 
             Spacer()
@@ -189,11 +189,9 @@ private struct ShortcutListRow: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .accessibilityLabel(
-            String(
-                localized: "hotkey.accessibility.label",
-                defaultValue: "\(hotkeyType.displayName), Shortcut: \(keyCombo.displayString)",
-                comment: "Hotkey row accessibility label"
-            )
+            hotkeyType.displayName + ", " +
+                String(localized: "hotkey.accessibility.shortcut_label", comment: "Shortcut: ") +
+                keyCombo.displayString
         )
     }
 }
@@ -248,11 +246,11 @@ private struct ShortcutDetailPanel: View {
                 .cornerRadius(8)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(hotkeyType.displayName)
+                Text(hotkeyType.localizedKey)
                     .font(.title2)
                     .fontWeight(.semibold)
 
-                Text(hotkeyType.category.rawValue)
+                Text(hotkeyType.category.localizedKey)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -269,7 +267,7 @@ private struct ShortcutDetailPanel: View {
             .font(.headline)
             .foregroundColor(.secondary)
 
-            Text(hotkeyType.hotkeyDescription)
+            Text(hotkeyType.descriptionKey)
                 .foregroundColor(.primary)
         }
     }
@@ -302,15 +300,14 @@ private struct ShortcutDetailPanel: View {
                     .font(.footnote)
                     .accessibilityLabel(
                         String(
-                            localized: "hotkey.conflict.warning",
-                            defaultValue: "Shortcut conflict warning: \(conflict)",
-                            comment: "Conflict warning accessibility label"
-                        )
+                            localized: "hotkey.accessibility.conflict_warning",
+                            comment: "Shortcut conflict warning: "
+                        ) + conflict
                     )
             }
 
             // 注意メッセージ
-            Text("hotkey.conflict.help", comment: "Change if conflicts with other apps")
+            Text(String(localized: "hotkey.conflict.help", comment: "Change if conflicts with other apps"))
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

@@ -86,18 +86,18 @@ struct ModelSettingsTab: View {
             HStack(spacing: 20) {
                 // モデル選択
                 HStack {
-                    Text("model.active.label", comment: "Model")
+                    Text(String(localized: "model.active.label", comment: "Model"))
                         .foregroundStyle(.secondary)
                     Picker("", selection: validatedModelSelection) {
                         if store.downloadedModels.isEmpty {
-                            Text("model.active.empty", comment: "Please download a model")
+                            Text(String(localized: "model.active.empty", comment: "Please download a model"))
                                 .tag("")
                         }
                         ForEach(store.downloadedModels, id: \.id) { model in
                             HStack {
                                 Text(model.displayName)
                                 if model.isRecommended {
-                                    Text("model.active.recommended", comment: "Recommended")
+                                    Text(String(localized: "model.active.recommended", comment: "Recommended"))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -112,7 +112,7 @@ struct ModelSettingsTab: View {
 
                 // 言語選択
                 HStack {
-                    Text("model.active.language", comment: "Language")
+                    Text(String(localized: "model.active.language", comment: "Language"))
                         .foregroundStyle(.secondary)
                     Picker(
                         "",
@@ -129,7 +129,7 @@ struct ModelSettingsTab: View {
                             TranscriptionSettings.TranscriptionLanguage.allCases,
                             id: \.self
                         ) { language in
-                            Text(language.displayName).tag(language)
+                            Text(language.localizedKey).tag(language)
                         }
                     }
                     .pickerStyle(.menu)
@@ -140,7 +140,7 @@ struct ModelSettingsTab: View {
             }
 
             if store.downloadedModels.isEmpty {
-                Text("model.active.download_prompt", comment: "Download a model from the list below")
+                Text(String(localized: "model.active.download_prompt", comment: "Download a model from the list below"))
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
@@ -186,7 +186,7 @@ struct ModelSettingsTab: View {
             Spacer()
             ProgressView()
                 .scaleEffect(0.8)
-            Text("model.list.loading", comment: "Loading models...")
+            Text(String(localized: "model.list.loading", comment: "Loading models..."))
                 .foregroundStyle(.secondary)
             Spacer()
         }
@@ -198,7 +198,7 @@ struct ModelSettingsTab: View {
             Image(systemName: "magnifyingglass")
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
-            Text("model.list.no_results", comment: "No models match the criteria")
+            Text(String(localized: "model.list.no_results", comment: "No models match the criteria"))
                 .foregroundStyle(.secondary)
             Button(String(localized: "model.filter.reset", comment: "Reset filters")) {
                 searchText = ""
@@ -247,7 +247,7 @@ struct ModelSettingsTab: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("model.storage.usage", comment: "Usage")
+                        Text(String(localized: "model.storage.usage", comment: "Usage"))
                             .foregroundStyle(.secondary)
                         Text(ByteCountFormatter.string(
                             fromByteCount: store.storageUsage,
@@ -257,14 +257,14 @@ struct ModelSettingsTab: View {
                     }
 
                     HStack {
-                        Text("model.storage.location", comment: "Location")
+                        Text(String(localized: "model.storage.location", comment: "Location"))
                             .foregroundStyle(.secondary)
                         if let customURL = store.settings.transcription.customStorageURL {
                             Text(customURL.path)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                         } else {
-                            Text("model.storage.default", comment: "Default")
+                            Text(String(localized: "model.storage.default", comment: "Default"))
                         }
                     }
                 }
@@ -288,9 +288,12 @@ struct ModelSettingsTab: View {
                 }
             }
 
-            Text("model.storage.footer", comment: "Models are stored on device and can be used offline")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(String(
+                localized: "model.storage.footer",
+                comment: "Models are stored on device and can be used offline"
+            ))
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
         .padding()
         .background(Color(.controlBackgroundColor))

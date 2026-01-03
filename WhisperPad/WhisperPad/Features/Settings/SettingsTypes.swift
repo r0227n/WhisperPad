@@ -212,6 +212,49 @@ extension HotkeyType {
     }
 }
 
+// MARK: - Localization
+
+import SwiftUI
+
+extension HotkeyType {
+    /// ローカライズキー
+    var localizedKey: LocalizedStringKey {
+        switch self {
+        case .recording: "hotkey.type.recording"
+        case .recordingPause: "hotkey.type.recording_pause"
+        case .cancel: "hotkey.type.cancel"
+        case .streaming: "hotkey.type.streaming"
+        case .popupCopyAndClose: "hotkey.type.copy_and_close"
+        case .popupSaveToFile: "hotkey.type.save_to_file"
+        case .popupClose: "hotkey.type.close"
+        }
+    }
+
+    /// 説明のローカライズキー
+    var descriptionKey: LocalizedStringKey {
+        switch self {
+        case .recording: "hotkey.description.recording"
+        case .recordingPause: "hotkey.description.recording_pause"
+        case .cancel: "hotkey.description.cancel"
+        case .streaming: "hotkey.description.streaming"
+        case .popupCopyAndClose: "hotkey.description.copy_and_close"
+        case .popupSaveToFile: "hotkey.description.save_to_file"
+        case .popupClose: "hotkey.description.close"
+        }
+    }
+}
+
+extension HotkeyType.Category {
+    /// ローカライズキー
+    var localizedKey: LocalizedStringKey {
+        switch self {
+        case .recording: "hotkey.category.recording"
+        case .cancel: "hotkey.category.cancel"
+        case .popup: "hotkey.category.popup"
+        }
+    }
+}
+
 // MARK: - Delegate Action
 
 /// 設定機能のデリゲートアクション

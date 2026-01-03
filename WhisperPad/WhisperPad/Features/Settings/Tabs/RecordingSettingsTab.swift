@@ -28,7 +28,8 @@ struct RecordingSettingsTab: View {
                         }
                     )
                 ) {
-                    Text("recording.input_device.system_default", comment: "System Default").tag(nil as String?)
+                    Text(String(localized: "recording.input_device.system_default", comment: "System Default"))
+                        .tag(nil as String?)
                     ForEach(store.availableInputDevices) { device in
                         Text(device.name).tag(device.id as String?)
                     }
@@ -37,7 +38,7 @@ struct RecordingSettingsTab: View {
                 .accessibilityLabel(String(localized: "recording.input_device.title", comment: "Input Device"))
                 .accessibilityHint(String(localized: "recording.input_device.help", comment: "Select microphone"))
             } header: {
-                Text("recording.input_device.title", comment: "Input Device")
+                Text(String(localized: "recording.input_device.title", comment: "Input Device"))
             }
 
             // MARK: - 出力セクション
@@ -46,7 +47,7 @@ struct RecordingSettingsTab: View {
                 SettingRowWithIcon(
                     icon: "doc.on.clipboard",
                     iconColor: .blue,
-                    title: String(localized: "recording.output.copy_to_clipboard", comment: "Copy to Clipboard"),
+                    title: "recording.output.copy_to_clipboard",
                     isOn: Binding(
                         get: { store.settings.output.copyToClipboard },
                         set: { newValue in
@@ -72,7 +73,7 @@ struct RecordingSettingsTab: View {
                         .foregroundStyle(.cyan)
                         .frame(width: 20, alignment: .center)
 
-                    Text("recording.output.save_to_file", comment: "Save to File")
+                    Text(String(localized: "recording.output.save_to_file", comment: "Save to File"))
 
                     Spacer()
 
@@ -92,7 +93,7 @@ struct RecordingSettingsTab: View {
 
                     if store.settings.output.isEnabled {
                         HoverPopoverButton(
-                            label: String(localized: "recording.output.settings", comment: "Settings"),
+                            label: "recording.output.settings",
                             icon: "folder.badge.gearshape"
                         ) {
                             FileOutputDetailsPopover(store: store)
@@ -103,11 +104,14 @@ struct RecordingSettingsTab: View {
                 .accessibilityLabel(String(localized: "recording.output.save_to_file", comment: "Save to File"))
                 .accessibilityHint(String(localized: "recording.output.save_to_file.help", comment: "Saves results"))
             } header: {
-                Label("recording.output.section", systemImage: "arrow.up.doc")
+                Label(String(localized: "recording.output.section", comment: "Output"), systemImage: "arrow.up.doc")
             } footer: {
                 if store.settings.output.copyToClipboard {
-                    Text("recording.output.copy_to_clipboard.footer", comment: "Can paste immediately")
-                        .foregroundStyle(.secondary)
+                    Text(String(
+                        localized: "recording.output.copy_to_clipboard.footer",
+                        comment: "Can paste immediately"
+                    ))
+                    .foregroundStyle(.secondary)
                 }
             }
 
@@ -133,7 +137,7 @@ struct RecordingSettingsTab: View {
 
                 if store.settings.recording.silenceDetectionEnabled {
                     HStack {
-                        Text("recording.silence.duration", comment: "Silence Duration")
+                        Text(String(localized: "recording.silence.duration", comment: "Silence Duration"))
                         Spacer()
                         TextField(
                             String(localized: "recording.silence.duration.placeholder", comment: "seconds"),
@@ -157,11 +161,11 @@ struct RecordingSettingsTab: View {
                             localized: "recording.silence.duration.help",
                             comment: "Enter duration"
                         ))
-                        Text("recording.silence.duration.placeholder", comment: "seconds")
+                        Text(String(localized: "recording.silence.duration.placeholder", comment: "seconds"))
                     }
 
                     HStack {
-                        Text("recording.silence.threshold", comment: "Silence Threshold")
+                        Text(String(localized: "recording.silence.threshold", comment: "Silence Threshold"))
                         Spacer()
                         Text("\(Int(store.settings.recording.silenceThreshold)) dB")
                             .foregroundColor(.secondary)
@@ -176,10 +180,10 @@ struct RecordingSettingsTab: View {
                     }
                 }
             } header: {
-                Text("recording.silence.section", comment: "Silence Detection")
+                Text(String(localized: "recording.silence.section", comment: "Silence Detection"))
             } footer: {
                 if store.settings.recording.silenceDetectionEnabled {
-                    Text("recording.silence.footer", comment: "Stops when below threshold")
+                    Text(String(localized: "recording.silence.footer", comment: "Stops when below threshold"))
                 }
             }
         }

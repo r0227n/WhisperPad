@@ -45,7 +45,7 @@ struct IconSettingsTab: View {
                     .tag(status)
                 }
             } header: {
-                Text("icon.status", comment: "Icon Status")
+                Text(String(localized: "icon.status", comment: "Icon Status"))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -102,7 +102,7 @@ private struct IconListRow: View {
                 .frame(width: 24, height: 24)
 
             // 状態名
-            Text(status.rawValue)
+            Text(status.localizedKey)
                 .lineLimit(1)
 
             Spacer()
@@ -112,7 +112,7 @@ private struct IconListRow: View {
         .accessibilityLabel(
             String(
                 localized: "icon.accessibility.label",
-                defaultValue: "\(status.rawValue) icon",
+                defaultValue: "\(status.displayName) icon",
                 comment: "Icon status accessibility label"
             )
         )
@@ -202,13 +202,9 @@ private struct IconDetailPanel: View {
                 .cornerRadius(8)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(status.rawValue)
+                Text(status.localizedKey)
                     .font(.title2)
                     .fontWeight(.semibold)
-
-                Text("icon.menu_bar", comment: "Menu Bar Icon")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             }
 
             Spacer()
@@ -233,7 +229,7 @@ private struct IconDetailPanel: View {
             .font(.headline)
             .foregroundColor(.secondary)
 
-            Text(status.detailedDescription)
+            Text(status.descriptionKey)
                 .foregroundColor(.primary)
         }
     }

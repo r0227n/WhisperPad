@@ -58,7 +58,7 @@ struct AudioLevelMeter: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Audio level")
+        .accessibilityLabel(String(localized: "accessibility.audio_level", comment: "Audio level"))
         .accessibilityValue("\(Int(level)) decibels")
     }
 

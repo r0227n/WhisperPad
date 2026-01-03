@@ -32,7 +32,7 @@ struct NotificationDetailsPopover: View {
                         .foregroundStyle(.secondary)
                     TextField(
                         String(
-                            localized: "notification.custom.notification_title_placeholder",
+                            localized: "notification.custom.notification_title.placeholder",
                             comment: "Notification Title"
                         ),
                         text: Binding(
@@ -59,7 +59,7 @@ struct NotificationDetailsPopover: View {
                         .foregroundStyle(.secondary)
                     TextField(
                         String(
-                            localized: "notification.custom.complete_message_placeholder",
+                            localized: "notification.custom.complete_message.placeholder",
                             comment: "When normal recording completes"
                         ),
                         text: Binding(
@@ -86,7 +86,7 @@ struct NotificationDetailsPopover: View {
                         .foregroundStyle(.secondary)
                     TextField(
                         String(
-                            localized: "notification.custom.streaming_message_placeholder",
+                            localized: "notification.custom.streaming_message.placeholder",
                             comment: "When streaming transcription completes"
                         ),
                         text: Binding(

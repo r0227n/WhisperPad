@@ -28,7 +28,7 @@ struct OutputSettingsSection: View {
                     SettingRowWithIcon(
                         icon: "doc.on.clipboard",
                         iconColor: .blue,
-                        title: String(localized: "recording.output.copy_to_clipboard", comment: "Copy to Clipboard"),
+                        title: "recording.output.copy_to_clipboard",
                         isOn: Binding(
                             get: { store.settings.output.copyToClipboard },
                             set: { newValue in
@@ -102,8 +102,10 @@ struct OutputSettingsSection: View {
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                     Text(
-                                        "recording.output.format \(store.settings.output.fileExtension.rawValue)",
-                                        comment: "Format: .txt"
+                                        String(
+                                            format: String(localized: "recording.output.format", comment: "Format: %@"),
+                                            store.settings.output.fileExtension.rawValue
+                                        )
                                     )
                                     .font(.caption)
                                     .foregroundColor(.secondary)
@@ -115,7 +117,7 @@ struct OutputSettingsSection: View {
 
                             // Right: Configure button
                             HoverPopoverButton(
-                                label: String(localized: "recording.output.configure", comment: "Configure"),
+                                label: "recording.output.configure",
                                 icon: "folder.badge.gearshape"
                             ) {
                                 FileOutputDetailsPopover(store: store)
