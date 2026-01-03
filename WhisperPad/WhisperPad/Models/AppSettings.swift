@@ -24,13 +24,17 @@ struct AppSettings: Codable, Equatable, Sendable {
     /// 出力設定
     var output: FileOutputSettings
 
+    /// 改行設定
+    var lineBreak: LineBreakSettings
+
     /// デフォルト設定
     static let `default` = AppSettings(
         general: .default,
         hotKey: .default,
         recording: .default,
         transcription: .default,
-        output: .default
+        output: .default,
+        lineBreak: .default
     )
 
     /// デフォルト初期化
@@ -39,13 +43,15 @@ struct AppSettings: Codable, Equatable, Sendable {
         hotKey: HotKeySettings = .default,
         recording: RecordingSettings = .default,
         transcription: TranscriptionSettings = .default,
-        output: FileOutputSettings = .default
+        output: FileOutputSettings = .default,
+        lineBreak: LineBreakSettings = .default
     ) {
         self.general = general
         self.hotKey = hotKey
         self.recording = recording
         self.transcription = transcription
         self.output = output
+        self.lineBreak = lineBreak
     }
 }
 
