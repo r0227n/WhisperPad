@@ -64,7 +64,7 @@ struct SettingsView: View {
                 }
                 .tag(SettingsTab.model)
         }
-        .frame(width: 520, height: 500)
+        .frame(width: 650, height: 550)
         .environment(\.locale, store.settings.general.preferredLocale.locale)
         .onAppear {
             store.send(.onAppear)
