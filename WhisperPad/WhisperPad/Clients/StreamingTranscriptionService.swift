@@ -43,12 +43,13 @@ actor StreamingTranscriptionService {
 
     // MARK: - Initialization
 
-    /// ストリーミング文字起こしを初期化
+    /// ストリーミング文字起こしサービスを初期化
     ///
     /// テキスト状態をリセットし、WhisperKitManager の共有インスタンスを使用します。
-    /// WhisperKit の初期化は AppReducer で行われるため、ここでは状態のリセットのみ行います。
+    /// 注意: このメソッドを呼び出す前に、Feature 層で WhisperKit を初期化しておく必要があります。
+    /// WhisperKit が初期化されていない場合、エラーをスローします。
     func initialize(modelName: String?, confirmationCount: Int = 2, language: String? = "ja") async throws {
-        logger.info("Initializing StreamingTranscriptionService with model: \(modelName ?? "default")")
+        logger.info("Initializing StreamingTranscriptionService")
 
         // テキスト状態をリセット
         confirmedSegments.removeAll()
@@ -59,21 +60,15 @@ actor StreamingTranscriptionService {
         self.confirmationCount = confirmationCount
         self.language = language
 
-        // WhisperKitManager が初期化済みかチェック
+        // WhisperKit が初期化済みであることを確認（Feature 層で初期化済みのはず）
         guard await WhisperKitManager.shared.isReady else {
-            // まだ初期化されていない場合は初期化を試みる
-            logger.info("WhisperKit not ready, initializing...")
-            do {
-                try await WhisperKitManager.shared.initialize(modelName: modelName)
-                logger.info("WhisperKit initialized successfully")
-            } catch {
-                logger.error("Failed to initialize WhisperKit: \(error.localizedDescription)")
-                throw StreamingTranscriptionError.initializationFailed(error.localizedDescription)
-            }
-            return
+            logger.error(
+                "WhisperKit is not ready. Feature layer should initialize WhisperKit before calling this method."
+            )
+            throw StreamingTranscriptionError.initializationFailed("WhisperKit is not initialized")
         }
 
-        logger.info("WhisperKit already initialized, reusing existing instance")
+        logger.info("StreamingTranscriptionService initialized successfully")
     }
 
     /// 音声チャンクを処理して文字起こし結果を返す

@@ -47,6 +47,7 @@ extension SettingRowWithIcon where Content == AnyView {
             AnyView(
                 Toggle("", isOn: isOn)
                     .labelsHidden()
+                    .toggleStyle(.switch)
             )
         }
     }

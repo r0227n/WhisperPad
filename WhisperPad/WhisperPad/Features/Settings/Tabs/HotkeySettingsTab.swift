@@ -293,6 +293,16 @@ private struct ShortcutDetailPanel: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+
+            Spacer()
+
+            Button {
+                onResetToDefault()
+            } label: {
+                Image(systemName: "arrow.counterclockwise")
+            }
+            .buttonStyle(.borderless)
+            .help("この状態をリセット")
         }
     }
 

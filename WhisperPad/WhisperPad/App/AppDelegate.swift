@@ -123,9 +123,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         requestNotificationPermission()
         setupHotKeys()
         setupStreamingPopupObserver()
-
-        // WhisperKit をバックグラウンドで初期化
-        store.send(.initializeWhisperKit)
     }
 
     func applicationWillTerminate(_ notification: Notification) {

@@ -109,46 +109,46 @@ extension HotKeySettings {
         /// Carbon 修飾キーフラグ
         var carbonModifiers: UInt32
 
-        /// 録音ホットキーのデフォルト（⌥ Space）
+        /// 録音ホットキーのデフォルト（⌘⌥R）
         static let recordingDefault = KeyComboSettings(
-            carbonKeyCode: 49,
-            carbonModifiers: 2048
-        )
-
-        /// ストリーミングホットキーのデフォルト（⌘⇧R）
-        static let streamingDefault = KeyComboSettings(
             carbonKeyCode: 15,
-            carbonModifiers: 768
+            carbonModifiers: 2304
         )
 
-        /// キャンセルホットキーのデフォルト（Escape）
+        /// ストリーミングホットキーのデフォルト（⌘⌥T）
+        static let streamingDefault = KeyComboSettings(
+            carbonKeyCode: 17,
+            carbonModifiers: 2304
+        )
+
+        /// キャンセルホットキーのデフォルト（⌘⌥.）
         static let cancelDefault = KeyComboSettings(
-            carbonKeyCode: 53,
-            carbonModifiers: 0
+            carbonKeyCode: 47,
+            carbonModifiers: 2304
         )
 
-        /// 録音一時停止ホットキーのデフォルト（⌥⇧P）
+        /// 録音一時停止ホットキーのデフォルト（⌘⌥P）
         static let recordingPauseDefault = KeyComboSettings(
             carbonKeyCode: 35,
-            carbonModifiers: 2560
+            carbonModifiers: 2304
         )
 
-        /// ポップアップ: コピーして閉じるのデフォルト（⌘⇧C）
+        /// ポップアップ: コピーして閉じるのデフォルト（⌘⌥C）
         static let popupCopyAndCloseDefault = KeyComboSettings(
             carbonKeyCode: 8,
-            carbonModifiers: 768
+            carbonModifiers: 2304
         )
 
-        /// ポップアップ: ファイル保存のデフォルト（⌘⇧S）
+        /// ポップアップ: ファイル保存のデフォルト（⌘⌥S）
         static let popupSaveToFileDefault = KeyComboSettings(
             carbonKeyCode: 1,
-            carbonModifiers: 768
+            carbonModifiers: 2304
         )
 
-        /// ポップアップ: 閉じるのデフォルト（Esc）
+        /// ポップアップ: 閉じるのデフォルト（⌘⌥.）
         static let popupCloseDefault = KeyComboSettings(
-            carbonKeyCode: 53,
-            carbonModifiers: 0
+            carbonKeyCode: 47,
+            carbonModifiers: 2304
         )
     }
 }
