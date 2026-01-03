@@ -82,8 +82,10 @@ struct ShortcutKeyButton: View {
                         .stroke(Color.accentColor.opacity(0.8), lineWidth: 2)
                 )
 
-            Button("common.cancel", comment: "Cancel button") {
+            Button {
                 onStopRecording()
+            } label: {
+                Text("common.cancel", comment: "Cancel button")
             }
             .buttonStyle(.borderless)
         }
@@ -111,8 +113,10 @@ struct ShortcutKeyButton: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("hotkey.reset", comment: "Reset to default") {
+            Button {
                 onResetToDefault()
+            } label: {
+                Text("hotkey.reset", comment: "Reset to default")
             }
         }
         .accessibilityLabel(

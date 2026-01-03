@@ -35,7 +35,13 @@ let package = Package(
                 ),
                 "HotKey",
             ],
-            path: "WhisperPad/WhisperPad"
+            path: "WhisperPad/WhisperPad",
+            resources: [
+                .process("Assets.xcassets"),
+                .process("Resources/Localizable.xcstrings"),
+                .process("Resources/Local"),
+                .copy("WhisperPad.entitlements"),
+            ]
         ),
         .testTarget(
             name: "WhisperPadTests",
