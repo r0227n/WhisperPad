@@ -17,13 +17,13 @@ struct ShortcutKeyButton: View {
     /// デフォルトのキーコンボ（リセット用）
     let defaultKeyCombo: HotKeySettings.KeyComboSettings
 
-    /// ショートカットタイプ（popupClose では単独キーを許可）
+    /// ショートカットタイプ
     let hotkeyType: HotkeyType
 
     /// 入力中かどうか
     let isRecording: Bool
 
-    /// popupClose で許可する単独キーのキーコード
+    /// 許可する単独キーのキーコード
     private static let allowedSingleKeys: Set<UInt16> = [
         53, // Escape
         36, // Return/Enter
@@ -70,7 +70,7 @@ struct ShortcutKeyButton: View {
     /// 録音中の表示
     private var recordingView: some View {
         HStack(spacing: 8) {
-            Text("キーを入力...")
+            Text("hotkey.recording.placeholder", comment: "Press key...")
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
                 .foregroundColor(.white)
                 .padding(.horizontal, 20)
@@ -82,7 +82,7 @@ struct ShortcutKeyButton: View {
                         .stroke(Color.accentColor.opacity(0.8), lineWidth: 2)
                 )
 
-            Button("キャンセル") {
+            Button(String(localized: "common.cancel", comment: "Cancel")) {
                 onStopRecording()
             }
             .buttonStyle(.borderless)
@@ -111,11 +111,17 @@ struct ShortcutKeyButton: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("デフォルトに戻す") {
+            Button(String(localized: "hotkey.reset", comment: "Reset to Default")) {
                 onResetToDefault()
             }
         }
-        .accessibilityLabel("ショートカット: \(keyCombo.displayString)。クリックして変更、右クリックでオプション")
+        .accessibilityLabel(
+            String(
+                localized: "hotkey.accessibility.change",
+                defaultValue: "Shortcut: \(keyCombo.displayString). Click to change, right-click for options",
+                comment: "Shortcut accessibility label"
+            )
+        )
     }
 
     /// キー入力モニターを開始

@@ -9,6 +9,9 @@ import Foundation
 ///
 /// アプリケーションの基本的な動作設定を管理します。
 struct GeneralSettings: Equatable, Sendable {
+    /// アプリケーションの表示言語
+    var preferredLocale: AppLocale = .system
+
     /// ログイン時に自動起動するかどうか
     var launchAtLogin: Bool = false
 
@@ -25,7 +28,7 @@ struct GeneralSettings: Equatable, Sendable {
     var notificationTitle: String = "WhisperPad"
 
     /// 通常録音完了時のメッセージ
-    var transcriptionCompleteMessage: String = "文字起こしが完了しました"
+    var transcriptionCompleteMessage = String(localized: "notification.transcription.complete.message")
 
     /// デフォルト設定
     static let `default` = GeneralSettings()
@@ -35,6 +38,7 @@ struct GeneralSettings: Equatable, Sendable {
 
 extension GeneralSettings: Codable {
     private enum CodingKeys: String, CodingKey {
+        case preferredLocale
         case launchAtLogin
         case showNotificationOnComplete
         case playSoundOnComplete
@@ -45,6 +49,7 @@ extension GeneralSettings: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        preferredLocale = try container.decodeIfPresent(AppLocale.self, forKey: .preferredLocale) ?? .system
         launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
         showNotificationOnComplete = try container.decodeIfPresent(
             Bool.self, forKey: .showNotificationOnComplete
@@ -56,6 +61,6 @@ extension GeneralSettings: Codable {
         notificationTitle = try container.decodeIfPresent(String.self, forKey: .notificationTitle) ?? "WhisperPad"
         transcriptionCompleteMessage = try container.decodeIfPresent(
             String.self, forKey: .transcriptionCompleteMessage
-        ) ?? "文字起こしが完了しました"
+        ) ?? String(localized: "notification.transcription.complete.message")
     }
 }

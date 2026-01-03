@@ -11,7 +11,7 @@ import SwiftUI
 struct SettingRowWithIcon<Content: View>: View {
     let icon: String
     let iconColor: Color
-    let title: String
+    let title: LocalizedStringKey
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -37,7 +37,7 @@ extension SettingRowWithIcon where Content == AnyView {
     init(
         icon: String,
         iconColor: Color,
-        title: String,
+        title: LocalizedStringKey,
         isOn: Binding<Bool>
     ) {
         self.icon = icon

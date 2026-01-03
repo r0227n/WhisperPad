@@ -5,6 +5,7 @@
 
 import AppKit
 import Foundation
+import SwiftUI
 
 /// 各状態のアイコン設定
 ///
@@ -91,15 +92,20 @@ struct MenuBarIconSettings: Codable, Equatable, Sendable {
 ///
 /// 設定画面で表示するための状態識別子です。
 enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
-    case idle = "待機中"
-    case recording = "録音中"
-    case paused = "一時停止中"
-    case transcribing = "文字起こし中"
-    case completed = "完了"
-    case error = "エラー"
-    case cancel = "キャンセル"
+    case idle
+    case recording
+    case paused
+    case transcribing
+    case completed
+    case error
+    case cancel
 
     var id: String { rawValue }
+
+    /// 表示名（ローカライズ済み）
+    var displayName: String {
+        String(localized: String.LocalizationValue(localizedKey))
+    }
 
     /// 対応する AppStatus のシンボル名（デフォルト）
     var defaultSymbolName: String {
@@ -116,21 +122,32 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
 
     /// 状態の詳細説明（設定画面の右パネル表示用）
     var detailedDescription: String {
+        String(localized: String.LocalizationValue(descriptionKey))
+    }
+
+    /// ローカライズキー
+    var localizedKey: String {
         switch self {
-        case .idle:
-            "アプリが起動していて、録音や文字起こしを行っていない待機状態です。ショートカットキーを押すといつでも録音を開始できます。"
-        case .recording:
-            "音声を録音している状態です。マイクから入力される音声がリアルタイムで記録されています。録音を停止すると文字起こし処理が始まります。"
-        case .paused:
-            "録音を一時停止している状態です。録音を再開するか、停止して文字起こしを開始できます。"
-        case .transcribing:
-            "録音した音声データをWhisperモデルで文字起こししている状態です。処理にはデバイスの性能やモデルサイズに応じて時間がかかります。"
-        case .completed:
-            "文字起こしが正常に完了した状態です。結果はクリップボードにコピーされ、設定に応じてファイルにも保存されます。"
-        case .error:
-            "録音または文字起こし中にエラーが発生した状態です。マイクへのアクセス権限やモデルのダウンロード状態を確認してください。"
-        case .cancel:
-            "録音または文字起こしがユーザーによってキャンセルされた状態です。録音データは破棄され、文字起こしは行われません。"
+        case .idle: "icon.status.idle"
+        case .recording: "icon.status.recording"
+        case .paused: "icon.status.paused"
+        case .transcribing: "icon.status.transcribing"
+        case .completed: "icon.status.completed"
+        case .error: "icon.status.error"
+        case .cancel: "icon.status.cancel"
+        }
+    }
+
+    /// 説明のローカライズキー
+    var descriptionKey: String {
+        switch self {
+        case .idle: "icon.description.idle"
+        case .recording: "icon.description.recording"
+        case .paused: "icon.description.paused"
+        case .transcribing: "icon.description.transcribing"
+        case .completed: "icon.description.completed"
+        case .error: "icon.description.error"
+        case .cancel: "icon.description.cancel"
         }
     }
 }

@@ -94,15 +94,15 @@ struct StatusBadge: View {
         var accessibilityLabel: String {
             switch self {
             case .ready:
-                "Ready"
+                String(localized: "accessibility.status.ready", comment: "Ready")
             case .recording:
-                "Recording"
+                String(localized: "accessibility.status.recording", comment: "Recording")
             case .paused:
-                "Paused"
+                String(localized: "accessibility.status.paused", comment: "Paused")
             case .processing:
-                "Processing"
+                String(localized: "accessibility.status.processing", comment: "Processing")
             case .error:
-                "Error"
+                String(localized: "accessibility.status.error", comment: "Error")
             }
         }
     }

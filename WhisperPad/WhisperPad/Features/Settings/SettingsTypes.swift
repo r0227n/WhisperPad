@@ -9,11 +9,27 @@ import Foundation
 
 /// 設定タブ
 enum SettingsTab: String, CaseIterable, Sendable {
-    case general = "一般"
-    case icon = "アイコン"
-    case hotkey = "ショートカット"
-    case recording = "録音"
-    case model = "モデル"
+    case general
+    case icon
+    case hotkey
+    case recording
+    case model
+
+    /// 表示名（ローカライズ済み）
+    var displayName: String {
+        switch self {
+        case .general:
+            String(localized: "settings.tab.general", comment: "General")
+        case .icon:
+            String(localized: "settings.tab.icon", comment: "Icon")
+        case .hotkey:
+            String(localized: "settings.tab.hotkey", comment: "Shortcuts")
+        case .recording:
+            String(localized: "settings.tab.recording", comment: "Recording")
+        case .model:
+            String(localized: "settings.tab.model", comment: "Model")
+        }
+    }
 
     /// SF Symbol 名
     var iconName: String {
@@ -48,10 +64,20 @@ enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
 extension HotkeyType {
     /// ショートカットのカテゴリ
     enum Category: String, CaseIterable, Identifiable {
-        case recording = "録音"
-        case cancel = "キャンセル"
+        case recording
+        case cancel
 
         var id: String { rawValue }
+
+        /// 表示名（ローカライズ済み）
+        var displayName: String {
+            switch self {
+            case .recording:
+                String(localized: "hotkey.category.recording", comment: "Recording")
+            case .cancel:
+                String(localized: "hotkey.category.cancel", comment: "Cancel")
+            }
+        }
 
         /// このカテゴリに属するショートカットタイプ
         var hotkeyTypes: [HotkeyType] {
@@ -74,27 +100,27 @@ extension HotkeyType {
         }
     }
 
-    /// 表示名
+    /// 表示名（ローカライズ済み）
     var displayName: String {
         switch self {
         case .recording:
-            "録音開始/停止"
+            String(localized: "hotkey.type.recording", comment: "Start/Stop Recording")
         case .recordingPause:
-            "一時停止/再開"
+            String(localized: "hotkey.type.recording_pause", comment: "Pause/Resume")
         case .cancel:
-            "録音キャンセル"
+            String(localized: "hotkey.type.cancel", comment: "Cancel Recording")
         }
     }
 
-    /// 説明
+    /// 説明（ローカライズ済み）
     var hotkeyDescription: String {
         switch self {
         case .recording:
-            "録音を開始または停止します"
+            String(localized: "hotkey.description.recording", comment: "Start or stop recording")
         case .recordingPause:
-            "録音を一時停止または再開します"
+            String(localized: "hotkey.description.recording_pause", comment: "Pause or resume recording")
         case .cancel:
-            "進行中の録音をキャンセルします"
+            String(localized: "hotkey.description.cancel", comment: "Cancel ongoing recording")
         }
     }
 
@@ -131,6 +157,40 @@ extension HotkeyType {
             .paused
         case .cancel:
             .cancel
+        }
+    }
+}
+
+// MARK: - Localization
+
+import SwiftUI
+
+extension HotkeyType {
+    /// ローカライズキー
+    var localizedKey: LocalizedStringKey {
+        switch self {
+        case .recording: "hotkey.type.recording"
+        case .recordingPause: "hotkey.type.recording_pause"
+        case .cancel: "hotkey.type.cancel"
+        }
+    }
+
+    /// 説明のローカライズキー
+    var descriptionKey: LocalizedStringKey {
+        switch self {
+        case .recording: "hotkey.description.recording"
+        case .recordingPause: "hotkey.description.recording_pause"
+        case .cancel: "hotkey.description.cancel"
+        }
+    }
+}
+
+extension HotkeyType.Category {
+    /// ローカライズキー
+    var localizedKey: LocalizedStringKey {
+        switch self {
+        case .recording: "hotkey.category.recording"
+        case .cancel: "hotkey.category.cancel"
         }
     }
 }

@@ -19,7 +19,7 @@ struct AudioInputSection: View {
                 SettingSectionHeader(
                     icon: "waveform",
                     iconColor: .blue,
-                    title: "Input Device"
+                    title: String(localized: "recording.input_device.title", comment: "Input Device")
                 )
 
                 Spacer()
@@ -36,13 +36,13 @@ struct AudioInputSection: View {
                         }
                     )
                 ) {
-                    Text("System Default").tag(nil as String?)
+                    Text("recording.input_device.system_default", comment: "System Default").tag(nil as String?)
 
                     ForEach(store.availableInputDevices) { device in
                         HStack {
                             Text(device.name)
                             if device.isDefault {
-                                Text("(Default)")
+                                Text("recording.input_device.default_marker", comment: "(Default)")
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -50,11 +50,11 @@ struct AudioInputSection: View {
                     }
                 }
                 .labelsHidden()
-                .help("Select the microphone to use for recording")
+                .help(String(localized: "recording.input_device.help", comment: "Select microphone"))
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Audio input settings")
+        .accessibilityLabel(String(localized: "recording.input_device.accessibility", comment: "Audio input settings"))
     }
 }
 

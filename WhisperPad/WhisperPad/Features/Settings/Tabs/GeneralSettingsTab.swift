@@ -15,13 +15,48 @@ struct GeneralSettingsTab: View {
 
     var body: some View {
         Form {
+            // MARK: - 言語セクション / Language Section
+
+            Section {
+                HStack(spacing: 12) {
+                    Image(systemName: "globe")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.blue)
+                        .frame(width: 20, alignment: .center)
+
+                    Text("settings.general.language.title", comment: "Language")
+
+                    Spacer()
+
+                    Picker("", selection: Binding(
+                        get: { store.settings.general.preferredLocale },
+                        set: { newValue in
+                            var general = store.settings.general
+                            general.preferredLocale = newValue
+                            store.send(.updateGeneralSettings(general))
+                        }
+                    )) {
+                        ForEach(AppLocale.allCases, id: \.self) { locale in
+                            Text(locale.localizedKey).tag(locale)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 200)
+                }
+            } header: {
+                Label("settings.general.language.section", systemImage: "globe")
+            } footer: {
+                Text("settings.general.language.footer")
+                    .foregroundStyle(.secondary)
+            }
+
             // MARK: - 動作セクション
 
             Section {
                 SettingRowWithIcon(
                     icon: "power",
                     iconColor: .green,
-                    title: "ログイン時に起動",
+                    title: "settings.general.launch_at_login",
                     isOn: Binding(
                         get: { store.settings.general.launchAtLogin },
                         set: { newValue in
@@ -31,11 +66,17 @@ struct GeneralSettingsTab: View {
                         }
                     )
                 )
-                .help("macOS 起動時にアプリを自動的に起動します")
-                .accessibilityLabel("ログイン時に起動")
-                .accessibilityHint("macOS 起動時にアプリを自動的に起動します")
+                .help(
+                    String(localized: "settings.general.launch_at_login.help", comment: "Launch at login help")
+                )
+                .accessibilityLabel(
+                    String(localized: "settings.general.launch_at_login", comment: "Launch at Login")
+                )
+                .accessibilityHint(
+                    String(localized: "settings.general.launch_at_login.help", comment: "Launch at login help")
+                )
             } header: {
-                Label("動作", systemImage: "gearshape.2")
+                Label("settings.general.behavior", systemImage: "gearshape.2")
             }
 
             // MARK: - 通知セクション
@@ -44,7 +85,7 @@ struct GeneralSettingsTab: View {
                 SettingRowWithIcon(
                     icon: "bell.fill",
                     iconColor: .orange,
-                    title: "通知を表示",
+                    title: "settings.general.show_notification",
                     isOn: Binding(
                         get: { store.settings.general.showNotificationOnComplete },
                         set: { newValue in
@@ -54,14 +95,26 @@ struct GeneralSettingsTab: View {
                         }
                     )
                 )
-                .help("文字起こし完了時に通知センターに通知を表示します")
-                .accessibilityLabel("通知を表示")
-                .accessibilityHint("文字起こし完了時に通知センターに通知を表示します")
+                .help(
+                    String(
+                        localized: "settings.general.show_notification.help",
+                        comment: "Show notification help"
+                    )
+                )
+                .accessibilityLabel(
+                    String(localized: "settings.general.show_notification", comment: "Show Notifications")
+                )
+                .accessibilityHint(
+                    String(
+                        localized: "settings.general.show_notification.help",
+                        comment: "Show notification help"
+                    )
+                )
 
                 SettingRowWithIcon(
                     icon: "speaker.wave.2.fill",
                     iconColor: .pink,
-                    title: "サウンドを再生",
+                    title: "settings.general.play_sound",
                     isOn: Binding(
                         get: { store.settings.general.playSoundOnComplete },
                         set: { newValue in
@@ -71,9 +124,11 @@ struct GeneralSettingsTab: View {
                         }
                     )
                 )
-                .help("文字起こし完了時にサウンドを再生します")
-                .accessibilityLabel("サウンドを再生")
-                .accessibilityHint("文字起こし完了時にサウンドを再生します")
+                .help(String(localized: "settings.general.play_sound.help", comment: "Play sound help"))
+                .accessibilityLabel(String(localized: "settings.general.play_sound", comment: "Play Sound"))
+                .accessibilityHint(
+                    String(localized: "settings.general.play_sound.help", comment: "Play sound help")
+                )
 
                 HStack(spacing: 12) {
                     Image(systemName: "text.bubble")
@@ -81,23 +136,27 @@ struct GeneralSettingsTab: View {
                         .foregroundStyle(.purple)
                         .frame(width: 20, alignment: .center)
 
-                    Text("メッセージ設定")
+                    Text("settings.general.notification.message", comment: "Message Settings")
 
                     Spacer()
 
-                    HoverPopoverButton(label: "カスタマイズ", icon: "slider.horizontal.3") {
+                    HoverPopoverButton(
+                        label: "settings.general.notification.message.customize",
+                        icon: "slider.horizontal.3"
+                    ) {
                         NotificationDetailsPopover(store: store)
                     }
                 }
             } header: {
-                Label("通知", systemImage: "bell.badge")
+                Label("settings.general.notification", systemImage: "bell.badge")
             } footer: {
-                Text("文字起こし完了時の通知とサウンドを設定します")
+                Text("settings.general.notification.footer")
                     .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
         .padding()
+        .environment(\.locale, store.settings.general.preferredLocale.locale)
     }
 }
 

@@ -595,9 +595,9 @@ struct SettingsFeature {
             case .checkHotkeyConflict:
                 let hotKey = state.settings.hotKey
                 let combos: [(String, HotKeySettings.KeyComboSettings)] = [
-                    ("録音", hotKey.recordingHotKey),
-                    ("キャンセル", hotKey.cancelHotKey),
-                    ("録音一時停止", hotKey.recordingPauseHotKey)
+                    (HotkeyType.recording.displayName, hotKey.recordingHotKey),
+                    (HotkeyType.cancel.displayName, hotKey.cancelHotKey),
+                    (HotkeyType.recordingPause.displayName, hotKey.recordingPauseHotKey)
                 ]
 
                 var conflicts: [String] = []
@@ -607,7 +607,7 @@ struct SettingsFeature {
                         let (name2, combo2) = combos[otherIndex]
                         if combo1.carbonKeyCode == combo2.carbonKeyCode,
                            combo1.carbonModifiers == combo2.carbonModifiers {
-                            conflicts.append("\(name1)と\(name2)")
+                            conflicts.append(name1 + String(localized: "hotkey.conflict.and", comment: " and ") + name2)
                         }
                     }
                 }
@@ -615,7 +615,10 @@ struct SettingsFeature {
                 if conflicts.isEmpty {
                     state.hotkeyConflict = nil
                 } else {
-                    state.hotkeyConflict = "競合: \(conflicts.joined(separator: ", "))"
+                    state.hotkeyConflict = String(
+                        localized: "hotkey.conflict.prefix",
+                        comment: "Conflict: "
+                    ) + conflicts.joined(separator: ", ")
                 }
                 return .none
 

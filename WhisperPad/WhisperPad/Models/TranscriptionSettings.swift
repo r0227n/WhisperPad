@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// 文字起こし設定
 ///
@@ -56,24 +57,7 @@ extension TranscriptionSettings {
 
         /// 表示名
         var displayName: String {
-            switch self {
-            case .auto:
-                "自動検出"
-            case .ja:
-                "日本語"
-            case .en:
-                "English"
-            case .zh:
-                "中文"
-            case .ko:
-                "한국어"
-            case .fr:
-                "Français"
-            case .de:
-                "Deutsch"
-            case .es:
-                "Español"
-            }
+            String(localized: String.LocalizationValue(localizedKey))
         }
 
         /// WhisperKit で使用する言語コード
@@ -83,6 +67,20 @@ extension TranscriptionSettings {
                 nil
             default:
                 rawValue
+            }
+        }
+
+        /// ローカライズキー
+        var localizedKey: String {
+            switch self {
+            case .auto: "transcription.language.auto"
+            case .ja: "transcription.language.ja"
+            case .en: "transcription.language.en"
+            case .zh: "transcription.language.zh"
+            case .ko: "transcription.language.ko"
+            case .fr: "transcription.language.fr"
+            case .de: "transcription.language.de"
+            case .es: "transcription.language.es"
             }
         }
     }
