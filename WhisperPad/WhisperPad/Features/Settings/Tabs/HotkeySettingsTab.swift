@@ -13,6 +13,7 @@ import SwiftUI
 /// 右パネル：選択したショートカットの詳細と編集
 struct HotkeySettingsTab: View {
     @Bindable var store: StoreOf<SettingsFeature>
+    @Environment(\.locale) private var locale
 
     var body: some View {
         HSplitView {
@@ -32,99 +33,89 @@ struct HotkeySettingsTab: View {
         }
         .environment(\.locale, store.settings.general.preferredLocale.locale)
         .alert(
-            String(
-                localized: "hotkey.conflict_alert.title",
-                defaultValue: "ホットキー登録失敗",
-                comment: "Hotkey registration failed"
-            ),
+            Text("hotkey.conflict_alert.title"),
             isPresented: Binding(
                 get: { store.showHotkeyConflictAlert },
                 set: { if !$0 { store.send(.dismissConflictAlert) } }
             )
         ) {
-            Button(String(localized: "common.ok", defaultValue: "OK", comment: "OK"), role: .cancel) {
+            Button("common.ok", role: .cancel) {
                 store.send(.dismissConflictAlert)
             }
         } message: {
             if let type = store.conflictingHotkeyType {
-                Text(String(
-                    localized: "hotkey.conflict_alert.message",
-                    defaultValue: "\(type.displayName) のショートカットは他のアプリケーションで使用中のため、登録できません。別のキーコンビネーションを選択してください。",
-                    comment: "Hotkey conflict with other app message"
-                ))
+                let userLocale = store.settings.general.preferredLocale.locale
+                let languageCode = userLocale.language.languageCode?.identifier ?? "en"
+                let format = Bundle.main.localizedString(
+                    forKey: "hotkey.conflict_alert.message",
+                    preferredLanguage: languageCode
+                )
+                let typeName = Bundle.main.localizedString(
+                    forKey: type.localizedKeyString,
+                    preferredLanguage: languageCode
+                )
+                Text(verbatim: String(format: format, typeName))
             } else {
-                Text(String(
-                    localized: "hotkey.conflict_alert.message_generic",
-                    defaultValue: "他のアプリケーションで使用中のため、登録できません。",
-                    comment: "Generic hotkey conflict message"
-                ))
+                Text("hotkey.conflict_alert.message_generic")
             }
         }
         .alert(
-            String(
-                localized: "hotkey.duplicate_alert.title",
-                defaultValue: "ホットキーが重複しています",
-                comment: "Hotkey duplication alert"
-            ),
+            Text("hotkey.duplicate_alert.title"),
             isPresented: Binding(
                 get: { store.showDuplicateHotkeyAlert },
                 set: { if !$0 { store.send(.dismissDuplicateAlert) } }
             )
         ) {
-            Button(String(localized: "common.ok", defaultValue: "OK", comment: "OK"), role: .cancel) {
+            Button("common.ok", role: .cancel) {
                 store.send(.dismissDuplicateAlert)
             }
         } message: {
             if let targetType = store.conflictingHotkeyType,
                let duplicateType = store.duplicateWithHotkeyType {
-                Text(String(
-                    localized: "hotkey.duplicate_alert.message",
-                    defaultValue: """
-                    \(targetType.displayName) のショートカットは、既に \(duplicateType.displayName) で使用されています。
-
-                    別のキーコンビネーションを選択してください。
-                    """,
-                    comment: "Hotkey duplication message"
-                ))
+                let userLocale = store.settings.general.preferredLocale.locale
+                let languageCode = userLocale.language.languageCode?.identifier ?? "en"
+                let format = Bundle.main.localizedString(
+                    forKey: "hotkey.duplicate_alert.message",
+                    preferredLanguage: languageCode
+                )
+                let targetName = Bundle.main.localizedString(
+                    forKey: targetType.localizedKeyString,
+                    preferredLanguage: languageCode
+                )
+                let duplicateName = Bundle.main.localizedString(
+                    forKey: duplicateType.localizedKeyString,
+                    preferredLanguage: languageCode
+                )
+                Text(verbatim: String(format: format, targetName, duplicateName))
             } else {
-                Text(String(
-                    localized: "hotkey.duplicate_alert.message_generic",
-                    defaultValue: "このショートカットは既に別の機能で使用されています。",
-                    comment: "Generic duplication message"
-                ))
+                Text("hotkey.duplicate_alert.message_generic")
             }
         }
         .alert(
-            String(
-                localized: "hotkey.system_reserved_alert.title",
-                defaultValue: "システムショートカット",
-                comment: "System reserved shortcut"
-            ),
+            Text("hotkey.system_reserved_alert.title"),
             isPresented: Binding(
                 get: { store.showSystemReservedAlert },
                 set: { if !$0 { store.send(.dismissSystemReservedAlert) } }
             )
         ) {
-            Button(String(localized: "common.ok", defaultValue: "OK", comment: "OK"), role: .cancel) {
+            Button("common.ok", role: .cancel) {
                 store.send(.dismissSystemReservedAlert)
             }
         } message: {
             if let type = store.conflictingHotkeyType {
-                Text(String(
-                    localized: "hotkey.system_reserved_alert.message",
-                    defaultValue: """
-                    \(type.displayName) のショートカットには、システムで予約されているキーコンビネーション（Cmd+C、Cmd+Vなど）を使用できません。
-
-                    別のキーコンビネーションを選択してください。
-                    """,
-                    comment: "System reserved shortcut message"
-                ))
+                let userLocale = store.settings.general.preferredLocale.locale
+                let languageCode = userLocale.language.languageCode?.identifier ?? "en"
+                let format = Bundle.main.localizedString(
+                    forKey: "hotkey.system_reserved_alert.message",
+                    preferredLanguage: languageCode
+                )
+                let typeName = Bundle.main.localizedString(
+                    forKey: type.localizedKeyString,
+                    preferredLanguage: languageCode
+                )
+                Text(verbatim: String(format: format, typeName))
             } else {
-                Text(String(
-                    localized: "hotkey.system_reserved_alert.message_generic",
-                    defaultValue: "このショートカットはシステムで予約されています。",
-                    comment: "Generic system reserved message"
-                ))
+                Text("hotkey.system_reserved_alert.message_generic")
             }
         }
     }
@@ -181,7 +172,7 @@ struct HotkeySettingsTab: View {
     private var placeholderView: some View {
         VStack {
             Spacer()
-            Text(String(localized: "hotkey.select_prompt", comment: "Please select a shortcut"))
+            Text("hotkey.select_prompt")
                 .foregroundColor(.secondary)
             Spacer()
         }
@@ -224,6 +215,22 @@ struct HotkeySettingsTab: View {
             hotKey.cancelHotKey = .cancelDefault
         }
         store.send(.updateHotKeySettings(hotKey))
+    }
+}
+
+// MARK: - Localization Helpers
+
+/// xcstrings ファイルから指定されたロケールに基づいて翻訳を取得する
+private extension Bundle {
+    func localizedString(forKey key: String, preferredLanguage: String) -> String {
+        // For xcstrings files, try to get bundle for preferred language
+        if let path = self.path(forResource: preferredLanguage, ofType: "lproj"),
+           let bundle = Bundle(path: path) {
+            return bundle.localizedString(forKey: key, value: nil, table: nil)
+        }
+
+        // Fallback to main bundle (will use sourceLanguage from xcstrings)
+        return self.localizedString(forKey: key, value: nil, table: nil)
     }
 }
 
@@ -327,19 +334,16 @@ private struct ShortcutDetailPanel: View {
                 Image(systemName: "arrow.counterclockwise")
             }
             .buttonStyle(.borderless)
-            .help("この状態をリセット")
+            .help(String(localized: "hotkey.reset.help", comment: "Reset this state"))
         }
     }
 
     /// 説明セクション
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(
-                String(localized: "hotkey.description", comment: "Description"),
-                systemImage: "info.circle"
-            )
-            .font(.headline)
-            .foregroundColor(.secondary)
+            Label("hotkey.description", systemImage: "info.circle")
+                .font(.headline)
+                .foregroundColor(.secondary)
 
             Text(hotkeyType.descriptionKey)
                 .foregroundColor(.primary)
@@ -349,12 +353,9 @@ private struct ShortcutDetailPanel: View {
     /// ショートカット入力セクション
     private var shortcutInputSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label(
-                String(localized: "hotkey.shortcut_key", comment: "Shortcut Key"),
-                systemImage: "keyboard"
-            )
-            .font(.headline)
-            .foregroundColor(.secondary)
+            Label("hotkey.shortcut_key", systemImage: "keyboard")
+                .font(.headline)
+                .foregroundColor(.secondary)
 
             // キー設定ボタン
             ShortcutKeyButton(
@@ -381,7 +382,7 @@ private struct ShortcutDetailPanel: View {
             }
 
             // 注意メッセージ
-            Text(String(localized: "hotkey.conflict.help", comment: "Change if conflicts with other apps"))
+            Text("hotkey.conflict.help")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

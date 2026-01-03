@@ -175,6 +175,15 @@ extension HotkeyType {
         }
     }
 
+    /// ローカライズキー（String）
+    var localizedKeyString: String {
+        switch self {
+        case .recording: "hotkey.type.recording"
+        case .recordingPause: "hotkey.type.recording_pause"
+        case .cancel: "hotkey.type.cancel"
+        }
+    }
+
     /// 説明のローカライズキー
     var descriptionKey: LocalizedStringKey {
         switch self {

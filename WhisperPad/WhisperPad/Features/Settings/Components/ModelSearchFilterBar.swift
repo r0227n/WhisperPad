@@ -30,12 +30,9 @@ struct ModelSearchFilterBar: View {
                 .foregroundStyle(.secondary)
                 .font(.system(size: 12))
 
-            TextField(
-                String(localized: "model.search.placeholder", comment: "Search models..."),
-                text: $searchText
-            )
-            .textFieldStyle(.plain)
-            .font(.system(size: 13))
+            TextField("model.search.placeholder", text: $searchText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13))
 
             if !searchText.isEmpty {
                 Button {
@@ -65,7 +62,7 @@ struct ModelSearchFilterBar: View {
 
             Picker("", selection: $downloadFilter) {
                 ForEach(ModelDownloadFilter.allCases, id: \.self) { filter in
-                    Text(filter.displayName).tag(filter)
+                    Text(filter.localizedKey).tag(filter)
                 }
             }
             .pickerStyle(.menu)

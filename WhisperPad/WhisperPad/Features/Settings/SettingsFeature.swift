@@ -86,6 +86,9 @@ struct SettingsFeature {
 
         /// 選択中のショートカット（ホットキー設定タブ用）
         var selectedShortcut: HotkeyType?
+
+        /// 利用可能な文字起こし言語一覧
+        var availableLanguages: [TranscriptionLanguage] = []
     }
 
     // MARK: - Action
@@ -239,6 +242,18 @@ struct SettingsFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                // 利用可能な言語を読み込み
+                let allLanguages = TranscriptionLanguage.allSupported
+
+                // 現在選択されているモデルが English-only の場合は言語を制限
+                if state.settings.transcription.modelName.hasSuffix(".en") {
+                    state.availableLanguages = allLanguages.filter {
+                        $0.code == "auto" || $0.code == "en"
+                    }
+                } else {
+                    state.availableLanguages = allLanguages
+                }
+
                 return .merge(
                     .send(.loadSettings),
                     .send(.fetchModels),
@@ -429,6 +444,22 @@ struct SettingsFeature {
 
             case let .selectModel(modelName):
                 state.settings.transcription.modelName = modelName
+
+                // English-only モデルの場合は言語リストを英語と自動検出のみに制限
+                if modelName.hasSuffix(".en") {
+                    state.availableLanguages = TranscriptionLanguage.allSupported.filter {
+                        $0.code == "auto" || $0.code == "en"
+                    }
+                    // 現在選択されている言語が英語でも自動検出でもない場合、自動検出にリセット
+                    if state.settings.transcription.language.code != "auto",
+                       state.settings.transcription.language.code != "en" {
+                        state.settings.transcription.language = .auto
+                    }
+                } else {
+                    // 多言語モデルの場合はすべての言語を表示
+                    state.availableLanguages = TranscriptionLanguage.allSupported
+                }
+
                 return .merge(
                     .send(.saveSettings),
                     .send(.delegate(.modelChanged(modelName)))

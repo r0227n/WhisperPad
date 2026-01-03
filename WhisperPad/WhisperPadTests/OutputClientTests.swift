@@ -248,7 +248,6 @@ final class OutputClientLiveTests: XCTestCase {
         var settings = FileOutputSettings.default
         settings.outputDirectory = testDirectory
         settings.fileNameFormat = .timestamp
-        settings.fileExtension = .md
         settings.includeMetadata = true
 
         let result = try await client.saveToFile("Test content", settings)
@@ -287,9 +286,11 @@ final class OutputClientLiveTests: XCTestCase {
         // 最初のファイル
         let result1 = try await client.saveToFile("Content 1", settings)
         XCTAssertTrue(result1.lastPathComponent.contains("WhisperPad_001"))
+        XCTAssertTrue(result1.path.hasSuffix(".md"))
 
         // 2番目のファイル
         let result2 = try await client.saveToFile("Content 2", settings)
         XCTAssertTrue(result2.lastPathComponent.contains("WhisperPad_002"))
+        XCTAssertTrue(result2.path.hasSuffix(".md"))
     }
 }

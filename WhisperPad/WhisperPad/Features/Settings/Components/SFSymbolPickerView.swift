@@ -104,7 +104,7 @@ struct SFSymbolPickerView: View {
                 Text("symbol_picker.title", comment: "Select Icon")
                     .font(.headline)
                 Spacer()
-                Button(String(localized: "common.close", comment: "Close")) {
+                Button("common.close") {
                     isPresented = false
                 }
                 .keyboardShortcut(.cancelAction)
@@ -118,7 +118,7 @@ struct SFSymbolPickerView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
                 TextField(
-                    String(localized: "symbol_picker.search_placeholder", comment: "Search symbols..."),
+                    "symbol_picker.search_placeholder",
                     text: $searchText
                 )
                 .textFieldStyle(.plain)

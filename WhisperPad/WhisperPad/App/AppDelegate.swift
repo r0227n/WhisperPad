@@ -47,6 +47,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// パルスアニメーションのフェーズ（ラジアン）
     private var pulsePhase: Double = 0
 
+    /// 現在のロケール（変更検出用）
+    private var currentLocale: AppLocale?
+
     /// ロガー
     let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.example.WhisperPad",
@@ -81,6 +84,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // HotKey registration task accessor
     func getHotKeyRegistrationTask() -> Task<Void, Never>? { hotKeyRegistrationTask }
     func setHotKeyRegistrationTask(_ task: Task<Void, Never>?) { hotKeyRegistrationTask = task }
+
+    /// アプリ設定のロケールに基づいてローカライズされた文字列を取得
+    func localizedAppString(forKey key: String) -> String {
+        let languageCode = store.settings.settings.general.preferredLocale.identifier ?? "en"
+        if let path = Bundle.main.path(forResource: languageCode, ofType: "lproj"),
+           let bundle = Bundle(path: path) {
+            return bundle.localizedString(forKey: key, value: nil, table: nil)
+        }
+        return Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+    }
 
     // MARK: - Menu Item Tags
 
@@ -144,7 +157,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let button = statusItem.button {
             setStatusIcon(symbolName: "mic", color: .systemGray)
-            button.toolTip = "WhisperPad - 音声文字起こし"
+            button.toolTip = localizedAppString(forKey: "app.tooltip")
         }
 
         statusMenu = createMenu()
@@ -158,9 +171,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupObservation() {
         observe { [weak self] in
             guard let self else { return }
+
+            // Detect locale changes and rebuild menu
+            let newLocale = self.store.settings.settings.general.preferredLocale
+            if self.currentLocale != newLocale {
+                self.currentLocale = newLocale
+                self.rebuildMenu()
+            }
+
             self.updateMenuForCurrentState()
             self.updateIconForCurrentState()
+            self.updateTooltip()
         }
+    }
+
+    /// メニューを再構築
+    private func rebuildMenu() {
+        statusMenu = createMenu()
+        statusMenu?.delegate = self
+        statusItem?.menu = statusMenu
+    }
+
+    /// ツールチップを更新
+    private func updateTooltip() {
+        guard let button = statusItem?.button else { return }
+        button.toolTip = localizedAppString(forKey: "app.tooltip")
     }
 
     /// 通知権限を要求

@@ -59,21 +59,13 @@ extension OutputClient: DependencyKey {
                 var content = text
                 if settings.includeMetadata {
                     let metadata = Self.generateMetadata()
-                    if settings.fileExtension == .md {
-                        content = """
-                        ---
-                        \(metadata)
-                        ---
+                    content = """
+                    ---
+                    \(metadata)
+                    ---
 
-                        \(text)
-                        """
-                    } else {
-                        content = """
-                        \(metadata)
-
-                        \(text)
-                        """
-                    }
+                    \(text)
+                    """
                 }
 
                 // ファイルに書き込み
