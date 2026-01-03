@@ -102,7 +102,7 @@ private struct IconListRow: View {
                 .frame(width: 24, height: 24)
 
             // 状態名
-            Text(status.displayName)
+            Text(LocalizedStringKey(status.localizedKey))
                 .lineLimit(1)
 
             Spacer()
@@ -202,7 +202,7 @@ private struct IconDetailPanel: View {
                 .cornerRadius(8)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(status.displayName)
+                Text(LocalizedStringKey(status.localizedKey))
                     .font(.title2)
                     .fontWeight(.semibold)
             }
@@ -226,7 +226,7 @@ private struct IconDetailPanel: View {
                 .font(.headline)
                 .foregroundColor(.secondary)
 
-            Text(status.detailedDescription)
+            Text(LocalizedStringKey(status.descriptionKey))
                 .foregroundColor(.primary)
         }
     }
