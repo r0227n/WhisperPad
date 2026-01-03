@@ -1258,24 +1258,6 @@
         }
       }
     },
-    "recording.output.format": {
-      "comment": "Format: %@",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Format: %@"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "形式: %@"
-          }
-        }
-      }
-    },
     "recording.output.save_to_file": {
       "comment": "Save to File",
       "extractionState": "manual",
@@ -2694,24 +2676,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "保存先を変更"
-          }
-        }
-      }
-    },
-    "file_output.file_format": {
-      "comment": "File Format label",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "File Format"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ファイル形式"
           }
         }
       }

@@ -21,7 +21,6 @@ final class FileOutputSettingsTests: XCTestCase {
         XCTAssertTrue(settings.outputDirectory.path.contains("Documents"))
         XCTAssertTrue(settings.outputDirectory.path.contains("WhisperPad"))
         XCTAssertEqual(settings.fileNameFormat, .dateTime)
-        XCTAssertEqual(settings.fileExtension, .txt)
         XCTAssertTrue(settings.includeMetadata)
     }
 
@@ -31,34 +30,32 @@ final class FileOutputSettingsTests: XCTestCase {
     func testFileNameGeneration_dateTime() {
         var settings = FileOutputSettings.default
         settings.fileNameFormat = .dateTime
-        settings.fileExtension = .txt
 
         let fileName = settings.generateFileName()
 
-        // WhisperPad_YYYYMMDD_HHMMSS.txt 形式
+        // WhisperPad_YYYYMMDD_HHMMSS.md 形式
         XCTAssertTrue(fileName.hasPrefix("WhisperPad_"))
-        XCTAssertTrue(fileName.hasSuffix(".txt"))
+        XCTAssertTrue(fileName.hasSuffix(".md"))
         XCTAssertTrue(fileName.contains("_"))
 
-        // ファイル名の長さを確認 (WhisperPad_YYYYMMDD_HHMMSS.txt = 30文字)
-        XCTAssertEqual(fileName.count, 30)
+        // ファイル名の長さを確認 (WhisperPad_YYYYMMDD_HHMMSS.md = 29文字)
+        XCTAssertEqual(fileName.count, 29)
     }
 
     /// タイムスタンプ形式のファイル名が正しく生成されることを確認
     func testFileNameGeneration_timestamp() {
         var settings = FileOutputSettings.default
         settings.fileNameFormat = .timestamp
-        settings.fileExtension = .txt
 
         let fileName = settings.generateFileName()
 
-        // WhisperPad_TIMESTAMP.txt 形式
+        // WhisperPad_TIMESTAMP.md 形式
         XCTAssertTrue(fileName.hasPrefix("WhisperPad_"))
-        XCTAssertTrue(fileName.hasSuffix(".txt"))
+        XCTAssertTrue(fileName.hasSuffix(".md"))
 
         // タイムスタンプ部分が数字であることを確認
         let components = fileName.replacingOccurrences(of: "WhisperPad_", with: "")
-            .replacingOccurrences(of: ".txt", with: "")
+            .replacingOccurrences(of: ".md", with: "")
         XCTAssertNotNil(Int(components))
     }
 
@@ -66,26 +63,14 @@ final class FileOutputSettingsTests: XCTestCase {
     func testFileNameGeneration_sequential() {
         var settings = FileOutputSettings.default
         settings.fileNameFormat = .sequential
-        settings.fileExtension = .txt
 
         let fileName1 = settings.generateFileName(sequentialNumber: 1)
         let fileName5 = settings.generateFileName(sequentialNumber: 5)
         let fileName100 = settings.generateFileName(sequentialNumber: 100)
 
-        XCTAssertEqual(fileName1, "WhisperPad_001.txt")
-        XCTAssertEqual(fileName5, "WhisperPad_005.txt")
-        XCTAssertEqual(fileName100, "WhisperPad_100.txt")
-    }
-
-    /// マークダウン拡張子が正しく適用されることを確認
-    func testFileNameGeneration_markdownExtension() {
-        var settings = FileOutputSettings.default
-        settings.fileNameFormat = .timestamp
-        settings.fileExtension = .md
-
-        let fileName = settings.generateFileName()
-
-        XCTAssertTrue(fileName.hasSuffix(".md"))
+        XCTAssertEqual(fileName1, "WhisperPad_001.md")
+        XCTAssertEqual(fileName5, "WhisperPad_005.md")
+        XCTAssertEqual(fileName100, "WhisperPad_100.md")
     }
 
     /// ファイルパス生成が正しいことを確認
@@ -107,7 +92,6 @@ final class FileOutputSettingsTests: XCTestCase {
         var original = FileOutputSettings.default
         original.isEnabled = true
         original.fileNameFormat = .timestamp
-        original.fileExtension = .md
         original.includeMetadata = false
 
         let encoder = JSONEncoder()
@@ -119,7 +103,6 @@ final class FileOutputSettingsTests: XCTestCase {
         XCTAssertEqual(decoded.isEnabled, original.isEnabled)
         XCTAssertEqual(decoded.outputDirectory, original.outputDirectory)
         XCTAssertEqual(decoded.fileNameFormat, original.fileNameFormat)
-        XCTAssertEqual(decoded.fileExtension, original.fileExtension)
         XCTAssertEqual(decoded.includeMetadata, original.includeMetadata)
     }
 
@@ -148,20 +131,5 @@ final class FileOutputSettingsTests: XCTestCase {
         XCTAssertTrue(allCases.contains(.dateTime))
         XCTAssertTrue(allCases.contains(.timestamp))
         XCTAssertTrue(allCases.contains(.sequential))
-    }
-
-    /// FileExtension の全ケースをカバー
-    func testFileExtension_allCases() {
-        let allCases = FileOutputSettings.FileExtension.allCases
-
-        XCTAssertEqual(allCases.count, 2)
-        XCTAssertTrue(allCases.contains(.txt))
-        XCTAssertTrue(allCases.contains(.md))
-    }
-
-    /// FileExtension の rawValue が正しいことを確認
-    func testFileExtension_rawValues() {
-        XCTAssertEqual(FileOutputSettings.FileExtension.txt.rawValue, "txt")
-        XCTAssertEqual(FileOutputSettings.FileExtension.md.rawValue, "md")
     }
 }

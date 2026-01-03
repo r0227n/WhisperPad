@@ -84,33 +84,6 @@ struct FileOutputDetailsPopover: View {
                     )
                 }
 
-                // ファイル形式
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("file_output.file_format", comment: "File Format")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Picker(
-                        "",
-                        selection: Binding(
-                            get: { store.settings.output.fileExtension },
-                            set: { newValue in
-                                var output = store.settings.output
-                                output.fileExtension = newValue
-                                store.send(.updateOutputSettings(output))
-                            }
-                        )
-                    ) {
-                        ForEach(FileOutputSettings.FileExtension.allCases, id: \.self) { ext in
-                            Text(".\(ext.rawValue)").tag(ext)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .accessibilityLabel(
-                        String(localized: "file_output.file_format", comment: "File Format")
-                    )
-                }
-
                 // メタデータ
                 Toggle(
                     String(localized: "file_output.include_metadata", comment: "Include Metadata"),

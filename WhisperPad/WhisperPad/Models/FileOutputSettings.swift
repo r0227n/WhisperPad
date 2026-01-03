@@ -26,9 +26,6 @@ struct FileOutputSettings: Codable, Equatable, Sendable {
     /// ファイル名形式
     var fileNameFormat: FileNameFormat = .dateTime
 
-    /// ファイル拡張子
-    var fileExtension: FileExtension = .txt
-
     /// メタデータを含めるかどうか
     var includeMetadata: Bool = true
 
@@ -61,19 +58,6 @@ extension FileOutputSettings {
     }
 }
 
-// MARK: - FileExtension
-
-extension FileOutputSettings {
-    /// ファイル拡張子
-    enum FileExtension: String, Codable, CaseIterable, Sendable {
-        /// テキストファイル
-        case txt
-
-        /// マークダウンファイル
-        case md
-    }
-}
-
 // MARK: - File Name Generation
 
 extension FileOutputSettings {
@@ -98,7 +82,7 @@ extension FileOutputSettings {
             baseName = String(format: "WhisperPad_%03d", sequentialNumber)
         }
 
-        return "\(baseName).\(fileExtension.rawValue)"
+        return "\(baseName).md"
     }
 
     /// 完全なファイルパスを生成
