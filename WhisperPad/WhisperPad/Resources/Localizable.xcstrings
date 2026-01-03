@@ -4193,6 +4193,96 @@
         }
       }
     },
+    "menu.model.title": {
+      "comment": "Model menu item title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モデル"
+          }
+        }
+      }
+    },
+    "menu.model.current": {
+      "comment": "Format string showing current model. %@ is model display name",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在: %@"
+          }
+        }
+      }
+    },
+    "menu.model.more": {
+      "comment": "More models menu item to open Settings",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More models..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モデルを追加..."
+          }
+        }
+      }
+    },
+    "menu.model.empty": {
+      "comment": "Message shown when no models are downloaded",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please download models..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モデルをダウンロードしてください..."
+          }
+        }
+      }
+    },
+    "menu.model.loading": {
+      "comment": "Message shown while WhisperKit is initializing a model",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading model..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モデルを読み込み中..."
+          }
+        }
+      }
+    },
     "hotkey.conflict.help": {
       "comment": "Help text for hotkey conflict warning",
       "extractionState": "manual",
