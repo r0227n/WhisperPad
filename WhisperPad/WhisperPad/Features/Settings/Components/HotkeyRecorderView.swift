@@ -77,8 +77,10 @@ struct HotkeyRecorderView: View {
                 )
                 .accessibilityLabel(String(localized: "hotkey.input.recording", comment: "Recording key"))
 
-            Button("common.cancel", comment: "Cancel button") {
+            Button {
                 onStopRecording()
+            } label: {
+                Text("common.cancel", comment: "Cancel button")
             }
             .buttonStyle(.borderless)
             .accessibilityLabel(String(localized: "common.cancel", comment: "Cancel"))
@@ -115,8 +117,10 @@ struct HotkeyRecorderView: View {
                 )
             )
 
-            Button("common.clear", comment: "Clear button") {
+            Button {
                 onClear()
+            } label: {
+                Text("common.clear", comment: "Clear button")
             }
             .buttonStyle(.borderless)
             .accessibilityLabel(String(localized: "common.clear", comment: "Clear"))

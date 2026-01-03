@@ -84,7 +84,7 @@ struct OutputSettingsSection: View {
 
                     if store.settings.output.isEnabled {
                         HStack(alignment: .top, spacing: 12) {
-                            // Left: Path and format display
+                            // Left: Path display
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack {
                                     Image(systemName: "folder")
@@ -95,20 +95,6 @@ struct OutputSettingsSection: View {
                                         .foregroundColor(.secondary)
                                         .lineLimit(1)
                                         .truncationMode(.middle)
-                                }
-
-                                HStack {
-                                    Image(systemName: "doc.text")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Text(
-                                        String(
-                                            format: String(localized: "recording.output.format", comment: "Format: %@"),
-                                            store.settings.output.fileExtension.rawValue
-                                        )
-                                    )
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
                                 }
                             }
                             .padding(.leading, 32)
