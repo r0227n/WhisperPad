@@ -64,7 +64,7 @@ struct HotkeyRecorderView: View {
     /// 録音中の表示
     private var recordingView: some View {
         HStack(spacing: 8) {
-            Text("hotkey.input.waiting")
+            Text("hotkey.input.waiting", comment: "Placeholder shown while waiting for hotkey input")
                 .foregroundColor(.secondary)
                 .frame(minWidth: 80)
                 .padding(.horizontal, 8)
@@ -77,7 +77,7 @@ struct HotkeyRecorderView: View {
                 )
                 .accessibilityLabel(String(localized: "hotkey.input.recording", comment: "Recording key"))
 
-            Button("common.cancel") {
+            Button("common.cancel", comment: "Cancel button") {
                 onStopRecording()
             }
             .buttonStyle(.borderless)
@@ -115,7 +115,7 @@ struct HotkeyRecorderView: View {
                 )
             )
 
-            Button("common.clear") {
+            Button("common.clear", comment: "Clear button") {
                 onClear()
             }
             .buttonStyle(.borderless)
