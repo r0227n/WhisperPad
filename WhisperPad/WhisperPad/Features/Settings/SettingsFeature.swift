@@ -63,6 +63,24 @@ struct SettingsFeature {
         /// ホットキー競合警告メッセージ
         var hotkeyConflict: String?
 
+        /// システム競合アラートの表示フラグ
+        var showHotkeyConflictAlert = false
+
+        /// 競合しているhotkeyタイプ（アラート表示用）
+        var conflictingHotkeyType: HotkeyType?
+
+        /// 競合前の設定値（ロールバック用）
+        var previousHotKeySettings: HotKeySettings?
+
+        /// 重複検出アラートの表示フラグ
+        var showDuplicateHotkeyAlert = false
+
+        /// 重複している相手のホットキータイプ
+        var duplicateWithHotkeyType: HotkeyType?
+
+        /// システム予約済みショートカットアラートの表示フラグ
+        var showSystemReservedAlert = false
+
         /// 削除確認対象のモデル名
         var modelToDelete: String?
 
@@ -180,6 +198,20 @@ struct SettingsFeature {
 
         /// ホットキー競合をチェック
         case checkHotkeyConflict
+        /// hotkey更新前に検証を実行
+        case validateAndUpdateHotkey(HotkeyType, HotKeySettings.KeyComboSettings)
+        /// システム競合が検出された
+        case hotkeyConflictDetected(HotkeyType)
+        /// 競合アラートを閉じた
+        case dismissConflictAlert
+        /// アプリ内重複が検出された
+        case duplicateHotkeyDetected(HotkeyType, duplicateWith: HotkeyType)
+        /// 重複アラートを閉じた
+        case dismissDuplicateAlert
+        /// システム予約済みショートカットが検出された
+        case systemReservedShortcutDetected(HotkeyType)
+        /// システム予約済みアラートを閉じた
+        case dismissSystemReservedAlert
 
         // MARK: - Menu Bar Icon
 
@@ -594,6 +626,103 @@ struct SettingsFeature {
                 }
                 return .none
 
+            case let .validateAndUpdateHotkey(type, newCombo):
+                // 設定を更新する前に現在の値を保存（ロールバック用）
+                state.previousHotKeySettings = state.settings.hotKey
+
+                // アプリ内重複チェック（デフォルト設定との重複は許可）
+                if let duplicateType = HotKeyValidator.findDuplicate(
+                    carbonKeyCode: newCombo.carbonKeyCode,
+                    carbonModifiers: newCombo.carbonModifiers,
+                    currentType: type,
+                    in: state.settings.hotKey
+                ) {
+                    // 重複検出 → アラート表示
+                    return .send(.duplicateHotkeyDetected(type, duplicateWith: duplicateType))
+                }
+
+                // 仮更新（検証のため）
+                updateHotkeySetting(&state.settings.hotKey, type: type, combo: newCombo)
+
+                // Carbon APIでシステム競合を検証
+                return .run { [settings = state.settings.hotKey] send in
+                    let validation = HotKeyValidator.canRegister(
+                        carbonKeyCode: newCombo.carbonKeyCode,
+                        carbonModifiers: newCombo.carbonModifiers
+                    )
+
+                    switch validation {
+                    case .success:
+                        // 競合なし → 更新を確定
+                        await send(.updateHotKeySettings(settings))
+                    case .failure(.reservedSystemShortcut):
+                        // システム予約済みショートカット → アラート表示
+                        await send(.systemReservedShortcutDetected(type))
+                    case .failure:
+                        // システム競合あり → アラート表示
+                        await send(.hotkeyConflictDetected(type))
+                    }
+                }
+
+            case let .hotkeyConflictDetected(type):
+                // 競合が検出されたら、設定を元に戻す
+                if let previous = state.previousHotKeySettings {
+                    state.settings.hotKey = previous
+                }
+
+                // アラート表示フラグを立てる
+                state.conflictingHotkeyType = type
+                state.showHotkeyConflictAlert = true
+
+                return .none
+
+            case .dismissConflictAlert:
+                state.showHotkeyConflictAlert = false
+                state.conflictingHotkeyType = nil
+                state.previousHotKeySettings = nil
+
+                return .none
+
+            case let .duplicateHotkeyDetected(targetType, duplicateType):
+                // 重複が検出されたら、設定を元に戻す
+                if let previous = state.previousHotKeySettings {
+                    state.settings.hotKey = previous
+                }
+
+                // アラート表示フラグを立てる
+                state.conflictingHotkeyType = targetType
+                state.duplicateWithHotkeyType = duplicateType
+                state.showDuplicateHotkeyAlert = true
+
+                return .none
+
+            case .dismissDuplicateAlert:
+                state.showDuplicateHotkeyAlert = false
+                state.conflictingHotkeyType = nil
+                state.duplicateWithHotkeyType = nil
+                state.previousHotKeySettings = nil
+
+                return .none
+
+            case let .systemReservedShortcutDetected(type):
+                // システム予約済みショートカットが検出されたら、設定を元に戻す
+                if let previous = state.previousHotKeySettings {
+                    state.settings.hotKey = previous
+                }
+
+                // アラート表示フラグを立てる
+                state.conflictingHotkeyType = type
+                state.showSystemReservedAlert = true
+
+                return .none
+
+            case .dismissSystemReservedAlert:
+                state.showSystemReservedAlert = false
+                state.conflictingHotkeyType = nil
+                state.previousHotKeySettings = nil
+
+                return .none
+
             case .resetMenuBarIconSettings:
                 state.settings.general.menuBarIconSettings = .default
                 return .send(.saveSettings)
@@ -607,5 +736,31 @@ struct SettingsFeature {
                 return .none
             }
         }
+    }
+}
+
+// MARK: - Helper Functions
+
+/// HotKeySettingsの特定のhotkeyタイプを更新するヘルパー関数
+private func updateHotkeySetting(
+    _ hotKey: inout HotKeySettings,
+    type: HotkeyType,
+    combo: HotKeySettings.KeyComboSettings
+) {
+    switch type {
+    case .recording:
+        hotKey.recordingHotKey = combo
+    case .streaming:
+        hotKey.streamingHotKey = combo
+    case .cancel:
+        hotKey.cancelHotKey = combo
+    case .recordingPause:
+        hotKey.recordingPauseHotKey = combo
+    case .popupCopyAndClose:
+        hotKey.popupCopyAndCloseHotKey = combo
+    case .popupSaveToFile:
+        hotKey.popupSaveToFileHotKey = combo
+    case .popupClose:
+        hotKey.popupCloseHotKey = combo
     }
 }

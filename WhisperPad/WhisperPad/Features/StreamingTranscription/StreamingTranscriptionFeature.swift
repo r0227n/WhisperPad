@@ -1,19 +1,19 @@
+// swiftlint:disable file_length
 //
 //  StreamingTranscriptionFeature.swift
 //  WhisperPad
 //
-
 import ComposableArchitecture
 import Foundation
 import OSLog
 
 private let logger = Logger(subsystem: "com.whisperpad", category: "StreamingTranscriptionFeature")
-
 /// ストリーミング文字起こし機能の TCA Reducer
 ///
 /// リアルタイム音声入力から文字起こしを行うライフサイクル
 /// （初期化、録音開始/停止、文字起こし処理、結果出力）を管理します。
 @Reducer
+// swiftlint:disable:next type_body_length
 struct StreamingTranscriptionFeature {
     // MARK: - State
 
@@ -76,6 +76,9 @@ struct StreamingTranscriptionFeature {
         var popupSaveToFileShortcut: String = HotKeySettings.KeyComboSettings.popupSaveToFileDefault.displayString
         var popupCopyAndCloseShortcut: String = HotKeySettings.KeyComboSettings.popupCopyAndCloseDefault.displayString
         var popupCloseShortcut: String = HotKeySettings.KeyComboSettings.popupCloseDefault.displayString
+
+        /// WhisperKit初期化中フラグ
+        var whisperKitInitializing: Bool = false
     }
 
     // MARK: - Action
@@ -106,10 +109,22 @@ struct StreamingTranscriptionFeature {
         case binding(BindingAction<State>)
 
         // 内部アクション
-        /// 初期化が完了した
-        case initializationCompleted
-        /// 初期化に失敗した
-        case initializationFailed(String)
+        /// WhisperKit準備状態確認
+        case checkWhisperKitReady
+        /// WhisperKit準備完了
+        case whisperKitReady
+        /// WhisperKit初期化開始
+        case initializeWhisperKit
+        /// WhisperKit初期化完了
+        case whisperKitInitialized
+        /// WhisperKit初期化失敗
+        case whisperKitInitFailed(Error)
+        /// Service初期化開始
+        case initializeStreamingService
+        /// Service初期化完了
+        case serviceInitializationCompleted
+        /// Service初期化失敗
+        case serviceInitializationFailed(String)
         /// 進捗が更新された
         case progressUpdated(TranscriptionProgress)
         /// 音声チャンクを受信した
@@ -162,7 +177,7 @@ struct StreamingTranscriptionFeature {
 
     var body: some Reducer<State, Action> {
         BindingReducer()
-        Reduce { state, action in
+        Reduce<State, Action> { (state: inout State, action: Action) -> Effect<Action> in
             switch action {
             case .binding:
                 return .none
@@ -191,26 +206,8 @@ struct StreamingTranscriptionFeature {
                 state.duration = 0
                 state.tokensPerSecond = 0
 
-                return .run { [whisperKitClient, streamingTranscription] send in
-                    do {
-                        // WhisperKitManager が ready なら即座に初期化完了
-                        let isReady = await whisperKitClient.isReady()
-                        if isReady {
-                            // 状態リセットのみ行う
-                            try await streamingTranscription.initialize(nil)
-                            await send(.initializationCompleted)
-                        } else {
-                            // フォールバック: WhisperKit の初期化を実行
-                            try await streamingTranscription.initialize(nil)
-                            await send(.initializationCompleted)
-                        }
-                    } catch {
-                        let message = (error as? StreamingTranscriptionError)?.errorDescription
-                            ?? error.localizedDescription
-                        await send(.initializationFailed(message))
-                    }
-                }
-                .cancellable(id: CancelID.initialization)
+                // RecordingFeatureと同様に、まずWhisperKit準備状態をチェック
+                return .send(.checkWhisperKitReady)
 
             case .stopButtonTapped:
                 guard case .recording = state.status else { return .none }
@@ -306,12 +303,63 @@ struct StreamingTranscriptionFeature {
 
             // MARK: - 内部アクション
 
-            case .initializationCompleted:
-                state.status = .recording(duration: 0, tokensPerSecond: 0)
+            case .checkWhisperKitReady:
+                return .run { send in
+                    let isReady = await whisperKitClient.isReady()
+                    if isReady {
+                        await send(.whisperKitReady)
+                    } else {
+                        await send(.initializeWhisperKit)
+                    }
+                }
 
-                // 音声ストリーミングとタイマーを開始
+            case .whisperKitReady:
+                return .send(.initializeStreamingService)
+
+            case .initializeWhisperKit:
+                state.whisperKitInitializing = true
+                return .run { [whisperKitClient, userDefaultsClient] send in
+                    do {
+                        let settings = await userDefaultsClient.loadSettings()
+                        let modelName = settings.transcription.modelName
+                        try await whisperKitClient.initialize(modelName)
+                        await send(.whisperKitInitialized)
+                    } catch {
+                        await send(.whisperKitInitFailed(error))
+                    }
+                }
+
+            case .whisperKitInitialized:
+                state.whisperKitInitializing = false
+                return .send(.initializeStreamingService)
+
+            case let .whisperKitInitFailed(error):
+                state.whisperKitInitializing = false
+                let message = (error as? WhisperKitManagerError)?.errorDescription
+                    ?? error.localizedDescription
+                state.status = .error(message)
+                return .none
+
+            case .initializeStreamingService:
+                return .run { [streamingTranscription, userDefaultsClient] send in
+                    do {
+                        // UserDefaultsから設定を読み込み
+                        let settings = await userDefaultsClient.loadSettings()
+                        let confirmationCount = settings.streaming.confirmationCount
+                        let language = settings.streaming.language
+                        try await streamingTranscription.initialize(nil, confirmationCount, language)
+                        await send(.serviceInitializationCompleted)
+                    } catch {
+                        let message = (error as? StreamingTranscriptionError)?.errorDescription
+                            ?? error.localizedDescription
+                        await send(.serviceInitializationFailed(message))
+                    }
+                }
+                .cancellable(id: CancelID.initialization)
+
+            case .serviceInitializationCompleted:
+                state.status = .recording(duration: 0, tokensPerSecond: 0)
                 return .merge(
-                    // 音声ストリームを開始
                     .run { send in
                         do {
                             let stream = try await streamingAudio.startRecording()
@@ -323,8 +371,6 @@ struct StreamingTranscriptionFeature {
                         }
                     }
                     .cancellable(id: CancelID.audioStream),
-
-                    // タイマーを開始
                     .run { send in
                         for await _ in clock.timer(interval: .seconds(1)) {
                             await send(.timerTick)
@@ -333,7 +379,7 @@ struct StreamingTranscriptionFeature {
                     .cancellable(id: CancelID.timer)
                 )
 
-            case let .initializationFailed(message):
+            case let .serviceInitializationFailed(message):
                 state.status = .error(message)
                 return .none
 
@@ -344,6 +390,16 @@ struct StreamingTranscriptionFeature {
                     do {
                         let progress = try await streamingTranscription.processChunk(samples)
                         await send(.progressUpdated(progress))
+                    } catch let error as StreamingTranscriptionError {
+                        // 型安全なエラー処理
+                        switch error {
+                        case .bufferOverflow:
+                            // バッファオーバーフロー時は自動停止
+                            logger.error("Buffer overflow occurred, stopping recording")
+                            await send(.stopButtonTapped)
+                        default:
+                            logger.error("Streaming error: \(error.localizedDescription)")
+                        }
                     } catch {
                         logger.error("Chunk processing error: \(error.localizedDescription)")
                     }
@@ -354,8 +410,6 @@ struct StreamingTranscriptionFeature {
                 state.pendingText = progress.pendingText
                 state.decodingText = progress.decodingText
                 state.tokensPerSecond = progress.tokensPerSecond
-
-                // statusのtokensPerSecondも更新
                 if case let .recording(duration, _) = state.status {
                     state.status = .recording(duration: duration, tokensPerSecond: progress.tokensPerSecond)
                 }

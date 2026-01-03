@@ -27,18 +27,6 @@ enum AppStatus: Equatable, Sendable {
     case error(String)
 }
 
-/// WhisperKit の初期化ステータス
-enum WhisperKitInitStatus: Equatable, Sendable {
-    /// 未開始
-    case notStarted
-    /// 初期化中
-    case initializing
-    /// 準備完了
-    case ready
-    /// 失敗
-    case failed(String)
-}
-
 /// アプリケーション全体の状態を管理する TCA Reducer
 ///
 /// アプリのステータス（idle, recording, transcribing, completed, error）を管理し、
@@ -52,9 +40,6 @@ struct AppReducer {
     struct State: Equatable {
         /// 現在のアプリステータス
         var appStatus: AppStatus = .idle
-
-        /// WhisperKit の初期化ステータス
-        var whisperKitStatus: WhisperKitInitStatus = .notStarted
 
         /// 最後の文字起こし結果
         var lastTranscription: String?
@@ -105,12 +90,6 @@ struct AppReducer {
         case startStreamingTranscription
         /// ストリーミング文字起こし機能のアクション
         case streamingTranscription(StreamingTranscriptionFeature.Action)
-        /// WhisperKit を初期化
-        case initializeWhisperKit
-        /// WhisperKit 初期化完了
-        case whisperKitInitCompleted
-        /// WhisperKit 初期化失敗
-        case whisperKitInitFailed(String)
     }
 
     // MARK: - Dependencies
@@ -123,7 +102,7 @@ struct AppReducer {
     // MARK: - Reducer Body
 
     var body: some Reducer<State, Action> {
-        Reduce { state, action in
+        Reduce<State, Action> { (state: inout State, action: Action) -> Effect<Action> in
             switch action {
             case .startRecording:
                 // 録音機能に委譲
@@ -220,10 +199,10 @@ struct AppReducer {
 
             // SettingsFeature のデリゲートアクションを処理
             case .settings(.delegate(.modelChanged)):
-                // モデルが変更された場合、WhisperKit を再初期化
-                state.whisperKitStatus = .notStarted
-                state.transcription.isModelInitialized = false
-                return .send(.initializeWhisperKit)
+                // モデルが変更された場合、WhisperKitをアンロード（次回使用時に新モデルで初期化）
+                return .run { [whisperKitClient] _ in
+                    await whisperKitClient.unload()
+                }
 
             case .settings(.delegate(.settingsChanged)):
                 // 設定が変更された場合の処理（必要に応じて）
@@ -302,11 +281,11 @@ struct AppReducer {
                 state.appStatus = .transcribing
                 return .none
 
-            case .streamingTranscription(.initializationCompleted):
+            case .streamingTranscription(.serviceInitializationCompleted):
                 state.appStatus = .streamingTranscribing
                 return .none
 
-            case let .streamingTranscription(.initializationFailed(message)):
+            case let .streamingTranscription(.serviceInitializationFailed(message)):
                 state.appStatus = .error(message)
                 return .none
 
@@ -404,40 +383,6 @@ struct AppReducer {
                 state.streamingTranscription.decodingText = ""
                 state.streamingTranscription.duration = 0
                 state.streamingTranscription.tokensPerSecond = 0
-                return .none
-
-            // MARK: - WhisperKit Initialization
-
-            case .initializeWhisperKit:
-                // 既に初期化中または完了済みの場合はスキップ
-                guard state.whisperKitStatus == .notStarted
-                    || state.whisperKitStatus != .initializing
-                else {
-                    return .none
-                }
-                state.whisperKitStatus = .initializing
-
-                return .run { [userDefaultsClient, whisperKitClient] send in
-                    do {
-                        // 設定からモデル名を取得
-                        let settings = await userDefaultsClient.loadSettings()
-                        let modelName = settings.transcription.modelName
-
-                        try await whisperKitClient.initialize(modelName)
-                        await send(.whisperKitInitCompleted)
-                    } catch {
-                        await send(.whisperKitInitFailed(error.localizedDescription))
-                    }
-                }
-                .cancellable(id: "whisperKitInit")
-
-            case .whisperKitInitCompleted:
-                state.whisperKitStatus = .ready
-                state.transcription.isModelInitialized = true
-                return .none
-
-            case let .whisperKitInitFailed(message):
-                state.whisperKitStatus = .failed(message)
                 return .none
             }
         }

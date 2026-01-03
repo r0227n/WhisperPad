@@ -22,8 +22,6 @@ struct TranscriptionFeature {
         var status: Status = .idle
         /// 最後の文字起こし結果
         var lastResult: String?
-        /// モデルが初期化済みかどうか
-        var isModelInitialized: Bool = false
         /// 処理中の音声ファイル URL
         var currentAudioURL: URL?
         /// 処理中の言語設定
@@ -36,12 +34,6 @@ struct TranscriptionFeature {
         // 内部アクション
         /// 文字起こしを開始
         case startTranscription(audioURL: URL, language: String?)
-        /// モデルを初期化（必要な場合）
-        case initializeModelIfNeeded
-        /// モデル初期化が完了
-        case modelInitialized
-        /// モデル初期化に失敗
-        case modelInitializationFailed(TranscriptionError)
         /// 文字起こしを実行
         case performTranscription
         /// 文字起こし結果
@@ -73,45 +65,8 @@ struct TranscriptionFeature {
                 state.currentAudioURL = audioURL
                 state.currentLanguage = language
 
-                // WhisperKitClient の状態をチェック
-                return .run { [isModelInitialized = state.isModelInitialized, whisperKitClient] send in
-                    // WhisperKitManager が ready なら直接文字起こし開始
-                    let isReady = await whisperKitClient.isReady()
-                    if isReady || isModelInitialized {
-                        await send(.performTranscription)
-                    } else {
-                        await send(.initializeModelIfNeeded)
-                    }
-                }
-
-            case .initializeModelIfNeeded:
-                state.status = .initializingModel
-                logger.info("Initializing WhisperKit model...")
-
-                return .run { [userDefaultsClient] send in
-                    do {
-                        let settings = await userDefaultsClient.loadSettings()
-                        let modelName = settings.transcription.modelName
-                        logger.info("Using model from settings: \(modelName)")
-                        try await transcriptionClient.initialize(modelName)
-                        await send(.modelInitialized)
-                    } catch {
-                        let transcriptionError =
-                            (error as? TranscriptionError)
-                                ?? .initializationFailed(error.localizedDescription)
-                        await send(.modelInitializationFailed(transcriptionError))
-                    }
-                }
-
-            case .modelInitialized:
-                logger.info("WhisperKit model initialized successfully")
-                state.isModelInitialized = true
+                // 直接文字起こしを実行（WhisperKitの初期化は録音/ストリーミング開始時に完了している）
                 return .send(.performTranscription)
-
-            case let .modelInitializationFailed(error):
-                logger.error("Model initialization failed: \(error.localizedDescription)")
-                state.status = .failed(error.localizedDescription)
-                return .send(.delegate(.transcriptionFailed(error)))
 
             case .performTranscription:
                 guard let audioURL = state.currentAudioURL else {

@@ -114,7 +114,7 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
 
     /// 表示名（ローカライズ済み）
     var displayName: String {
-        String(localized: localizedKey)
+        String(localized: String.LocalizationValue(localizedKey))
     }
 
     /// 対応する AppStatus のシンボル名（デフォルト）
@@ -134,11 +134,11 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
 
     /// 状態の詳細説明（設定画面の右パネル表示用）
     var detailedDescription: String {
-        String(localized: descriptionKey)
+        String(localized: String.LocalizationValue(descriptionKey))
     }
 
     /// ローカライズキー
-    var localizedKey: LocalizedStringKey {
+    var localizedKey: String {
         switch self {
         case .idle: "icon.status.idle"
         case .recording: "icon.status.recording"
@@ -153,7 +153,7 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
     }
 
     /// 説明のローカライズキー
-    var descriptionKey: LocalizedStringKey {
+    var descriptionKey: String {
         switch self {
         case .idle: "icon.description.idle"
         case .recording: "icon.description.recording"

@@ -31,6 +31,102 @@ struct HotkeySettingsTab: View {
             }
         }
         .environment(\.locale, store.settings.general.preferredLocale.locale)
+        .alert(
+            String(
+                localized: "hotkey.conflict_alert.title",
+                defaultValue: "ホットキー登録失敗",
+                comment: "Hotkey registration failed"
+            ),
+            isPresented: Binding(
+                get: { store.showHotkeyConflictAlert },
+                set: { if !$0 { store.send(.dismissConflictAlert) } }
+            )
+        ) {
+            Button(String(localized: "common.ok", defaultValue: "OK", comment: "OK"), role: .cancel) {
+                store.send(.dismissConflictAlert)
+            }
+        } message: {
+            if let type = store.conflictingHotkeyType {
+                Text(String(
+                    localized: "hotkey.conflict_alert.message",
+                    defaultValue: "\(type.displayName) のショートカットは他のアプリケーションで使用中のため、登録できません。別のキーコンビネーションを選択してください。",
+                    comment: "Hotkey conflict with other app message"
+                ))
+            } else {
+                Text(String(
+                    localized: "hotkey.conflict_alert.message_generic",
+                    defaultValue: "他のアプリケーションで使用中のため、登録できません。",
+                    comment: "Generic hotkey conflict message"
+                ))
+            }
+        }
+        .alert(
+            String(
+                localized: "hotkey.duplicate_alert.title",
+                defaultValue: "ホットキーが重複しています",
+                comment: "Hotkey duplication alert"
+            ),
+            isPresented: Binding(
+                get: { store.showDuplicateHotkeyAlert },
+                set: { if !$0 { store.send(.dismissDuplicateAlert) } }
+            )
+        ) {
+            Button(String(localized: "common.ok", defaultValue: "OK", comment: "OK"), role: .cancel) {
+                store.send(.dismissDuplicateAlert)
+            }
+        } message: {
+            if let targetType = store.conflictingHotkeyType,
+               let duplicateType = store.duplicateWithHotkeyType {
+                Text(String(
+                    localized: "hotkey.duplicate_alert.message",
+                    defaultValue: """
+                    \(targetType.displayName) のショートカットは、既に \(duplicateType.displayName) で使用されています。
+
+                    別のキーコンビネーションを選択してください。
+                    """,
+                    comment: "Hotkey duplication message"
+                ))
+            } else {
+                Text(String(
+                    localized: "hotkey.duplicate_alert.message_generic",
+                    defaultValue: "このショートカットは既に別の機能で使用されています。",
+                    comment: "Generic duplication message"
+                ))
+            }
+        }
+        .alert(
+            String(
+                localized: "hotkey.system_reserved_alert.title",
+                defaultValue: "システムショートカット",
+                comment: "System reserved shortcut"
+            ),
+            isPresented: Binding(
+                get: { store.showSystemReservedAlert },
+                set: { if !$0 { store.send(.dismissSystemReservedAlert) } }
+            )
+        ) {
+            Button(String(localized: "common.ok", defaultValue: "OK", comment: "OK"), role: .cancel) {
+                store.send(.dismissSystemReservedAlert)
+            }
+        } message: {
+            if let type = store.conflictingHotkeyType {
+                Text(String(
+                    localized: "hotkey.system_reserved_alert.message",
+                    defaultValue: """
+                    \(type.displayName) のショートカットには、システムで予約されているキーコンビネーション（Cmd+C、Cmd+Vなど）を使用できません。
+
+                    別のキーコンビネーションを選択してください。
+                    """,
+                    comment: "System reserved shortcut message"
+                ))
+            } else {
+                Text(String(
+                    localized: "hotkey.system_reserved_alert.message_generic",
+                    defaultValue: "このショートカットはシステムで予約されています。",
+                    comment: "Generic system reserved message"
+                ))
+            }
+        }
     }
 
     // MARK: - Left Panel
@@ -118,24 +214,8 @@ struct HotkeySettingsTab: View {
         Binding(
             get: { keyCombo(for: type) },
             set: { newValue in
-                var hotKey = store.settings.hotKey
-                switch type {
-                case .recording:
-                    hotKey.recordingHotKey = newValue
-                case .recordingPause:
-                    hotKey.recordingPauseHotKey = newValue
-                case .cancel:
-                    hotKey.cancelHotKey = newValue
-                case .streaming:
-                    hotKey.streamingHotKey = newValue
-                case .popupCopyAndClose:
-                    hotKey.popupCopyAndCloseHotKey = newValue
-                case .popupSaveToFile:
-                    hotKey.popupSaveToFileHotKey = newValue
-                case .popupClose:
-                    hotKey.popupCloseHotKey = newValue
-                }
-                store.send(.updateHotKeySettings(hotKey))
+                // システム競合検証を含む更新処理
+                store.send(.validateAndUpdateHotkey(type, newValue))
             }
         )
     }
@@ -254,6 +334,16 @@ private struct ShortcutDetailPanel: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+
+            Spacer()
+
+            Button {
+                onResetToDefault()
+            } label: {
+                Image(systemName: "arrow.counterclockwise")
+            }
+            .buttonStyle(.borderless)
+            .help("この状態をリセット")
         }
     }
 

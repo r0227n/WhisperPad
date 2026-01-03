@@ -57,7 +57,7 @@ extension TranscriptionSettings {
 
         /// 表示名
         var displayName: String {
-            String(localized: localizedKey)
+            String(localized: String.LocalizationValue(localizedKey))
         }
 
         /// WhisperKit で使用する言語コード
@@ -71,7 +71,7 @@ extension TranscriptionSettings {
         }
 
         /// ローカライズキー
-        var localizedKey: LocalizedStringKey {
+        var localizedKey: String {
             switch self {
             case .auto: "transcription.language.auto"
             case .ja: "transcription.language.ja"
