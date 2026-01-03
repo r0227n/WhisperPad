@@ -28,6 +28,7 @@ struct IconSettingsTab: View {
             detailPanel
                 .frame(minWidth: 300)
         }
+        .environment(\.locale, store.settings.general.preferredLocale.locale)
     }
 
     // MARK: - Left Panel

@@ -16,35 +16,36 @@ struct SettingsView: View {
         TabView(selection: $store.selectedTab.sending(\.selectTab)) {
             GeneralSettingsTab(store: store)
                 .tabItem {
-                    Label(SettingsTab.general.rawValue, systemImage: SettingsTab.general.iconName)
+                    Label(SettingsTab.general.displayName, systemImage: SettingsTab.general.iconName)
                 }
                 .tag(SettingsTab.general)
 
             IconSettingsTab(store: store)
                 .tabItem {
-                    Label(SettingsTab.icon.rawValue, systemImage: SettingsTab.icon.iconName)
+                    Label(SettingsTab.icon.displayName, systemImage: SettingsTab.icon.iconName)
                 }
                 .tag(SettingsTab.icon)
 
             HotkeySettingsTab(store: store)
                 .tabItem {
-                    Label(SettingsTab.hotkey.rawValue, systemImage: SettingsTab.hotkey.iconName)
+                    Label(SettingsTab.hotkey.displayName, systemImage: SettingsTab.hotkey.iconName)
                 }
                 .tag(SettingsTab.hotkey)
 
             RecordingSettingsTab(store: store)
                 .tabItem {
-                    Label(SettingsTab.recording.rawValue, systemImage: SettingsTab.recording.iconName)
+                    Label(SettingsTab.recording.displayName, systemImage: SettingsTab.recording.iconName)
                 }
                 .tag(SettingsTab.recording)
 
             ModelSettingsTab(store: store)
                 .tabItem {
-                    Label(SettingsTab.model.rawValue, systemImage: SettingsTab.model.iconName)
+                    Label(SettingsTab.model.displayName, systemImage: SettingsTab.model.iconName)
                 }
                 .tag(SettingsTab.model)
         }
         .frame(width: 520, height: 500)
+        .environment(\.locale, store.settings.general.preferredLocale.locale)
         .onAppear {
             store.send(.onAppear)
         }

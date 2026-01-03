@@ -70,6 +70,7 @@ struct ModelSettingsTab: View {
                 )
             }
         }
+        .environment(\.locale, store.settings.general.preferredLocale.locale)
     }
 
     // MARK: - Active Model Section

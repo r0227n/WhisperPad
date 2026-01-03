@@ -30,6 +30,7 @@ struct HotkeySettingsTab: View {
                 store.send(.selectShortcut(.recording))
             }
         }
+        .environment(\.locale, store.settings.general.preferredLocale.locale)
     }
 
     // MARK: - Left Panel
@@ -50,7 +51,7 @@ struct HotkeySettingsTab: View {
                         .tag(hotkeyType)
                     }
                 } header: {
-                    Text(category.rawValue)
+                    Text(category.displayName)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
