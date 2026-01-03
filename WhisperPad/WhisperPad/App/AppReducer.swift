@@ -19,10 +19,6 @@ enum AppStatus: Equatable, Sendable {
     case transcribing
     /// 完了
     case completed
-    /// ストリーミング文字起こし中
-    case streamingTranscribing
-    /// ストリーミング完了
-    case streamingCompleted
     /// エラー
     case error(String)
 }
@@ -52,9 +48,6 @@ struct AppReducer {
 
         /// 設定機能の状態
         var settings: SettingsFeature.State = .init()
-
-        /// ストリーミング文字起こし機能の状態
-        var streamingTranscription: StreamingTranscriptionFeature.State = .init()
 
         /// 最後に録音されたファイルの URL
         var lastRecordingURL: URL?
@@ -86,10 +79,6 @@ struct AppReducer {
         case transcription(TranscriptionFeature.Action)
         /// 設定機能のアクション
         case settings(SettingsFeature.Action)
-        /// ストリーミング文字起こしを開始
-        case startStreamingTranscription
-        /// ストリーミング文字起こし機能のアクション
-        case streamingTranscription(StreamingTranscriptionFeature.Action)
     }
 
     // MARK: - Dependencies
@@ -212,101 +201,6 @@ struct AppReducer {
                 // その他の設定アクションは無視
                 return .none
 
-            // MARK: - Streaming Transcription
-
-            case .startStreamingTranscription:
-                // 既存のストリーミング状態をリセット
-                state.streamingTranscription.status = .idle
-                state.streamingTranscription.confirmedText = ""
-                state.streamingTranscription.pendingText = ""
-                state.streamingTranscription.decodingText = ""
-                state.streamingTranscription.duration = 0
-                state.streamingTranscription.tokensPerSecond = 0
-                state.streamingTranscription.showCancelConfirmation = false
-                // ストリーミング文字起こし機能に委譲
-                return .send(.streamingTranscription(.startButtonTapped))
-
-            // StreamingTranscriptionFeature のデリゲートアクションを処理
-            // 注: 通知と完了音は finalizationCompleted で既に実行済み
-            case let .streamingTranscription(.delegate(.streamingCompleted(text))):
-                // appStatusはfinalizationCompletedで既に.streamingCompletedに設定済み
-                state.lastTranscription = text
-                let copyToClipboard = state.settings.settings.output.copyToClipboard
-
-                return .run { [outputClient, clock] send in
-                    // クリップボードにコピー（設定が有効な場合）
-                    if copyToClipboard {
-                        _ = await outputClient.copyToClipboard(text)
-                    }
-
-                    // 自動リセット
-                    try await clock.sleep(for: .seconds(3))
-                    await send(.resetToIdle)
-                }
-
-            case .streamingTranscription(.delegate(.streamingCancelled)):
-                state.appStatus = .idle
-                // AppDelegate にポップアップを閉じる通知を送信
-                return .run { _ in
-                    await MainActor.run {
-                        NotificationCenter.default.post(
-                            name: .closeStreamingPopup,
-                            object: nil
-                        )
-                    }
-                }
-
-            case .streamingTranscription(.delegate(.closePopup)):
-                // 状態をリセット
-                state.appStatus = .idle
-                state.streamingTranscription.status = .idle
-                state.streamingTranscription.confirmedText = ""
-                state.streamingTranscription.pendingText = ""
-                state.streamingTranscription.decodingText = ""
-                state.streamingTranscription.duration = 0
-                state.streamingTranscription.tokensPerSecond = 0
-                // AppDelegate にポップアップを閉じる通知を送信
-                return .run { _ in
-                    await MainActor.run {
-                        NotificationCenter.default.post(
-                            name: .closeStreamingPopup,
-                            object: nil
-                        )
-                    }
-                }
-
-            // StreamingTranscriptionFeature の内部アクションで appStatus を更新
-            case .streamingTranscription(.startButtonTapped):
-                // 初期化中はギアアニメーションを表示
-                state.appStatus = .transcribing
-                return .none
-
-            case .streamingTranscription(.serviceInitializationCompleted):
-                state.appStatus = .streamingTranscribing
-                return .none
-
-            case let .streamingTranscription(.serviceInitializationFailed(message)):
-                state.appStatus = .error(message)
-                return .none
-
-            case .streamingTranscription(.stopButtonTapped):
-                // 処理中（ファイナライズ中）はギアアニメーションを表示
-                state.appStatus = .transcribing
-                return .none
-
-            case .streamingTranscription(.finalizationCompleted):
-                // ファイナライズ完了時にアイコンを完了状態に
-                state.appStatus = .streamingCompleted
-                return .none
-
-            case let .streamingTranscription(.finalizationFailed(message)):
-                state.appStatus = .error(message)
-                return .none
-
-            case .streamingTranscription:
-                // その他のストリーミングアクションは無視
-                return .none
-
             case let .transcriptionCompleted(text):
                 state.appStatus = .completed
                 state.lastTranscription = text
@@ -377,12 +271,6 @@ struct AppReducer {
 
             case .resetToIdle:
                 state.appStatus = .idle
-                state.streamingTranscription.status = .idle
-                state.streamingTranscription.confirmedText = ""
-                state.streamingTranscription.pendingText = ""
-                state.streamingTranscription.decodingText = ""
-                state.streamingTranscription.duration = 0
-                state.streamingTranscription.tokensPerSecond = 0
                 return .none
             }
         }
@@ -400,11 +288,6 @@ struct AppReducer {
         // 設定機能の子 Reducer を統合
         Scope(state: \.settings, action: \.settings) {
             SettingsFeature()
-        }
-
-        // ストリーミング文字起こし機能の子 Reducer を統合
-        Scope(state: \.streamingTranscription, action: \.streamingTranscription) {
-            StreamingTranscriptionFeature()
         }
     }
 }
