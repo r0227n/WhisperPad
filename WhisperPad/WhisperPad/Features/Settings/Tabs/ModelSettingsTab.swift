@@ -247,33 +247,25 @@ struct ModelSettingsTab: View {
                     HStack {
                         Text("model.storage.location")
                             .foregroundStyle(.secondary)
-                        if let customURL = store.settings.transcription.customStorageURL {
-                            Text(customURL.path)
+                        if let storageURL = store.modelStorageURL {
+                            Text(storageURL.path)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                         } else {
-                            Text("model.storage.default")
+                            // フォールバック: パス取得前
+                            ProgressView()
+                                .scaleEffect(0.5)
                         }
                     }
                 }
 
                 Spacer()
 
-                HStack(spacing: 8) {
-                    Button("common.change") {
-                        store.send(.selectStorageLocation)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-
-                    if store.settings.transcription.customStorageURL != nil {
-                        Button("common.reset") {
-                            store.send(.resetStorageLocation)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                    }
+                Button("common.change") {
+                    store.send(.selectStorageLocation)
                 }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
         }
         .padding()

@@ -169,6 +169,10 @@ struct SettingsFeature {
         case calculateStorageUsage
         /// ストレージ使用量取得完了
         case storageUsageResponse(Int64)
+        /// モデル保存先URLを取得
+        case fetchModelStorageURL
+        /// モデル保存先URL取得完了
+        case modelStorageURLResponse(URL)
         /// ストレージ場所を選択
         case selectStorageLocation
         /// ストレージ場所選択完了
@@ -259,7 +263,8 @@ struct SettingsFeature {
                     .send(.fetchModels),
                     .send(.calculateStorageUsage),
                     .send(.fetchInputDevices),
-                    .send(.checkHotkeyConflict)
+                    .send(.checkHotkeyConflict),
+                    .send(.fetchModelStorageURL)
                 )
 
             case .onDisappear:
@@ -338,6 +343,9 @@ struct SettingsFeature {
                 effects.append(.run { [transcriptionClient] send in
                     await send(.fetchDownloadedModels)
                     await send(.storageUsageResponse(transcriptionClient.getStorageUsage()))
+                    // 現在のストレージパスを取得
+                    let storageURL = await transcriptionClient.getModelStorageURL()
+                    await send(.modelStorageURLResponse(storageURL))
                 })
                 // 出力ディレクトリのブックマークを解決
                 if let outputBookmark = settings.output.outputBookmarkData {
@@ -549,6 +557,16 @@ struct SettingsFeature {
                 state.storageUsage = usage
                 return .none
 
+            case .fetchModelStorageURL:
+                return .run { send in
+                    let url = await transcriptionClient.getModelStorageURL()
+                    await send(.modelStorageURLResponse(url))
+                }
+
+            case let .modelStorageURLResponse(url):
+                state.modelStorageURL = url
+                return .none
+
             case .selectStorageLocation:
                 return .run { send in
                     await MainActor.run {
@@ -578,6 +596,7 @@ struct SettingsFeature {
                             try await userDefaultsClient.saveSettings(newSettings)
                             await send(.settingsLoaded(newSettings))
                             await send(.calculateStorageUsage)
+                            await send(.fetchModelStorageURL)
                         } catch {
                             await send(.storageLocationSelected(.failure(error)))
                         }
@@ -595,6 +614,7 @@ struct SettingsFeature {
                     await send(.saveSettings)
                     await send(.fetchDownloadedModels)
                     await send(.calculateStorageUsage)
+                    await send(.fetchModelStorageURL)
                 }
 
             case .clearError:
