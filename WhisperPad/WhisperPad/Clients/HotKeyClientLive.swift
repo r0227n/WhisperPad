@@ -104,9 +104,9 @@ private final class HotKeyManager {
             break
         case let .failure(error):
             logger.error("""
-                Cannot register recording hotkey: \(error). \
-                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """)
+            Cannot register recording hotkey: \(error). \
+            keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+            """)
             return
         }
 
@@ -183,9 +183,9 @@ private final class HotKeyManager {
             break
         case let .failure(error):
             logger.error("""
-                Cannot register streaming hotkey: \(error). \
-                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """)
+            Cannot register streaming hotkey: \(error). \
+            keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+            """)
             return
         }
 
@@ -230,9 +230,9 @@ private final class HotKeyManager {
             break
         case let .failure(error):
             logger.error("""
-                Cannot register recording pause hotkey: \(error). \
-                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """)
+            Cannot register recording pause hotkey: \(error). \
+            keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+            """)
             return
         }
 
@@ -282,9 +282,9 @@ private final class HotKeyManager {
             break
         case let .failure(error):
             logger.error("""
-                Cannot register popup copy & close hotkey: \(error). \
-                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """)
+            Cannot register popup copy & close hotkey: \(error). \
+            keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+            """)
             return
         }
 
@@ -320,9 +320,9 @@ private final class HotKeyManager {
             break
         case let .failure(error):
             logger.error("""
-                Cannot register popup save to file hotkey: \(error). \
-                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """)
+            Cannot register popup save to file hotkey: \(error). \
+            keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+            """)
             return
         }
 
@@ -358,9 +358,9 @@ private final class HotKeyManager {
             break
         case let .failure(error):
             logger.error("""
-                Cannot register popup close hotkey: \(error). \
-                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """)
+            Cannot register popup close hotkey: \(error). \
+            keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
+            """)
             return
         }
 

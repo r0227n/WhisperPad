@@ -92,7 +92,7 @@ final class HotKeyValidatorTests: XCTestCase {
     }
 
     /// Groups of system reserved shortcuts from the blocklist
-    struct SystemReservedGroups {
+    enum SystemReservedGroups {
         /// Clipboard and text operations
         static let clipboardShortcuts: [TestKeyCombo] = [
             TestKeyCombo(keyCode: 8, modifiers: 256, description: "Cmd+C (Copy)"),
@@ -436,7 +436,7 @@ final class HotKeyValidatorTests: XCTestCase {
                 carbonModifiers: modifiers
             )
 
-            if case .failure(let error) = result {
+            if case let .failure(error) = result {
                 XCTAssertEqual(
                     error,
                     .reservedSystemShortcut,
@@ -465,7 +465,7 @@ final class HotKeyValidatorTests: XCTestCase {
                 carbonModifiers: modifiers
             )
 
-            if case .failure(let error) = result {
+            if case let .failure(error) = result {
                 XCTFail("Expected \(description) to succeed, but got error: \(error)")
             }
         }
@@ -482,7 +482,7 @@ final class HotKeyValidatorTests: XCTestCase {
         switch result {
         case .success:
             XCTFail("Expected invalid key code to fail")
-        case .failure(let error):
+        case let .failure(error):
             XCTAssertTrue(
                 error == .systemConflict(0) || error == .invalidCombo,
                 "Expected systemConflict or invalidCombo error"
@@ -678,7 +678,7 @@ final class HotKeyValidatorTests: XCTestCase {
 
             // Most Cmd+Option+Letter combinations are not reserved
             // (exceptions are explicitly in the blocklist)
-            if letter != "H" && letter != "Space" { // Known exceptions
+            if letter != "H", letter != "Space" { // Known exceptions
                 XCTAssertFalse(
                     isReserved,
                     "Cmd+Option+\(letter) should not be system reserved"
@@ -816,7 +816,7 @@ final class HotKeyValidatorTests: XCTestCase {
             )
 
             // Should generally succeed with F10
-            if case .failure(let error) = result {
+            if case let .failure(error) = result {
                 XCTFail("\(name)+F10 should be valid, got error: \(error)")
             }
         }
@@ -841,7 +841,7 @@ final class HotKeyValidatorTests: XCTestCase {
                 carbonModifiers: modifiers
             )
 
-            if case .failure(let error) = result {
+            if case let .failure(error) = result {
                 XCTFail("\(name)+F10 should be valid, got error: \(error)")
             }
         }
@@ -864,7 +864,7 @@ final class HotKeyValidatorTests: XCTestCase {
                 carbonModifiers: modifiers
             )
 
-            if case .failure(let error) = result {
+            if case let .failure(error) = result {
                 XCTFail("\(name)+F15 should be valid, got error: \(error)")
             }
         }
@@ -879,7 +879,7 @@ final class HotKeyValidatorTests: XCTestCase {
             carbonModifiers: TestModifiers.all
         )
 
-        if case .failure(let error) = result {
+        if case let .failure(error) = result {
             XCTFail("Cmd+Shift+Option+Control+F15 should be valid, got error: \(error)")
         }
     }
@@ -923,7 +923,7 @@ final class HotKeyValidatorTests: XCTestCase {
                 carbonKeyCode: keyCode,
                 carbonModifiers: modifiers
             )
-            if case .failure(let error) = canRegister {
+            if case let .failure(error) = canRegister {
                 XCTFail("\(description) should be registerable, got: \(error)")
             }
         }
@@ -972,7 +972,7 @@ final class HotKeyValidatorTests: XCTestCase {
             carbonModifiers: 0
         )
         // Should succeed (F10 without modifiers is valid)
-        if case .failure(let error) = noModResult {
+        if case let .failure(error) = noModResult {
             XCTFail("F10 without modifiers should work, got: \(error)")
         }
 
@@ -1008,7 +1008,7 @@ final class HotKeyValidatorTests: XCTestCase {
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers
         )
-        if case .failure(let error) = canRegister {
+        if case let .failure(error) = canRegister {
             XCTAssertEqual(error, .reservedSystemShortcut)
         } else {
             XCTFail("Step 2: Cmd+C should fail canRegister")
@@ -1046,7 +1046,7 @@ final class HotKeyValidatorTests: XCTestCase {
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers
         )
-        if case .failure(let error) = canRegister {
+        if case let .failure(error) = canRegister {
             XCTFail("Step 2: Cmd+Option+F10 should pass canRegister, got: \(error)")
         }
 
@@ -1083,7 +1083,7 @@ final class HotKeyValidatorTests: XCTestCase {
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers
         )
-        if case .failure(let error) = canRegister {
+        if case let .failure(error) = canRegister {
             XCTFail("Step 2: Option+Space should pass canRegister, got: \(error)")
         }
 
@@ -1113,7 +1113,7 @@ final class HotKeyValidatorTests: XCTestCase {
         popupSaveToFile: (UInt32, UInt32) = (1, 768),
         popupClose: (UInt32, UInt32) = (53, 0)
     ) -> HotKeySettings {
-        return HotKeySettings(
+        HotKeySettings(
             recordingHotKey: .init(
                 carbonKeyCode: recording.0,
                 carbonModifiers: recording.1
