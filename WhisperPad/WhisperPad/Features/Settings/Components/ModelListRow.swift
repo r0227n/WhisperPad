@@ -153,7 +153,7 @@ struct ModelListRow: View {
         Button {
             onDownload()
         } label: {
-            Label("model.row.download.button", systemImage: "arrow.down.circle")
+            Label(String(localized: "model.row.download.button", comment: "Download button"), systemImage: "arrow.down.circle")
                 .font(.caption)
         }
         .buttonStyle(.borderedProminent)
