@@ -596,12 +596,8 @@ struct SettingsFeature {
                 let hotKey = state.settings.hotKey
                 let combos: [(String, HotKeySettings.KeyComboSettings)] = [
                     (HotkeyType.recording.displayName, hotKey.recordingHotKey),
-                    (HotkeyType.streaming.displayName, hotKey.streamingHotKey),
                     (HotkeyType.cancel.displayName, hotKey.cancelHotKey),
-                    (HotkeyType.recordingPause.displayName, hotKey.recordingPauseHotKey),
-                    (HotkeyType.popupCopyAndClose.displayName, hotKey.popupCopyAndCloseHotKey),
-                    (HotkeyType.popupSaveToFile.displayName, hotKey.popupSaveToFileHotKey),
-                    (HotkeyType.popupClose.displayName, hotKey.popupCloseHotKey)
+                    (HotkeyType.recordingPause.displayName, hotKey.recordingPauseHotKey)
                 ]
 
                 var conflicts: [String] = []
@@ -750,17 +746,9 @@ private func updateHotkeySetting(
     switch type {
     case .recording:
         hotKey.recordingHotKey = combo
-    case .streaming:
-        hotKey.streamingHotKey = combo
     case .cancel:
         hotKey.cancelHotKey = combo
     case .recordingPause:
         hotKey.recordingPauseHotKey = combo
-    case .popupCopyAndClose:
-        hotKey.popupCopyAndCloseHotKey = combo
-    case .popupSaveToFile:
-        hotKey.popupSaveToFileHotKey = combo
-    case .popupClose:
-        hotKey.popupCloseHotKey = combo
     }
 }

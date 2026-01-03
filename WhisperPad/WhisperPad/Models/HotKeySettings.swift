@@ -13,23 +13,11 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     /// 録音開始/停止のホットキー
     var recordingHotKey: KeyComboSettings
 
-    /// ストリーミング文字起こしのホットキー
-    var streamingHotKey: KeyComboSettings
-
     /// 録音キャンセルのホットキー
     var cancelHotKey: KeyComboSettings
 
     /// 録音一時停止のホットキー
     var recordingPauseHotKey: KeyComboSettings
-
-    /// ポップアップ: コピーして閉じるのホットキー
-    var popupCopyAndCloseHotKey: KeyComboSettings
-
-    /// ポップアップ: ファイル保存のホットキー
-    var popupSaveToFileHotKey: KeyComboSettings
-
-    /// ポップアップ: 閉じるのホットキー
-    var popupCloseHotKey: KeyComboSettings
 
     /// デフォルト設定
     static let `default` = HotKeySettings()
@@ -37,28 +25,19 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     /// デフォルト初期化
     init(
         recordingHotKey: KeyComboSettings = .recordingDefault,
-        streamingHotKey: KeyComboSettings = .streamingDefault,
         cancelHotKey: KeyComboSettings = .cancelDefault,
-        recordingPauseHotKey: KeyComboSettings = .recordingPauseDefault,
-        popupCopyAndCloseHotKey: KeyComboSettings = .popupCopyAndCloseDefault,
-        popupSaveToFileHotKey: KeyComboSettings = .popupSaveToFileDefault,
-        popupCloseHotKey: KeyComboSettings = .popupCloseDefault
+        recordingPauseHotKey: KeyComboSettings = .recordingPauseDefault
     ) {
         self.recordingHotKey = recordingHotKey
-        self.streamingHotKey = streamingHotKey
         self.cancelHotKey = cancelHotKey
         self.recordingPauseHotKey = recordingPauseHotKey
-        self.popupCopyAndCloseHotKey = popupCopyAndCloseHotKey
-        self.popupSaveToFileHotKey = popupSaveToFileHotKey
-        self.popupCloseHotKey = popupCloseHotKey
     }
 
     // MARK: - Codable (Migration Support)
 
     private enum CodingKeys: String, CodingKey {
         case recordingHotKey
-        case streamingHotKey, cancelHotKey, recordingPauseHotKey
-        case popupCopyAndCloseHotKey, popupSaveToFileHotKey, popupCloseHotKey
+        case cancelHotKey, recordingPauseHotKey
     }
 
     init(from decoder: Decoder) throws {
@@ -66,33 +45,17 @@ struct HotKeySettings: Codable, Equatable, Sendable {
 
         recordingHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .recordingHotKey)
             ?? .recordingDefault
-        streamingHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .streamingHotKey)
-            ?? .streamingDefault
         cancelHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .cancelHotKey)
             ?? .cancelDefault
         recordingPauseHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .recordingPauseHotKey)
             ?? .recordingPauseDefault
-        popupCopyAndCloseHotKey = try container.decodeIfPresent(
-            KeyComboSettings.self,
-            forKey: .popupCopyAndCloseHotKey
-        ) ?? .popupCopyAndCloseDefault
-        popupSaveToFileHotKey = try container.decodeIfPresent(
-            KeyComboSettings.self,
-            forKey: .popupSaveToFileHotKey
-        ) ?? .popupSaveToFileDefault
-        popupCloseHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .popupCloseHotKey)
-            ?? .popupCloseDefault
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(recordingHotKey, forKey: .recordingHotKey)
-        try container.encode(streamingHotKey, forKey: .streamingHotKey)
         try container.encode(cancelHotKey, forKey: .cancelHotKey)
         try container.encode(recordingPauseHotKey, forKey: .recordingPauseHotKey)
-        try container.encode(popupCopyAndCloseHotKey, forKey: .popupCopyAndCloseHotKey)
-        try container.encode(popupSaveToFileHotKey, forKey: .popupSaveToFileHotKey)
-        try container.encode(popupCloseHotKey, forKey: .popupCloseHotKey)
     }
 }
 
@@ -115,12 +78,6 @@ extension HotKeySettings {
             carbonModifiers: 2304
         )
 
-        /// ストリーミングホットキーのデフォルト（⌘⌥T）
-        static let streamingDefault = KeyComboSettings(
-            carbonKeyCode: 17,
-            carbonModifiers: 2304
-        )
-
         /// キャンセルホットキーのデフォルト（⌘⌥.）
         static let cancelDefault = KeyComboSettings(
             carbonKeyCode: 47,
@@ -130,24 +87,6 @@ extension HotKeySettings {
         /// 録音一時停止ホットキーのデフォルト（⌘⌥P）
         static let recordingPauseDefault = KeyComboSettings(
             carbonKeyCode: 35,
-            carbonModifiers: 2304
-        )
-
-        /// ポップアップ: コピーして閉じるのデフォルト（⌘⌥C）
-        static let popupCopyAndCloseDefault = KeyComboSettings(
-            carbonKeyCode: 8,
-            carbonModifiers: 2304
-        )
-
-        /// ポップアップ: ファイル保存のデフォルト（⌘⌥S）
-        static let popupSaveToFileDefault = KeyComboSettings(
-            carbonKeyCode: 1,
-            carbonModifiers: 2304
-        )
-
-        /// ポップアップ: 閉じるのデフォルト（⌘⌥.）
-        static let popupCloseDefault = KeyComboSettings(
-            carbonKeyCode: 47,
             carbonModifiers: 2304
         )
     }

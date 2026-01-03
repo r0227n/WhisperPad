@@ -68,12 +68,6 @@ struct MenuBarIconSettings: Codable, Equatable, Sendable {
     /// 完了時のアイコン設定
     var completed: StatusIconConfig
 
-    /// ストリーミング文字起こし中のアイコン設定
-    var streamingTranscribing: StatusIconConfig
-
-    /// ストリーミング完了時のアイコン設定
-    var streamingCompleted: StatusIconConfig
-
     /// エラー時のアイコン設定
     var error: StatusIconConfig
 
@@ -87,8 +81,6 @@ struct MenuBarIconSettings: Codable, Equatable, Sendable {
         paused: StatusIconConfig(symbolName: "pause.fill", color: .systemOrange),
         transcribing: StatusIconConfig(symbolName: "gear", color: .systemBlue),
         completed: StatusIconConfig(symbolName: "checkmark.circle", color: .systemGreen),
-        streamingTranscribing: StatusIconConfig(symbolName: "waveform.badge.mic", color: .systemPurple),
-        streamingCompleted: StatusIconConfig(symbolName: "checkmark.circle", color: .systemGreen),
         error: StatusIconConfig(symbolName: "exclamationmark.triangle", color: .systemYellow),
         cancel: StatusIconConfig(symbolName: "xmark.circle", color: .systemGray)
     )
@@ -105,8 +97,6 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
     case paused
     case transcribing
     case completed
-    case streamingTranscribing = "streaming_transcribing"
-    case streamingCompleted = "streaming_completed"
     case error
     case cancel
 
@@ -125,8 +115,6 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
         case .paused: "pause.fill"
         case .transcribing: "gear"
         case .completed: "checkmark.circle"
-        case .streamingTranscribing: "waveform.badge.mic"
-        case .streamingCompleted: "checkmark.circle"
         case .error: "exclamationmark.triangle"
         case .cancel: "xmark.circle"
         }
@@ -145,8 +133,6 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
         case .paused: "icon.status.paused"
         case .transcribing: "icon.status.transcribing"
         case .completed: "icon.status.completed"
-        case .streamingTranscribing: "icon.status.streaming_transcribing"
-        case .streamingCompleted: "icon.status.streaming_completed"
         case .error: "icon.status.error"
         case .cancel: "icon.status.cancel"
         }
@@ -160,8 +146,6 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
         case .paused: "icon.description.paused"
         case .transcribing: "icon.description.transcribing"
         case .completed: "icon.description.completed"
-        case .streamingTranscribing: "icon.description.streaming_transcribing"
-        case .streamingCompleted: "icon.description.streaming_completed"
         case .error: "icon.description.error"
         case .cancel: "icon.description.cancel"
         }
@@ -181,8 +165,6 @@ extension MenuBarIconSettings {
         case .paused: paused
         case .transcribing: transcribing
         case .completed: completed
-        case .streamingTranscribing: streamingTranscribing
-        case .streamingCompleted: streamingCompleted
         case .error: error
         case .cancel: cancel
         }
@@ -199,8 +181,6 @@ extension MenuBarIconSettings {
         case .paused: paused = config
         case .transcribing: transcribing = config
         case .completed: completed = config
-        case .streamingTranscribing: streamingTranscribing = config
-        case .streamingCompleted: streamingCompleted = config
         case .error: error = config
         case .cancel: cancel = config
         }

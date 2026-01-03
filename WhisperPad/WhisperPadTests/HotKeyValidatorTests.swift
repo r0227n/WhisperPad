@@ -362,11 +362,6 @@ final class HotKeyValidatorTests: XCTestCase {
             carbonKeyCode: 49, carbonModifiers: 2048
         ))
 
-        // Cmd+Shift+R (default streaming hotkey)
-        XCTAssertFalse(HotKeyValidator.isSystemReservedShortcut(
-            carbonKeyCode: 15, carbonModifiers: 768
-        ))
-
         // Option+Shift+P (default pause hotkey)
         XCTAssertFalse(HotKeyValidator.isSystemReservedShortcut(
             carbonKeyCode: 35, carbonModifiers: 2560
@@ -514,15 +509,14 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests findDuplicate detects when another hotkey uses same combination
     func test_findDuplicate_duplicateExists_returnsConflictingType() {
         let settings = makeTestSettings(
-            recording: (49, 2048), // Option+Space
-            streaming: (15, 768) // Cmd+Shift+R
+            recording: (49, 2048) // Option+Space
         )
 
-        // Try to set streaming to same as recording
+        // Try to set cancel to same as recording
         let result = HotKeyValidator.findDuplicate(
             carbonKeyCode: 49,
             carbonModifiers: 2048,
-            currentType: .streaming,
+            currentType: .cancel,
             in: settings
         )
 
@@ -567,7 +561,6 @@ final class HotKeyValidatorTests: XCTestCase {
 
         let hotkeyTypes: [HotkeyType] = [
             .recording,
-            .streaming,
             .cancel,
             .recordingPause,
             .popupCopyAndClose,
@@ -583,8 +576,6 @@ final class HotKeyValidatorTests: XCTestCase {
             switch existingType {
             case .recording:
                 settings = makeTestSettings(recording: testCombo)
-            case .streaming:
-                settings = makeTestSettings(streaming: testCombo)
             case .cancel:
                 settings = makeTestSettings(cancel: testCombo)
             case .recordingPause:
@@ -612,27 +603,6 @@ final class HotKeyValidatorTests: XCTestCase {
                 )
             }
         }
-    }
-
-    /// Tests pairwise duplicate detection between recording and streaming
-    func test_findDuplicate_recording_conflictsWithStreaming() {
-        let settings = makeTestSettings(
-            recording: (49, 2048),
-            streaming: (49, 2048) // Intentional duplicate
-        )
-
-        let result = HotKeyValidator.findDuplicate(
-            carbonKeyCode: 49,
-            carbonModifiers: 2048,
-            currentType: .cancel,
-            in: settings
-        )
-
-        // Should return one of the conflicting types (typically first found)
-        XCTAssertTrue(
-            result == .recording || result == .streaming,
-            "Should detect conflict between recording and streaming"
-        )
     }
 
     /// Tests duplicate detection with popup shortcuts
@@ -907,7 +877,6 @@ final class HotKeyValidatorTests: XCTestCase {
         // swiftlint:disable:next large_tuple
         let defaults: [(UInt32, UInt32, String)] = [
             (49, 2048, "Option+Space (recording)"),
-            (15, 768, "Cmd+Shift+R (streaming)"),
             (53, 0, "Escape (cancel)"),
             (35, 2560, "Option+Shift+P (pause)")
         ]
@@ -1063,8 +1032,7 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests full validation pipeline: valid but duplicate shortcut (passes 1 & 2, fails 3)
     func test_integration_fullValidationPipeline_validButDuplicate() {
         let settings = makeTestSettings(
-            recording: (49, 2048), // Option+Space
-            streaming: (15, 768) // Cmd+Shift+R
+            recording: (49, 2048) // Option+Space
         )
 
         // Try to set cancel to same as recording
@@ -1106,7 +1074,6 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Creates test HotKeySettings with specified key combinations
     private func makeTestSettings(
         recording: (UInt32, UInt32) = (49, 2048),
-        streaming: (UInt32, UInt32) = (15, 768),
         cancel: (UInt32, UInt32) = (53, 0),
         recordingPause: (UInt32, UInt32) = (35, 2560),
         popupCopyAndClose: (UInt32, UInt32) = (8, 768),
@@ -1117,10 +1084,6 @@ final class HotKeyValidatorTests: XCTestCase {
             recordingHotKey: .init(
                 carbonKeyCode: recording.0,
                 carbonModifiers: recording.1
-            ),
-            streamingHotKey: .init(
-                carbonKeyCode: streaming.0,
-                carbonModifiers: streaming.1
             ),
             cancelHotKey: .init(
                 carbonKeyCode: cancel.0,

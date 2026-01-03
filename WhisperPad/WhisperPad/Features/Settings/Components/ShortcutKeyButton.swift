@@ -17,13 +17,13 @@ struct ShortcutKeyButton: View {
     /// デフォルトのキーコンボ（リセット用）
     let defaultKeyCombo: HotKeySettings.KeyComboSettings
 
-    /// ショートカットタイプ（popupClose では単独キーを許可）
+    /// ショートカットタイプ
     let hotkeyType: HotkeyType
 
     /// 入力中かどうか
     let isRecording: Bool
 
-    /// popupClose で許可する単独キーのキーコード
+    /// 許可する単独キーのキーコード
     private static let allowedSingleKeys: Set<UInt16> = [
         53, // Escape
         36, // Return/Enter
@@ -127,17 +127,7 @@ struct ShortcutKeyButton: View {
     /// キー入力モニターを開始
     private func startKeyMonitor() {
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { event in
-            // popupClose では特殊キー単体を許可
-            if hotkeyType == .popupClose && Self.allowedSingleKeys.contains(event.keyCode) {
-                keyCombo = HotKeySettings.KeyComboSettings(
-                    carbonKeyCode: UInt32(event.keyCode),
-                    carbonModifiers: 0
-                )
-                onStopRecording()
-                return nil
-            }
-
-            // 他のタイプでは Escape でキャンセル
+            // Escape でキャンセル
             if event.keyCode == 53 {
                 onStopRecording()
                 return nil
@@ -187,26 +177,6 @@ struct ShortcutKeyButton: View {
             keyCombo: .constant(.recordingDefault),
             defaultKeyCombo: .recordingDefault,
             hotkeyType: .recording,
-            isRecording: false,
-            onStartRecording: {},
-            onStopRecording: {},
-            onResetToDefault: {}
-        )
-
-        ShortcutKeyButton(
-            keyCombo: .constant(.streamingDefault),
-            defaultKeyCombo: .streamingDefault,
-            hotkeyType: .streaming,
-            isRecording: false,
-            onStartRecording: {},
-            onStopRecording: {},
-            onResetToDefault: {}
-        )
-
-        ShortcutKeyButton(
-            keyCombo: .constant(.popupCloseDefault),
-            defaultKeyCombo: .popupCloseDefault,
-            hotkeyType: .popupClose,
             isRecording: false,
             onStartRecording: {},
             onStopRecording: {},

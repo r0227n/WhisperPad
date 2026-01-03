@@ -61,20 +61,6 @@ struct HotKeyClient: Sendable {
     /// すべてのホットキーを解除
     var unregisterAll: @Sendable () async -> Void
 
-    /// 動的キーコンボでストリーミングホットキーを登録（Push-to-Talk対応）
-    /// - Parameters:
-    ///   - combo: キーコンボ設定
-    ///   - keyDownHandler: キーが押されたときのハンドラー
-    ///   - keyUpHandler: キーが離されたときのハンドラー（Push-to-Talk用）
-    var registerStreamingWithCombo: @Sendable (
-        HotKeySettings.KeyComboSettings,
-        @escaping @Sendable () -> Void,
-        @escaping @Sendable () -> Void
-    ) async -> Void
-
-    /// ストリーミングホットキーを解除
-    var unregisterStreaming: @Sendable () async -> Void
-
     /// 動的キーコンボで録音一時停止ホットキーを登録
     /// - Parameters:
     ///   - combo: キーコンボ設定
@@ -83,38 +69,6 @@ struct HotKeyClient: Sendable {
         HotKeySettings.KeyComboSettings,
         @escaping @Sendable () -> Void
     ) async -> Void
-
-    // MARK: - ポップアップ用ホットキー
-
-    /// ポップアップ: コピーして閉じるホットキーを登録
-    /// - Parameters:
-    ///   - combo: キーコンボ設定
-    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
-    var registerPopupCopyAndClose: @Sendable (
-        HotKeySettings.KeyComboSettings,
-        @escaping @Sendable () -> Void
-    ) async -> Void
-
-    /// ポップアップ: ファイル保存ホットキーを登録
-    /// - Parameters:
-    ///   - combo: キーコンボ設定
-    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
-    var registerPopupSaveToFile: @Sendable (
-        HotKeySettings.KeyComboSettings,
-        @escaping @Sendable () -> Void
-    ) async -> Void
-
-    /// ポップアップ: 閉じるホットキーを登録
-    /// - Parameters:
-    ///   - combo: キーコンボ設定
-    ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
-    var registerPopupClose: @Sendable (
-        HotKeySettings.KeyComboSettings,
-        @escaping @Sendable () -> Void
-    ) async -> Void
-
-    /// ポップアップ用ホットキーをすべて解除
-    var unregisterPopupHotKeys: @Sendable () async -> Void
 }
 
 // MARK: - HotKeyError
@@ -170,26 +124,8 @@ extension HotKeyClient: TestDependencyKey {
             unregisterAll: {
                 clientLogger.debug("[PREVIEW] unregisterAll called")
             },
-            registerStreamingWithCombo: { _, _, _ in
-                clientLogger.debug("[PREVIEW] registerStreamingWithCombo called")
-            },
-            unregisterStreaming: {
-                clientLogger.debug("[PREVIEW] unregisterStreaming called")
-            },
             registerRecordingPauseWithCombo: { _, _ in
                 clientLogger.debug("[PREVIEW] registerRecordingPauseWithCombo called")
-            },
-            registerPopupCopyAndClose: { _, _ in
-                clientLogger.debug("[PREVIEW] registerPopupCopyAndClose called")
-            },
-            registerPopupSaveToFile: { _, _ in
-                clientLogger.debug("[PREVIEW] registerPopupSaveToFile called")
-            },
-            registerPopupClose: { _, _ in
-                clientLogger.debug("[PREVIEW] registerPopupClose called")
-            },
-            unregisterPopupHotKeys: {
-                clientLogger.debug("[PREVIEW] unregisterPopupHotKeys called")
             }
         )
     }
@@ -224,26 +160,8 @@ extension HotKeyClient: TestDependencyKey {
             unregisterAll: {
                 clientLogger.debug("[TEST] unregisterAll called")
             },
-            registerStreamingWithCombo: { _, _, _ in
-                clientLogger.debug("[TEST] registerStreamingWithCombo called")
-            },
-            unregisterStreaming: {
-                clientLogger.debug("[TEST] unregisterStreaming called")
-            },
             registerRecordingPauseWithCombo: { _, _ in
                 clientLogger.debug("[TEST] registerRecordingPauseWithCombo called")
-            },
-            registerPopupCopyAndClose: { _, _ in
-                clientLogger.debug("[TEST] registerPopupCopyAndClose called")
-            },
-            registerPopupSaveToFile: { _, _ in
-                clientLogger.debug("[TEST] registerPopupSaveToFile called")
-            },
-            registerPopupClose: { _, _ in
-                clientLogger.debug("[TEST] registerPopupClose called")
-            },
-            unregisterPopupHotKeys: {
-                clientLogger.debug("[TEST] unregisterPopupHotKeys called")
             }
         )
     }

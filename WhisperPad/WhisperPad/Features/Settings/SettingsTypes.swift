@@ -53,12 +53,8 @@ enum SettingsTab: String, CaseIterable, Sendable {
 /// ショートカットタイプ（どのショートカットを編集中か）
 enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
     case recording
-    case streaming
     case cancel
     case recordingPause
-    case popupCopyAndClose
-    case popupSaveToFile
-    case popupClose
 
     var id: String { rawValue }
 }
@@ -70,7 +66,6 @@ extension HotkeyType {
     enum Category: String, CaseIterable, Identifiable {
         case recording
         case cancel
-        case popup
 
         var id: String { rawValue }
 
@@ -81,8 +76,6 @@ extension HotkeyType {
                 String(localized: "hotkey.category.recording", comment: "Recording")
             case .cancel:
                 String(localized: "hotkey.category.cancel", comment: "Cancel")
-            case .popup:
-                String(localized: "hotkey.category.popup", comment: "Popup")
             }
         }
 
@@ -90,11 +83,9 @@ extension HotkeyType {
         var hotkeyTypes: [HotkeyType] {
             switch self {
             case .recording:
-                [.recording, .recordingPause, .streaming]
+                [.recording, .recordingPause]
             case .cancel:
                 [.cancel]
-            case .popup:
-                [.popupCopyAndClose, .popupSaveToFile, .popupClose]
             }
         }
     }
@@ -102,12 +93,10 @@ extension HotkeyType {
     /// ショートカットのカテゴリ
     var category: Category {
         switch self {
-        case .recording, .recordingPause, .streaming:
+        case .recording, .recordingPause:
             .recording
         case .cancel:
             .cancel
-        case .popupCopyAndClose, .popupSaveToFile, .popupClose:
-            .popup
         }
     }
 
@@ -120,14 +109,6 @@ extension HotkeyType {
             String(localized: "hotkey.type.recording_pause", comment: "Pause/Resume")
         case .cancel:
             String(localized: "hotkey.type.cancel", comment: "Cancel Recording")
-        case .streaming:
-            String(localized: "hotkey.type.streaming", comment: "Streaming")
-        case .popupCopyAndClose:
-            String(localized: "hotkey.type.copy_and_close", comment: "Copy and Close")
-        case .popupSaveToFile:
-            String(localized: "hotkey.type.save_to_file", comment: "Save to File")
-        case .popupClose:
-            String(localized: "hotkey.type.close", comment: "Close")
         }
     }
 
@@ -140,14 +121,6 @@ extension HotkeyType {
             String(localized: "hotkey.description.recording_pause", comment: "Pause or resume recording")
         case .cancel:
             String(localized: "hotkey.description.cancel", comment: "Cancel ongoing recording")
-        case .streaming:
-            String(localized: "hotkey.description.streaming", comment: "Start real-time transcription")
-        case .popupCopyAndClose:
-            String(localized: "hotkey.description.copy_and_close", comment: "Copy to clipboard and close popup")
-        case .popupSaveToFile:
-            String(localized: "hotkey.description.save_to_file", comment: "Save transcription to file")
-        case .popupClose:
-            String(localized: "hotkey.description.close", comment: "Close popup")
         }
     }
 
@@ -160,14 +133,6 @@ extension HotkeyType {
             .recordingPauseDefault
         case .cancel:
             .cancelDefault
-        case .streaming:
-            .streamingDefault
-        case .popupCopyAndClose:
-            .popupCopyAndCloseDefault
-        case .popupSaveToFile:
-            .popupSaveToFileDefault
-        case .popupClose:
-            .popupCloseDefault
         }
     }
 
@@ -180,14 +145,6 @@ extension HotkeyType {
             "pause.fill"
         case .cancel:
             "xmark.circle"
-        case .streaming:
-            "waveform"
-        case .popupCopyAndClose:
-            "doc.on.clipboard"
-        case .popupSaveToFile:
-            "square.and.arrow.down"
-        case .popupClose:
-            "xmark"
         }
     }
 
@@ -200,14 +157,6 @@ extension HotkeyType {
             .paused
         case .cancel:
             .cancel
-        case .streaming:
-            .streamingTranscribing
-        case .popupCopyAndClose:
-            .streamingCompleted
-        case .popupSaveToFile:
-            .streamingCompleted
-        case .popupClose:
-            .streamingTranscribing
         }
     }
 }
@@ -223,10 +172,6 @@ extension HotkeyType {
         case .recording: "hotkey.type.recording"
         case .recordingPause: "hotkey.type.recording_pause"
         case .cancel: "hotkey.type.cancel"
-        case .streaming: "hotkey.type.streaming"
-        case .popupCopyAndClose: "hotkey.type.copy_and_close"
-        case .popupSaveToFile: "hotkey.type.save_to_file"
-        case .popupClose: "hotkey.type.close"
         }
     }
 
@@ -236,10 +181,6 @@ extension HotkeyType {
         case .recording: "hotkey.description.recording"
         case .recordingPause: "hotkey.description.recording_pause"
         case .cancel: "hotkey.description.cancel"
-        case .streaming: "hotkey.description.streaming"
-        case .popupCopyAndClose: "hotkey.description.copy_and_close"
-        case .popupSaveToFile: "hotkey.description.save_to_file"
-        case .popupClose: "hotkey.description.close"
         }
     }
 }
@@ -250,7 +191,6 @@ extension HotkeyType.Category {
         switch self {
         case .recording: "hotkey.category.recording"
         case .cancel: "hotkey.category.cancel"
-        case .popup: "hotkey.category.popup"
         }
     }
 }

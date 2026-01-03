@@ -66,7 +66,6 @@ extension AppDelegate {
         // 各ホットキーを個別に再登録（古いものは自動的に置き換わる）
         await registerRecordingHotKey(hotKeySettings)
         await registerCancelHotKey(hotKeySettings)
-        await registerStreamingHotKey(hotKeySettings)
         await registerRecordingPauseHotKey(hotKeySettings)
 
         logger.info("Hotkeys registered from settings")
@@ -86,34 +85,11 @@ extension AppDelegate {
         )
     }
 
-    private func registerStreamingHotKey(_ settings: HotKeySettings) async {
-        await hotKeyClient.registerStreamingWithCombo(
-            settings.streamingHotKey,
-            { [weak self] in Task { @MainActor in self?.handleStreamingKeyDown() } },
-            { [weak self] in Task { @MainActor in self?.handleStreamingKeyUp() } }
-        )
-    }
-
     private func registerRecordingPauseHotKey(_ settings: HotKeySettings) async {
         await hotKeyClient.registerRecordingPauseWithCombo(
             settings.recordingPauseHotKey,
             { [weak self] in Task { @MainActor in self?.handleRecordingPauseKeyDown() } }
         )
-    }
-
-    /// ストリーミングキーダウンハンドラー
-    func handleStreamingKeyDown() {
-        logger.info("Streaming hotkey pressed: ⌘⇧R")
-        toggleStreaming()
-    }
-
-    /// ストリーミングキーアップハンドラー（Push-to-Talk）
-    func handleStreamingKeyUp() {
-        // Push-to-Talk: ストリーミング中ならキーを離したときに停止
-        if store.appStatus == .streamingTranscribing {
-            logger.info("Streaming Push-to-Talk: Key up, stopping streaming")
-            store.send(.streamingTranscription(.stopButtonTapped))
-        }
     }
 
     /// 録音一時停止キーダウンハンドラー

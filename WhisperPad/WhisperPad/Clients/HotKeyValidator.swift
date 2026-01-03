@@ -11,7 +11,7 @@ import OSLog
 private let logger = Logger(subsystem: "com.r0227n.WhisperPad", category: "HotKeyValidator")
 
 enum HotKeyValidator {
-    enum ValidationError: Error {
+    enum ValidationError: Error, Equatable {
         case systemConflict(OSStatus)
         case invalidCombo
         case reservedSystemShortcut
@@ -176,12 +176,8 @@ enum HotKeyValidator {
     ) -> HotkeyType? {
         let allHotkeys: [(HotkeyType, HotKeySettings.KeyComboSettings)] = [
             (.recording, settings.recordingHotKey),
-            (.streaming, settings.streamingHotKey),
             (.cancel, settings.cancelHotKey),
-            (.recordingPause, settings.recordingPauseHotKey),
-            (.popupCopyAndClose, settings.popupCopyAndCloseHotKey),
-            (.popupSaveToFile, settings.popupSaveToFileHotKey),
-            (.popupClose, settings.popupCloseHotKey)
+            (.recordingPause, settings.recordingPauseHotKey)
         ]
 
         // 自分自身以外で同じキーコンボを使っているものを探す

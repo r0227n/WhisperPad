@@ -79,33 +79,6 @@ struct NotificationDetailsPopover: View {
                         )
                     )
                 }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("notification.custom.streaming_message", comment: "Streaming Complete Message")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    TextField(
-                        String(
-                            localized: "notification.custom.streaming_message.placeholder",
-                            comment: "When streaming transcription completes"
-                        ),
-                        text: Binding(
-                            get: { store.settings.general.streamingCompleteMessage },
-                            set: { newValue in
-                                var general = store.settings.general
-                                general.streamingCompleteMessage = newValue
-                                store.send(.updateGeneralSettings(general))
-                            }
-                        )
-                    )
-                    .textFieldStyle(.roundedBorder)
-                    .accessibilityLabel(
-                        String(
-                            localized: "notification.custom.streaming_message",
-                            comment: "Streaming Complete Message"
-                        )
-                    )
-                }
             }
 
             Divider()
@@ -118,9 +91,6 @@ struct NotificationDetailsPopover: View {
                     general.notificationTitle = "WhisperPad"
                     general.transcriptionCompleteMessage = String(
                         localized: "notification.transcription.complete.message"
-                    )
-                    general.streamingCompleteMessage = String(
-                        localized: "notification.streaming.complete.message"
                     )
                     store.send(.updateGeneralSettings(general))
                 }
