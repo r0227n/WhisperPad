@@ -12,17 +12,6 @@ enum ModelDownloadFilter: String, CaseIterable, Sendable {
     case downloaded
     case notDownloaded
 
-    var displayName: String {
-        switch self {
-        case .all:
-            String(localized: "model.filter.all", comment: "All")
-        case .downloaded:
-            String(localized: "model.row.downloaded", comment: "Downloaded")
-        case .notDownloaded:
-            String(localized: "model.row.not_downloaded", comment: "Not Downloaded")
-        }
-    }
-
     /// モデルがこのフィルターに一致するか判定
     func matches(isDownloaded: Bool) -> Bool {
         switch self {

@@ -54,15 +54,34 @@ struct TranscriptionLanguage: Codable, Equatable, Hashable, Identifiable, Sendab
 
     /// UI表示用のローカライズされた名前
     var displayName: String {
-        let key = localizedKey
-        let localized = NSLocalizedString(key, comment: "Language name for transcription")
+        displayName(locale: .current)
+    }
 
-        // ローカライゼーションが見つからない場合、英語名の先頭を大文字にして使用
-        if localized == key {
-            return englishName.prefix(1).uppercased() + englishName.dropFirst()
+    /// UI表示用のローカライズされた名前（指定されたロケールを使用）
+    /// - Parameter locale: 使用するロケール
+    /// - Returns: ローカライズされた言語名
+    func displayName(locale: Locale) -> String {
+        let key = localizedKey
+        let languageCode = locale.language.languageCode?.identifier ?? "en"
+
+        // 指定されたロケールに対応する言語バンドルから翻訳を取得
+        if let path = Bundle.main.path(forResource: languageCode, ofType: "lproj"),
+           let bundle = Bundle(path: path) {
+            let localized = bundle.localizedString(forKey: key, value: nil, table: nil)
+            // ローカライゼーションが見つからない場合、英語名の先頭を大文字にして使用
+            if localized != key {
+                return localized
+            }
         }
 
-        return localized
+        // フォールバック: メインバンドルから取得を試みる
+        let mainLocalized = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+        if mainLocalized != key {
+            return mainLocalized
+        }
+
+        // 最終フォールバック: 英語名を使用
+        return englishName.prefix(1).uppercased() + englishName.dropFirst()
     }
 
     /// ローカライゼーションキー
