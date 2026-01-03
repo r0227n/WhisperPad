@@ -343,10 +343,19 @@ struct StreamingTranscriptionFeature {
 
             case .initializeStreamingService:
                 // ここでWhisperKitは必ず初期化済み
-                return .run { [streamingTranscription] send in
+                return .run { [streamingTranscription, userDefaultsClient] send in
                     do {
+                        // UserDefaultsから設定を読み込み
+                        let settings = await userDefaultsClient.loadSettings()
+                        let confirmationCount = settings.streaming.confirmationCount
+                        let language = settings.streaming.language
+
                         // Service層は状態リセットのみ（WhisperKit初期化は不要）
-                        try await streamingTranscription.initialize(nil)
+                        try await streamingTranscription.initialize(
+                            modelName: nil,
+                            confirmationCount: confirmationCount,
+                            language: language
+                        )
                         await send(.serviceInitializationCompleted)
                     } catch {
                         let message = (error as? StreamingTranscriptionError)?.errorDescription
@@ -394,6 +403,16 @@ struct StreamingTranscriptionFeature {
                     do {
                         let progress = try await streamingTranscription.processChunk(samples)
                         await send(.progressUpdated(progress))
+                    } catch let error as StreamingTranscriptionError {
+                        // 型安全なエラー処理
+                        switch error {
+                        case .bufferOverflow:
+                            // バッファオーバーフロー時は自動停止
+                            logger.error("Buffer overflow occurred, stopping recording")
+                            await send(.stopButtonTapped)
+                        default:
+                            logger.error("Streaming error: \(error.localizedDescription)")
+                        }
                     } catch {
                         logger.error("Chunk processing error: \(error.localizedDescription)")
                     }
