@@ -27,9 +27,6 @@ struct GeneralSettings: Equatable, Sendable {
     /// 通常録音完了時のメッセージ
     var transcriptionCompleteMessage: String = "文字起こしが完了しました"
 
-    /// リアルタイム文字起こし完了時のメッセージ
-    var streamingCompleteMessage: String = "リアルタイム文字起こしが完了しました"
-
     /// デフォルト設定
     static let `default` = GeneralSettings()
 }
@@ -44,7 +41,6 @@ extension GeneralSettings: Codable {
         case menuBarIconSettings
         case notificationTitle
         case transcriptionCompleteMessage
-        case streamingCompleteMessage
     }
 
     init(from decoder: Decoder) throws {
@@ -61,8 +57,5 @@ extension GeneralSettings: Codable {
         transcriptionCompleteMessage = try container.decodeIfPresent(
             String.self, forKey: .transcriptionCompleteMessage
         ) ?? "文字起こしが完了しました"
-        streamingCompleteMessage = try container.decodeIfPresent(
-            String.self, forKey: .streamingCompleteMessage
-        ) ?? "リアルタイム文字起こしが完了しました"
     }
 }

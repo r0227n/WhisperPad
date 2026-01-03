@@ -161,8 +161,6 @@ struct HotkeySettingsTab: View {
             store.settings.hotKey.recordingPauseHotKey
         case .cancel:
             store.settings.hotKey.cancelHotKey
-        case .streaming:
-            store.settings.hotKey.streamingHotKey
         case .popupCopyAndClose:
             store.settings.hotKey.popupCopyAndCloseHotKey
         case .popupSaveToFile:
@@ -193,8 +191,6 @@ struct HotkeySettingsTab: View {
             hotKey.recordingPauseHotKey = .recordingPauseDefault
         case .cancel:
             hotKey.cancelHotKey = .cancelDefault
-        case .streaming:
-            hotKey.streamingHotKey = .streamingDefault
         case .popupCopyAndClose:
             hotKey.popupCopyAndCloseHotKey = .popupCopyAndCloseDefault
         case .popupSaveToFile:

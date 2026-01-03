@@ -67,12 +67,6 @@ struct MenuBarIconSettings: Codable, Equatable, Sendable {
     /// 完了時のアイコン設定
     var completed: StatusIconConfig
 
-    /// ストリーミング文字起こし中のアイコン設定
-    var streamingTranscribing: StatusIconConfig
-
-    /// ストリーミング完了時のアイコン設定
-    var streamingCompleted: StatusIconConfig
-
     /// エラー時のアイコン設定
     var error: StatusIconConfig
 
@@ -86,8 +80,6 @@ struct MenuBarIconSettings: Codable, Equatable, Sendable {
         paused: StatusIconConfig(symbolName: "pause.fill", color: .systemOrange),
         transcribing: StatusIconConfig(symbolName: "gear", color: .systemBlue),
         completed: StatusIconConfig(symbolName: "checkmark.circle", color: .systemGreen),
-        streamingTranscribing: StatusIconConfig(symbolName: "waveform.badge.mic", color: .systemPurple),
-        streamingCompleted: StatusIconConfig(symbolName: "checkmark.circle", color: .systemGreen),
         error: StatusIconConfig(symbolName: "exclamationmark.triangle", color: .systemYellow),
         cancel: StatusIconConfig(symbolName: "xmark.circle", color: .systemGray)
     )
@@ -104,8 +96,6 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
     case paused = "一時停止中"
     case transcribing = "文字起こし中"
     case completed = "完了"
-    case streamingTranscribing = "ストリーミング中"
-    case streamingCompleted = "ストリーミング完了"
     case error = "エラー"
     case cancel = "キャンセル"
 
@@ -119,8 +109,6 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
         case .paused: "pause.fill"
         case .transcribing: "gear"
         case .completed: "checkmark.circle"
-        case .streamingTranscribing: "waveform.badge.mic"
-        case .streamingCompleted: "checkmark.circle"
         case .error: "exclamationmark.triangle"
         case .cancel: "xmark.circle"
         }
@@ -139,10 +127,6 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
             "録音した音声データをWhisperモデルで文字起こししている状態です。処理にはデバイスの性能やモデルサイズに応じて時間がかかります。"
         case .completed:
             "文字起こしが正常に完了した状態です。結果はクリップボードにコピーされ、設定に応じてファイルにも保存されます。"
-        case .streamingTranscribing:
-            "ストリーミングモードで録音と文字起こしを同時に行っている状態です。話しながらリアルタイムで文字起こし結果が表示されます。"
-        case .streamingCompleted:
-            "ストリーミング文字起こしが正常に完了した状態です。リアルタイム処理された結果がクリップボードにコピーされます。"
         case .error:
             "録音または文字起こし中にエラーが発生した状態です。マイクへのアクセス権限やモデルのダウンロード状態を確認してください。"
         case .cancel:
@@ -164,8 +148,6 @@ extension MenuBarIconSettings {
         case .paused: paused
         case .transcribing: transcribing
         case .completed: completed
-        case .streamingTranscribing: streamingTranscribing
-        case .streamingCompleted: streamingCompleted
         case .error: error
         case .cancel: cancel
         }
@@ -182,8 +164,6 @@ extension MenuBarIconSettings {
         case .paused: paused = config
         case .transcribing: transcribing = config
         case .completed: completed = config
-        case .streamingTranscribing: streamingTranscribing = config
-        case .streamingCompleted: streamingCompleted = config
         case .error: error = config
         case .cancel: cancel = config
         }

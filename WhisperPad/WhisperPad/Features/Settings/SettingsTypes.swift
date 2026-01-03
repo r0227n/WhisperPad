@@ -37,7 +37,6 @@ enum SettingsTab: String, CaseIterable, Sendable {
 /// ショートカットタイプ（どのショートカットを編集中か）
 enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
     case recording
-    case streaming
     case cancel
     case recordingPause
     case popupCopyAndClose
@@ -62,7 +61,7 @@ extension HotkeyType {
         var hotkeyTypes: [HotkeyType] {
             switch self {
             case .recording:
-                [.recording, .recordingPause, .streaming]
+                [.recording, .recordingPause]
             case .cancel:
                 [.cancel]
             case .popup:
@@ -74,7 +73,7 @@ extension HotkeyType {
     /// ショートカットのカテゴリ
     var category: Category {
         switch self {
-        case .recording, .recordingPause, .streaming:
+        case .recording, .recordingPause:
             .recording
         case .cancel:
             .cancel
@@ -92,8 +91,6 @@ extension HotkeyType {
             "一時停止/再開"
         case .cancel:
             "録音キャンセル"
-        case .streaming:
-            "ストリーミング"
         case .popupCopyAndClose:
             "コピーして閉じる"
         case .popupSaveToFile:
@@ -112,8 +109,6 @@ extension HotkeyType {
             "録音を一時停止または再開します"
         case .cancel:
             "進行中の録音をキャンセルします"
-        case .streaming:
-            "リアルタイム文字起こしを開始します"
         case .popupCopyAndClose:
             "文字起こしをクリップボードにコピーしてポップアップを閉じます"
         case .popupSaveToFile:
@@ -132,8 +127,6 @@ extension HotkeyType {
             .recordingPauseDefault
         case .cancel:
             .cancelDefault
-        case .streaming:
-            .streamingDefault
         case .popupCopyAndClose:
             .popupCopyAndCloseDefault
         case .popupSaveToFile:
@@ -152,8 +145,6 @@ extension HotkeyType {
             "pause.fill"
         case .cancel:
             "xmark.circle"
-        case .streaming:
-            "waveform"
         case .popupCopyAndClose:
             "doc.on.clipboard"
         case .popupSaveToFile:
@@ -172,14 +163,12 @@ extension HotkeyType {
             .paused
         case .cancel:
             .cancel
-        case .streaming:
-            .streamingTranscribing
         case .popupCopyAndClose:
-            .streamingCompleted
+            .completed
         case .popupSaveToFile:
-            .streamingCompleted
+            .completed
         case .popupClose:
-            .streamingTranscribing
+            .idle
         }
     }
 }

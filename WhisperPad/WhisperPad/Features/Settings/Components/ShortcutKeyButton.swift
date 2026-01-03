@@ -188,16 +188,6 @@ struct ShortcutKeyButton: View {
         )
 
         ShortcutKeyButton(
-            keyCombo: .constant(.streamingDefault),
-            defaultKeyCombo: .streamingDefault,
-            hotkeyType: .streaming,
-            isRecording: false,
-            onStartRecording: {},
-            onStopRecording: {},
-            onResetToDefault: {}
-        )
-
-        ShortcutKeyButton(
             keyCombo: .constant(.popupCloseDefault),
             defaultKeyCombo: .popupCloseDefault,
             hotkeyType: .popupClose,

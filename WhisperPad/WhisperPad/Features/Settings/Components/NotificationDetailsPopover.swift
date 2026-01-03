@@ -63,25 +63,6 @@ struct NotificationDetailsPopover: View {
                     .textFieldStyle(.roundedBorder)
                     .accessibilityLabel("完了メッセージ")
                 }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("リアルタイム完了メッセージ")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    TextField(
-                        "リアルタイム文字起こし完了時",
-                        text: Binding(
-                            get: { store.settings.general.streamingCompleteMessage },
-                            set: { newValue in
-                                var general = store.settings.general
-                                general.streamingCompleteMessage = newValue
-                                store.send(.updateGeneralSettings(general))
-                            }
-                        )
-                    )
-                    .textFieldStyle(.roundedBorder)
-                    .accessibilityLabel("リアルタイム完了メッセージ")
-                }
             }
 
             Divider()
@@ -93,7 +74,6 @@ struct NotificationDetailsPopover: View {
                     var general = store.settings.general
                     general.notificationTitle = "WhisperPad"
                     general.transcriptionCompleteMessage = "文字起こしが完了しました"
-                    general.streamingCompleteMessage = "リアルタイム文字起こしが完了しました"
                     store.send(.updateGeneralSettings(general))
                 }
                 .buttonStyle(.link)

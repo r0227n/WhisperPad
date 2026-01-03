@@ -596,7 +596,6 @@ struct SettingsFeature {
                 let hotKey = state.settings.hotKey
                 let combos: [(String, HotKeySettings.KeyComboSettings)] = [
                     ("録音", hotKey.recordingHotKey),
-                    ("ストリーミング", hotKey.streamingHotKey),
                     ("キャンセル", hotKey.cancelHotKey),
                     ("録音一時停止", hotKey.recordingPauseHotKey),
                     ("コピーして閉じる", hotKey.popupCopyAndCloseHotKey),
@@ -747,8 +746,6 @@ private func updateHotkeySetting(
     switch type {
     case .recording:
         hotKey.recordingHotKey = combo
-    case .streaming:
-        hotKey.streamingHotKey = combo
     case .cancel:
         hotKey.cancelHotKey = combo
     case .recordingPause:

@@ -24,7 +24,6 @@ private final class HotKeyManager {
 
     private var recordingToggleHotKey: HotKey?
     private var cancelHotKey: HotKey?
-    private var streamingHotKey: HotKey?
     private var recordingPauseHotKey: HotKey?
     private var popupCopyAndCloseHotKey: HotKey?
     private var popupSaveToFileHotKey: HotKey?
@@ -161,55 +160,6 @@ private final class HotKeyManager {
         )
     }
 
-    // MARK: - Streaming (⌘⇧R)
-
-    /// 動的キーコンボでストリーミングホットキーを登録（Push-to-Talk対応）
-    /// - Parameters:
-    ///   - combo: キーコンボ設定
-    ///   - keyDownHandler: キーが押されたときのハンドラー
-    ///   - keyUpHandler: キーが離されたときのハンドラー（Push-to-Talk用）
-    func registerStreamingWithCombo(
-        _ combo: HotKeySettings.KeyComboSettings,
-        keyDownHandler: @escaping () -> Void,
-        keyUpHandler: @escaping () -> Void
-    ) {
-        let validation = HotKeyValidator.canRegister(
-            carbonKeyCode: combo.carbonKeyCode,
-            carbonModifiers: combo.carbonModifiers
-        )
-
-        switch validation {
-        case .success:
-            break
-        case let .failure(error):
-            logger.error("""
-            Cannot register streaming hotkey: \(error). \
-            keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-            """)
-            return
-        }
-
-        if let oldHotKey = streamingHotKey { scheduleDeallocation(oldHotKey) }
-        streamingHotKey = nil
-
-        let hotKey = HotKey(
-            carbonKeyCode: combo.carbonKeyCode,
-            carbonModifiers: combo.carbonModifiers
-        )
-        hotKey.keyDownHandler = keyDownHandler
-        hotKey.keyUpHandler = keyUpHandler
-        streamingHotKey = hotKey
-        logger.info(
-            "Streaming hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
-        )
-    }
-
-    /// ストリーミングホットキーを解除
-    func unregisterStreaming() {
-        streamingHotKey = nil
-        logger.info("Streaming hotkey unregistered")
-    }
-
     // MARK: - Recording Pause (⌥⇧P)
 
     /// 動的キーコンボで録音一時停止ホットキーを登録
@@ -254,7 +204,6 @@ private final class HotKeyManager {
     func unregisterAll() {
         recordingToggleHotKey = nil
         cancelHotKey = nil
-        streamingHotKey = nil
         recordingPauseHotKey = nil
         popupCopyAndCloseHotKey = nil
         popupSaveToFileHotKey = nil
@@ -435,20 +384,6 @@ extension HotKeyClient: DependencyKey {
             unregisterAll: {
                 await MainActor.run {
                     HotKeyManager.shared.unregisterAll()
-                }
-            },
-            registerStreamingWithCombo: { combo, keyDownHandler, keyUpHandler in
-                await MainActor.run {
-                    HotKeyManager.shared.registerStreamingWithCombo(
-                        combo,
-                        keyDownHandler: keyDownHandler,
-                        keyUpHandler: keyUpHandler
-                    )
-                }
-            },
-            unregisterStreaming: {
-                await MainActor.run {
-                    HotKeyManager.shared.unregisterStreaming()
                 }
             },
             registerRecordingPauseWithCombo: { combo, handler in
