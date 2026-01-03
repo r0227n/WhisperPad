@@ -51,6 +51,12 @@ struct AppReducer {
 
         /// 最後に録音されたファイルの URL
         var lastRecordingURL: URL?
+
+        /// WhisperKit の初期化状態
+        var whisperKitState: WhisperKitManager.WhisperKitState = .unloaded
+
+        /// ダウンロード済みモデル一覧（メニュー表示用）
+        var downloadedModels: [WhisperModel] = []
     }
 
     // MARK: - Action
@@ -79,6 +85,14 @@ struct AppReducer {
         case transcription(TranscriptionFeature.Action)
         /// 設定機能のアクション
         case settings(SettingsFeature.Action)
+        /// メニューバーからモデルを選択
+        case selectModelFromMenu(String)
+        /// WhisperKit 状態が変更された
+        case whisperKitStateChanged(WhisperKitManager.WhisperKitState)
+        /// ダウンロード済みモデル一覧を更新
+        case updateDownloadedModels([WhisperModel])
+        /// メニューを開く前の準備
+        case prepareMenu
     }
 
     // MARK: - Dependencies
@@ -87,6 +101,7 @@ struct AppReducer {
     @Dependency(\.outputClient) var outputClient
     @Dependency(\.whisperKitClient) var whisperKitClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
+    @Dependency(\.transcriptionClient) var transcriptionClient
 
     // MARK: - Reducer Body
 
@@ -189,9 +204,12 @@ struct AppReducer {
             // SettingsFeature のデリゲートアクションを処理
             case .settings(.delegate(.modelChanged)):
                 // モデルが変更された場合、WhisperKitをアンロード（次回使用時に新モデルで初期化）
-                return .run { [whisperKitClient] _ in
-                    await whisperKitClient.unload()
-                }
+                return .merge(
+                    .run { [whisperKitClient] _ in
+                        await whisperKitClient.unload()
+                    },
+                    .send(.prepareMenu)  // モデルリストを更新
+                )
 
             case .settings(.delegate(.settingsChanged)):
                 // 設定が変更された場合の処理（必要に応じて）
@@ -278,6 +296,65 @@ struct AppReducer {
                     await send(.resetToIdle)
                 }
                 .cancellable(id: "autoReset")
+
+            // メニューバーからのモデル選択
+            case let .selectModelFromMenu(modelName):
+                // idle/completed/error状態以外では切り替え不可
+                guard state.appStatus == .idle ||
+                      state.appStatus == .completed ||
+                      state.appStatus == .error
+                else {
+                    return .none
+                }
+
+                // 既に同じモデルの場合は何もしない
+                guard modelName != state.settings.settings.transcription.modelName else {
+                    return .none
+                }
+
+                // 設定を更新
+                state.settings.settings.transcription.modelName = modelName
+
+                // WhisperKitを即座に初期化
+                return .merge(
+                    .send(.settings(.saveSettings)),
+                    .run { send in
+                        await send(.whisperKitStateChanged(.initializing))
+                        do {
+                            try await whisperKitClient.initialize(modelName)
+                            await send(.whisperKitStateChanged(.ready))
+                        } catch {
+                            await send(.whisperKitStateChanged(.error(error.localizedDescription)))
+                        }
+                    }
+                )
+
+            // WhisperKit状態が変更された
+            case let .whisperKitStateChanged(newState):
+                state.whisperKitState = newState
+                return .none
+
+            // ダウンロード済みモデル一覧を更新
+            case let .updateDownloadedModels(models):
+                state.downloadedModels = models
+                return .none
+
+            // メニューを開く前の準備
+            case .prepareMenu:
+                return .run { send in
+                    let modelNames = await transcriptionClient.fetchDownloadedModels()
+                    let recommendedModel = await transcriptionClient.recommendedModel()
+
+                    var models: [WhisperModel] = modelNames.map { name in
+                        WhisperModel(
+                            id: name,
+                            isDownloaded: true,
+                            isRecommended: name == recommendedModel
+                        )
+                    }
+                    models.sort { $0.id < $1.id }
+                    await send(.updateDownloadedModels(models))
+                }
 
             case .resetToIdle:
                 state.appStatus = .idle
