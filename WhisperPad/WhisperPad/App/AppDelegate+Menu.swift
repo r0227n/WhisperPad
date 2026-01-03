@@ -105,21 +105,18 @@ extension AppDelegate {
 private extension Bundle {
     func localizedString(forKey key: String, preferredLanguage: String) -> String {
         // Get preferred localizations based on user preference
-        // This works with String Catalogs (.xcstrings) and LOCALIZATION_PREFERS_STRING_CATALOGS=YES
-        let preferredLocalizations = Bundle.main.preferredLocalizations(
+        let preferredLocalizations = Bundle.preferredLocalizations(
             from: Bundle.main.localizations,
             forPreferences: [preferredLanguage]
         )
 
-        // Use the first preferred localization, or fall back to the main bundle
-        guard let preferredLocale = preferredLocalizations.first else {
-            return Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+        // Use the preferred locale with String(localized:locale:)
+        guard let preferredLocaleIdentifier = preferredLocalizations.first else {
+            return String(localized: String.LocalizationValue(key), table: nil, bundle: .main)
         }
 
-        // Load localized string for the preferred locale
-        // The String Catalog system will automatically use the correct localization
-        let localizedValue = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
-        return localizedValue
+        let locale = Locale(identifier: preferredLocaleIdentifier)
+        return String(localized: String.LocalizationValue(key), table: nil, bundle: .main, locale: locale)
     }
 }
 
