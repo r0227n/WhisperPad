@@ -104,14 +104,22 @@ extension AppDelegate {
 /// xcstrings ファイルから指定されたロケールに基づいて翻訳を取得する
 private extension Bundle {
     func localizedString(forKey key: String, preferredLanguage: String) -> String {
-        // For xcstrings files, try to get bundle for preferred language
-        if let path = self.path(forResource: preferredLanguage, ofType: "lproj"),
-           let bundle = Bundle(path: path) {
-            return bundle.localizedString(forKey: key, value: nil, table: nil)
+        // Get preferred localizations based on user preference
+        // This works with String Catalogs (.xcstrings) and LOCALIZATION_PREFERS_STRING_CATALOGS=YES
+        let preferredLocalizations = Bundle.main.preferredLocalizations(
+            from: Bundle.main.localizations,
+            forPreferences: [preferredLanguage]
+        )
+
+        // Use the first preferred localization, or fall back to the main bundle
+        guard let preferredLocale = preferredLocalizations.first else {
+            return Bundle.main.localizedString(forKey: key, value: nil, table: nil)
         }
 
-        // Fallback to main bundle (will use sourceLanguage from xcstrings)
-        return self.localizedString(forKey: key, value: nil, table: nil)
+        // Load localized string for the preferred locale
+        // The String Catalog system will automatically use the correct localization
+        let localizedValue = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+        return localizedValue
     }
 }
 
