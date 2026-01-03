@@ -34,7 +34,7 @@ extension AppDelegate {
         let hotKey = store.settings.settings.hotKey
 
         let recordingItem = NSMenuItem(
-            title: localizedMenuString(forKey: "menu.recording.start"),
+            title: localizedAppString(forKey: "menu.recording.start"),
             action: #selector(startRecording),
             keyEquivalent: hotKey.recordingHotKey.keyEquivalentCharacter
         )
@@ -45,7 +45,7 @@ extension AppDelegate {
         menu.addItem(recordingItem)
 
         let pauseResumeItem = NSMenuItem(
-            title: localizedMenuString(forKey: "menu.recording.pause"),
+            title: localizedAppString(forKey: "menu.recording.pause"),
             action: #selector(pauseRecording),
             keyEquivalent: hotKey.recordingPauseHotKey.keyEquivalentCharacter
         )
@@ -61,7 +61,7 @@ extension AppDelegate {
         let hotKey = store.settings.settings.hotKey
 
         let cancelItem = NSMenuItem(
-            title: localizedMenuString(forKey: "menu.cancel"),
+            title: localizedAppString(forKey: "menu.cancel"),
             action: #selector(cancelMenuItemTapped),
             keyEquivalent: hotKey.cancelHotKey.keyEquivalentCharacter
         )
@@ -75,7 +75,7 @@ extension AppDelegate {
 
     private func addSettingsItem(to menu: NSMenu) {
         let settingsItem = NSMenuItem(
-            title: localizedMenuString(forKey: "menu.settings"),
+            title: localizedAppString(forKey: "menu.settings"),
             action: #selector(openSettings),
             keyEquivalent: ","
         )
@@ -88,7 +88,7 @@ extension AppDelegate {
 
     private func addQuitItem(to menu: NSMenu) {
         let quitItem = NSMenuItem(
-            title: localizedMenuString(forKey: "menu.quit"),
+            title: localizedAppString(forKey: "menu.quit"),
             action: #selector(quitApplication),
             keyEquivalent: "q"
         )
@@ -96,38 +96,6 @@ extension AppDelegate {
         quitItem.tag = MenuItemTag.quit.rawValue
         quitItem.target = self
         menu.addItem(quitItem)
-    }
-}
-
-// MARK: - Localization Helper
-
-/// xcstrings ファイルから指定されたロケールに基づいて翻訳を取得する
-private extension Bundle {
-    func localizedString(forKey key: String, preferredLanguage: String) -> String {
-        // Get preferred localizations based on user preference
-        let preferredLocalizations = Bundle.preferredLocalizations(
-            from: Bundle.main.localizations,
-            forPreferences: [preferredLanguage]
-        )
-
-        // Use the preferred locale with String(localized:locale:)
-        guard let preferredLocaleIdentifier = preferredLocalizations.first else {
-            return String(localized: String.LocalizationValue(key), table: nil, bundle: .main)
-        }
-
-        let locale = Locale(identifier: preferredLocaleIdentifier)
-        return String(localized: String.LocalizationValue(key), table: nil, bundle: .main, locale: locale)
-    }
-}
-
-extension AppDelegate {
-    /// メニュー項目用のローカライズされた文字列を取得
-    func localizedMenuString(forKey key: String) -> String {
-        let languageCode = store.settings.settings.general.preferredLocale.identifier ?? "en"
-        return Bundle.main.localizedString(
-            forKey: key,
-            preferredLanguage: languageCode
-        )
     }
 }
 
@@ -187,7 +155,7 @@ extension AppDelegate {
         let toggleKey = hotKey.recordingHotKey
         configureMenuItem(
             recordingItem,
-            title: localizedMenuString(forKey: "menu.recording.start"),
+            title: localizedAppString(forKey: "menu.recording.start"),
             action: #selector(startRecording),
             symbol: "mic.fill",
             keyEquivalent: toggleKey.keyEquivalentCharacter,
@@ -208,7 +176,7 @@ extension AppDelegate {
         let cancelKey = hotKey.cancelHotKey
         configureMenuItem(
             recordingItem,
-            title: localizedMenuString(forKey: "menu.recording.stop"),
+            title: localizedAppString(forKey: "menu.recording.stop"),
             action: #selector(endRecording),
             symbol: "stop.fill",
             keyEquivalent: toggleKey.keyEquivalentCharacter,
@@ -216,7 +184,7 @@ extension AppDelegate {
         )
         configureMenuItem(
             pauseResumeItem,
-            title: localizedMenuString(forKey: "menu.recording.pause"),
+            title: localizedAppString(forKey: "menu.recording.pause"),
             action: #selector(pauseRecording),
             symbol: "pause.fill",
             keyEquivalent: pauseKey.keyEquivalentCharacter,
@@ -224,7 +192,7 @@ extension AppDelegate {
         )
         configureMenuItem(
             cancelItem,
-            title: localizedMenuString(forKey: "menu.cancel"),
+            title: localizedAppString(forKey: "menu.cancel"),
             action: #selector(cancelMenuItemTapped),
             symbol: "xmark.circle.fill",
             keyEquivalent: cancelKey.keyEquivalentCharacter,
@@ -245,7 +213,7 @@ extension AppDelegate {
         let cancelKey = hotKey.cancelHotKey
         configureMenuItem(
             recordingItem,
-            title: localizedMenuString(forKey: "menu.recording.stop"),
+            title: localizedAppString(forKey: "menu.recording.stop"),
             action: #selector(endRecording),
             symbol: "stop.fill",
             keyEquivalent: toggleKey.keyEquivalentCharacter,
@@ -253,7 +221,7 @@ extension AppDelegate {
         )
         configureMenuItem(
             pauseResumeItem,
-            title: localizedMenuString(forKey: "menu.recording.resume"),
+            title: localizedAppString(forKey: "menu.recording.resume"),
             action: #selector(resumeRecording),
             symbol: "play.fill",
             keyEquivalent: pauseKey.keyEquivalentCharacter,
@@ -261,7 +229,7 @@ extension AppDelegate {
         )
         configureMenuItem(
             cancelItem,
-            title: localizedMenuString(forKey: "menu.cancel"),
+            title: localizedAppString(forKey: "menu.cancel"),
             action: #selector(cancelMenuItemTapped),
             symbol: "xmark.circle.fill",
             keyEquivalent: cancelKey.keyEquivalentCharacter,
@@ -278,7 +246,7 @@ extension AppDelegate {
     ) {
         configureMenuItem(
             recordingItem,
-            title: localizedMenuString(forKey: "menu.transcribing"),
+            title: localizedAppString(forKey: "menu.transcribing"),
             action: nil,
             symbol: "gear",
             isEnabled: false
