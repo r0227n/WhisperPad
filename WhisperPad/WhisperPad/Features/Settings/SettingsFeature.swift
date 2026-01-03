@@ -597,10 +597,7 @@ struct SettingsFeature {
                 let combos: [(String, HotKeySettings.KeyComboSettings)] = [
                     ("録音", hotKey.recordingHotKey),
                     ("キャンセル", hotKey.cancelHotKey),
-                    ("録音一時停止", hotKey.recordingPauseHotKey),
-                    ("コピーして閉じる", hotKey.popupCopyAndCloseHotKey),
-                    ("ファイル保存", hotKey.popupSaveToFileHotKey),
-                    ("閉じる", hotKey.popupCloseHotKey)
+                    ("録音一時停止", hotKey.recordingPauseHotKey)
                 ]
 
                 var conflicts: [String] = []
@@ -750,11 +747,5 @@ private func updateHotkeySetting(
         hotKey.cancelHotKey = combo
     case .recordingPause:
         hotKey.recordingPauseHotKey = combo
-    case .popupCopyAndClose:
-        hotKey.popupCopyAndCloseHotKey = combo
-    case .popupSaveToFile:
-        hotKey.popupSaveToFileHotKey = combo
-    case .popupClose:
-        hotKey.popupCloseHotKey = combo
     }
 }

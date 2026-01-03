@@ -121,17 +121,7 @@ struct ShortcutKeyButton: View {
     /// キー入力モニターを開始
     private func startKeyMonitor() {
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { event in
-            // popupClose では特殊キー単体を許可
-            if hotkeyType == .popupClose && Self.allowedSingleKeys.contains(event.keyCode) {
-                keyCombo = HotKeySettings.KeyComboSettings(
-                    carbonKeyCode: UInt32(event.keyCode),
-                    carbonModifiers: 0
-                )
-                onStopRecording()
-                return nil
-            }
-
-            // 他のタイプでは Escape でキャンセル
+            // Escape でキャンセル
             if event.keyCode == 53 {
                 onStopRecording()
                 return nil
@@ -181,16 +171,6 @@ struct ShortcutKeyButton: View {
             keyCombo: .constant(.recordingDefault),
             defaultKeyCombo: .recordingDefault,
             hotkeyType: .recording,
-            isRecording: false,
-            onStartRecording: {},
-            onStopRecording: {},
-            onResetToDefault: {}
-        )
-
-        ShortcutKeyButton(
-            keyCombo: .constant(.popupCloseDefault),
-            defaultKeyCombo: .popupCloseDefault,
-            hotkeyType: .popupClose,
             isRecording: false,
             onStartRecording: {},
             onStopRecording: {},

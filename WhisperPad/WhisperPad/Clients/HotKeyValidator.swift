@@ -177,10 +177,7 @@ enum HotKeyValidator {
         let allHotkeys: [(HotkeyType, HotKeySettings.KeyComboSettings)] = [
             (.recording, settings.recordingHotKey),
             (.cancel, settings.cancelHotKey),
-            (.recordingPause, settings.recordingPauseHotKey),
-            (.popupCopyAndClose, settings.popupCopyAndCloseHotKey),
-            (.popupSaveToFile, settings.popupSaveToFileHotKey),
-            (.popupClose, settings.popupCloseHotKey)
+            (.recordingPause, settings.recordingPauseHotKey)
         ]
 
         // 自分自身以外で同じキーコンボを使っているものを探す
