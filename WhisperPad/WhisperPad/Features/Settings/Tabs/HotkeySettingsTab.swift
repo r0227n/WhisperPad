@@ -30,6 +30,66 @@ struct HotkeySettingsTab: View {
                 store.send(.selectShortcut(.recording))
             }
         }
+        .alert(
+            "ホットキー登録失敗",
+            isPresented: Binding(
+                get: { store.showHotkeyConflictAlert },
+                set: { if !$0 { store.send(.dismissConflictAlert) } }
+            )
+        ) {
+            Button("OK", role: .cancel) {
+                store.send(.dismissConflictAlert)
+            }
+        } message: {
+            if let type = store.conflictingHotkeyType {
+                Text("\(type.displayName) のショートカットは他のアプリケーションで使用中のため、登録できません。別のキーコンビネーションを選択してください。")
+            } else {
+                Text("他のアプリケーションで使用中のため、登録できません。")
+            }
+        }
+        .alert(
+            "ホットキーが重複しています",
+            isPresented: Binding(
+                get: { store.showDuplicateHotkeyAlert },
+                set: { if !$0 { store.send(.dismissDuplicateAlert) } }
+            )
+        ) {
+            Button("OK", role: .cancel) {
+                store.send(.dismissDuplicateAlert)
+            }
+        } message: {
+            if let targetType = store.conflictingHotkeyType,
+               let duplicateType = store.duplicateWithHotkeyType {
+                Text("""
+                \(targetType.displayName) のショートカットは、既に \(duplicateType.displayName) で使用されています。
+
+                別のキーコンビネーションを選択してください。
+                """)
+            } else {
+                Text("このショートカットは既に別の機能で使用されています。")
+            }
+        }
+        .alert(
+            "システムショートカット",
+            isPresented: Binding(
+                get: { store.showSystemReservedAlert },
+                set: { if !$0 { store.send(.dismissSystemReservedAlert) } }
+            )
+        ) {
+            Button("OK", role: .cancel) {
+                store.send(.dismissSystemReservedAlert)
+            }
+        } message: {
+            if let type = store.conflictingHotkeyType {
+                Text("""
+                \(type.displayName) のショートカットには、システムで予約されているキーコンビネーション（Cmd+C、Cmd+Vなど）を使用できません。
+
+                別のキーコンビネーションを選択してください。
+                """)
+            } else {
+                Text("このショートカットはシステムで予約されています。")
+            }
+        }
     }
 
     // MARK: - Left Panel
@@ -117,24 +177,8 @@ struct HotkeySettingsTab: View {
         Binding(
             get: { keyCombo(for: type) },
             set: { newValue in
-                var hotKey = store.settings.hotKey
-                switch type {
-                case .recording:
-                    hotKey.recordingHotKey = newValue
-                case .recordingPause:
-                    hotKey.recordingPauseHotKey = newValue
-                case .cancel:
-                    hotKey.cancelHotKey = newValue
-                case .streaming:
-                    hotKey.streamingHotKey = newValue
-                case .popupCopyAndClose:
-                    hotKey.popupCopyAndCloseHotKey = newValue
-                case .popupSaveToFile:
-                    hotKey.popupSaveToFileHotKey = newValue
-                case .popupClose:
-                    hotKey.popupCloseHotKey = newValue
-                }
-                store.send(.updateHotKeySettings(hotKey))
+                // システム競合検証を含む更新処理
+                store.send(.validateAndUpdateHotkey(type, newValue))
             }
         )
     }

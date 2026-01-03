@@ -27,9 +27,17 @@ extension AppDelegate {
             return
         }
         logger.info("Hot key settings changed, re-registering hotkeys")
-        Task {
+
+        // 既存のタスクをキャンセル（重複実行を防ぐ）
+        getHotKeyRegistrationTask()?.cancel()
+
+        // 新しいタスクを開始
+        setHotKeyRegistrationTask(Task {
+            // 少し待機してから実行（連続変更をまとめる）
+            try? await Task.sleep(for: .milliseconds(100))
+            guard !Task.isCancelled else { return }
             await registerHotKeysFromSettings(hotKeySettings)
-        }
+        })
     }
 
     /// グローバルホットキーを設定（保存された設定を使用）
@@ -53,8 +61,9 @@ extension AppDelegate {
 
     /// 設定からホットキーを登録
     func registerHotKeysFromSettings(_ hotKeySettings: HotKeySettings) async {
-        await hotKeyClient.unregisterAll()
+        // unregisterAll() は呼ばない（個別に置き換える方が安全）
 
+        // 各ホットキーを個別に再登録（古いものは自動的に置き換わる）
         await registerRecordingHotKey(hotKeySettings)
         await registerCancelHotKey(hotKeySettings)
         await registerStreamingHotKey(hotKeySettings)
