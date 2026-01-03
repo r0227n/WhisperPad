@@ -14,7 +14,11 @@ private let clientLogger = Logger(subsystem: "com.whisperpad", category: "Stream
 /// WhisperKit を使用してリアルタイム文字起こしを提供します。
 struct StreamingTranscriptionClient: Sendable {
     /// WhisperKit を初期化
-    var initialize: @Sendable (_ modelName: String?) async throws -> Void
+    var initialize: @Sendable (
+        _ modelName: String?,
+        _ confirmationCount: Int,
+        _ language: String?
+    ) async throws -> Void
 
     /// 音声チャンクを処理
     var processChunk: @Sendable (_ samples: [Float]) async throws -> TranscriptionProgress
@@ -46,9 +50,13 @@ extension StreamingTranscriptionClient: DependencyKey {
 
     static var liveValue: Self {
         Self(
-            initialize: { modelName in
+            initialize: { modelName, confirmationCount, language in
                 let service = await ServiceHolder.shared.getService()
-                try await service.initialize(modelName: modelName)
+                try await service.initialize(
+                    modelName: modelName,
+                    confirmationCount: confirmationCount,
+                    language: language
+                )
             },
             processChunk: { samples in
                 let service = await ServiceHolder.shared.getService()
@@ -71,8 +79,12 @@ extension StreamingTranscriptionClient: DependencyKey {
 extension StreamingTranscriptionClient: TestDependencyKey {
     static var previewValue: Self {
         Self(
-            initialize: { modelName in
-                clientLogger.debug("[PREVIEW] initialize called with \(modelName ?? "nil")")
+            initialize: { modelName, confirmationCount, language in
+                let modelStr = modelName ?? "nil"
+                let langStr = language ?? "nil"
+                clientLogger.debug(
+                    "[PREVIEW] initialize called with \(modelStr), confirmationCount: \(confirmationCount), language: \(langStr)"
+                )
             },
             processChunk: { _ in
                 clientLogger.debug("[PREVIEW] processChunk called")
@@ -95,8 +107,12 @@ extension StreamingTranscriptionClient: TestDependencyKey {
 
     static var testValue: Self {
         Self(
-            initialize: { modelName in
-                clientLogger.debug("[TEST] initialize called with \(modelName ?? "nil")")
+            initialize: { modelName, confirmationCount, language in
+                let modelStr = modelName ?? "nil"
+                let langStr = language ?? "nil"
+                clientLogger.debug(
+                    "[TEST] initialize called with \(modelStr), confirmationCount: \(confirmationCount), language: \(langStr)"
+                )
             },
             processChunk: { _ in
                 clientLogger.debug("[TEST] processChunk called")
