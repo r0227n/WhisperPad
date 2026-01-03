@@ -43,7 +43,7 @@ struct ModelSearchFilterBar: View {
                         .font(.system(size: 12))
                 }
                 .buttonStyle(.plain)
-                .help(String(localized: "model.search.clear", comment: "Clear search"))
+                .help(Text("model.search.clear"))
             }
         }
         .padding(.horizontal, 8)

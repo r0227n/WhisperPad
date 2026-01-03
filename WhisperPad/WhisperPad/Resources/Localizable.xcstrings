@@ -1870,6 +1870,42 @@
         }
       }
     },
+    "model.row.delete.hint": {
+      "comment": "Delete button accessibility hint",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deletes the model. You will need to download it again to use it"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モデルを削除します。再使用には再ダウンロードが必要です"
+          }
+        }
+      }
+    },
+    "model.row.delete.label": {
+      "comment": "Delete button accessibility label",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を削除"
+          }
+        }
+      }
+    },
     "model.row.download.button": {
       "comment": "Download button in model row",
       "extractionState": "manual",
@@ -1884,6 +1920,42 @@
           "stringUnit": {
             "state": "translated",
             "value": "ダウンロード"
+          }
+        }
+      }
+    },
+    "model.row.download.hint": {
+      "comment": "Download button accessibility hint",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads the model to use it offline"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オフラインで使用するためにモデルをダウンロードします"
+          }
+        }
+      }
+    },
+    "model.row.download.label": {
+      "comment": "Download button accessibility label",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@をダウンロード"
           }
         }
       }
@@ -1938,6 +2010,60 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lldパーセント"
+          }
+        }
+      }
+    },
+    "model.row.downloaded": {
+      "comment": "Model downloaded status",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロード済み"
+          }
+        }
+      }
+    },
+    "model.row.english_only": {
+      "comment": "English-only model badge",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English Only"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "英語専用"
+          }
+        }
+      }
+    },
+    "model.row.not_downloaded": {
+      "comment": "Model not downloaded status",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Downloaded"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未ダウンロード"
           }
         }
       }

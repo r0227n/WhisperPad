@@ -31,7 +31,6 @@ struct ModelListRow: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(accessibilityDescription)
     }
 
     // MARK: - Download Status Icon
@@ -41,11 +40,11 @@ struct ModelListRow: View {
             if model.isDownloaded {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
-                    .help(String(localized: "model.row.downloaded", comment: "Downloaded"))
+                    .help(Text("model.row.downloaded"))
             } else {
                 Image(systemName: "circle")
                     .foregroundStyle(.secondary)
-                    .help(String(localized: "model.row.not_downloaded", comment: "Not Downloaded"))
+                    .help(Text("model.row.not_downloaded"))
             }
         }
         .font(.system(size: 14))
@@ -101,20 +100,8 @@ struct ModelListRow: View {
             ProgressView(value: downloadProgress)
                 .progressViewStyle(.linear)
                 .frame(width: 80)
-                .accessibilityLabel(
-                    String(
-                        localized: "model.row.download_progress",
-                        defaultValue: "Download progress for \(model.displayName)",
-                        comment: "Download progress label"
-                    )
-                )
-                .accessibilityValue(
-                    String(
-                        localized: "model.row.percentage",
-                        defaultValue: "\(Int(downloadProgress * 100)) percent",
-                        comment: "Percentage value"
-                    )
-                )
+                .accessibilityLabel(Text("model.row.download_progress \(model.displayName)"))
+                .accessibilityValue(Text("model.row.percentage.label \(Int(downloadProgress * 100))"))
 
             Text("\(Int(downloadProgress * 100))%")
                 .font(.caption)
@@ -128,73 +115,42 @@ struct ModelListRow: View {
         Button(role: .destructive) {
             onDelete()
         } label: {
-            Label(String(localized: "common.delete", comment: "Delete button"), systemImage: "trash")
-                .font(.caption)
+            Label {
+                Text("common.delete")
+            } icon: {
+                Image(systemName: "trash")
+            }
+            .font(.caption)
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .help(String(localized: "model.row.delete.help", comment: "Delete model"))
-        .accessibilityLabel(
-            String(
-                localized: "model.row.delete.label",
-                defaultValue: "Delete \(model.displayName)",
-                comment: "Delete model accessibility label"
-            )
-        )
-        .accessibilityHint(
-            String(
-                localized: "model.row.delete.hint",
-                comment: "Deletes the model. You will need to download it again to use it"
-            )
-        )
+        .help(Text("model.row.delete.help"))
+        .accessibilityLabel(Text("model.row.delete.label \(model.displayName)"))
+        .accessibilityHint(Text("model.row.delete.hint"))
     }
 
     private var notDownloadedView: some View {
         Button {
             onDownload()
         } label: {
-            Label(
-                String(localized: "model.row.download.button", comment: "Download button"),
-                systemImage: "arrow.down.circle"
-            )
+            Label {
+                Text("model.row.download.button")
+            } icon: {
+                Image(systemName: "arrow.down.circle")
+            }
             .font(.caption)
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.small)
-        .help(String(localized: "model.row.download.help", comment: "Download model"))
-        .accessibilityLabel(
-            String(
-                localized: "model.row.download.label",
-                defaultValue: "Download \(model.displayName)",
-                comment: "Download model accessibility label"
-            )
-        )
-        .accessibilityHint(
-            String(
-                localized: "model.row.download.hint",
-                comment: "Downloads the model to use it offline"
-            )
-        )
+        .help(Text("model.row.download.help"))
+        .accessibilityLabel(Text("model.row.download.label \(model.displayName)"))
+        .accessibilityHint(Text("model.row.download.hint"))
     }
 
     // MARK: - Helpers
 
     private var isEnglishOnly: Bool {
         model.id.hasSuffix(".en")
-    }
-
-    private var accessibilityDescription: String {
-        var parts = [model.displayName]
-        if model.isRecommended {
-            parts.append(String(localized: "model.active.recommended", comment: "Recommended"))
-        }
-        if isEnglishOnly {
-            parts.append(String(localized: "model.row.english_only", comment: "English Only"))
-        }
-        if model.isDownloaded {
-            parts.append(String(localized: "model.row.downloaded", comment: "Downloaded"))
-        }
-        return parts.joined(separator: ", ")
     }
 }
 

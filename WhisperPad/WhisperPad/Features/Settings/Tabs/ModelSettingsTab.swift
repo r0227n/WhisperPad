@@ -46,28 +46,26 @@ struct ModelSettingsTab: View {
             .padding()
         }
         .confirmationDialog(
-            String(localized: "model.delete.confirm.title", comment: "Delete model?"),
+            Text("model.delete.confirm.title"),
             isPresented: Binding(
                 get: { store.modelToDelete != nil },
                 set: { if !$0 { store.send(.cancelDeleteModel) } }
             ),
             titleVisibility: .visible
         ) {
-            Button(String(localized: "common.delete", comment: "Delete"), role: .destructive) {
+            Button(role: .destructive) {
                 store.send(.confirmDeleteModel)
+            } label: {
+                Text("common.delete")
             }
-            Button(String(localized: "common.cancel", comment: "Cancel"), role: .cancel) {
+            Button(role: .cancel) {
                 store.send(.cancelDeleteModel)
+            } label: {
+                Text("common.cancel")
             }
         } message: {
             if let modelName = store.modelToDelete {
-                Text(
-                    String(
-                        localized: "model.delete.confirm.message",
-                        defaultValue: "「\(modelName)」will be deleted. You will need to download it again to use it.",
-                        comment: "Delete confirmation message"
-                    )
-                )
+                Text("model.delete.confirm.message \(modelName)")
             }
         }
         .environment(\.locale, store.settings.general.preferredLocale.locale)
