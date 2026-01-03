@@ -128,11 +128,8 @@ struct ModelListRow: View {
         Button(role: .destructive) {
             onDelete()
         } label: {
-            Label(
-                String(localized: "common.delete", comment: "Delete"),
-                systemImage: "trash"
-            )
-            .font(.caption)
+            Label("common.delete", systemImage: "trash")
+                .font(.caption)
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
@@ -156,11 +153,8 @@ struct ModelListRow: View {
         Button {
             onDownload()
         } label: {
-            Label(
-                String(localized: "model.row.download.button", comment: "Download"),
-                systemImage: "arrow.down.circle"
-            )
-            .font(.caption)
+            Label("model.row.download.button", systemImage: "arrow.down.circle")
+                .font(.caption)
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.small)

@@ -16,6 +16,9 @@ struct InlineSymbolPicker: View {
     /// フルピッカー表示状態
     @State private var showFullPicker = false
 
+    /// 環境ロケール
+    @Environment(\.locale) private var locale
+
     /// クイック選択用の推奨シンボル（2行分 = 14個）
     private let quickSymbols = [
         "mic", "mic.fill", "mic.circle", "waveform", "waveform.badge.mic",
@@ -53,6 +56,7 @@ struct InlineSymbolPicker: View {
                     selectedSymbol: $selection,
                     isPresented: $showFullPicker
                 )
+                .environment(\.locale, locale)
             }
         }
     }

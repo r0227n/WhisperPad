@@ -217,6 +217,24 @@
         }
       }
     },
+    "app.tooltip": {
+      "comment": "Menu bar tooltip",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhisperPad - Voice-to-Text Transcription"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhisperPad - 音声文字起こし"
+          }
+        }
+      }
+    },
     "locale.english": {
       "comment": "English",
       "extractionState": "manual",
@@ -303,6 +321,60 @@
           "stringUnit": {
             "state": "translated",
             "value": "文字起こしが完了しました"
+          }
+        }
+      }
+    },
+    "notification.default.title": {
+      "comment": "Default notification title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhisperPad"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhisperPad"
+          }
+        }
+      }
+    },
+    "notification.file.save.success": {
+      "comment": "File save success notification message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存完了: %@"
+          }
+        }
+      }
+    },
+    "notification.file.save.failure": {
+      "comment": "File save failure notification message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to save file: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイル保存に失敗: %@"
           }
         }
       }
@@ -1000,6 +1072,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "閉じる"
+          }
+        }
+      }
+    },
+    "common.ok": {
+      "comment": "OK",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
           }
         }
       }
@@ -1940,24 +2030,6 @@
         }
       }
     },
-    "model.storage.footer": {
-      "comment": "Storage section footer text",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Models stored locally for offline use"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ローカル保存でオフライン使用可能"
-          }
-        }
-      }
-    },
     "model.storage.location": {
       "comment": "Storage location label",
       "extractionState": "manual",
@@ -2084,6 +2156,168 @@
         }
       }
     },
+    "hotkey.conflict_alert.title": {
+      "comment": "Hotkey registration failed",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hotkey Registration Failed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ホットキー登録失敗"
+          }
+        }
+      }
+    },
+    "hotkey.conflict_alert.message": {
+      "comment": "Hotkey conflict with other app message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The %@ shortcut is already in use by another application and cannot be registered. Please select a different key combination."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ のショートカットは他のアプリケーションで使用中のため、登録できません。別のキーコンビネーションを選択してください。"
+          }
+        }
+      }
+    },
+    "hotkey.conflict_alert.message_generic": {
+      "comment": "Generic hotkey conflict message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot be registered because it is in use by another application."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "他のアプリケーションで使用中のため、登録できません。"
+          }
+        }
+      }
+    },
+    "hotkey.duplicate_alert.title": {
+      "comment": "Hotkey duplication alert",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hotkey Duplication"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ホットキーが重複しています"
+          }
+        }
+      }
+    },
+    "hotkey.duplicate_alert.message": {
+      "comment": "Hotkey duplication message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The %@ shortcut is already in use by %@.\n\nPlease select a different key combination."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ のショートカットは、既に %@ で使用されています。\n\n別のキーコンビネーションを選択してください。"
+          }
+        }
+      }
+    },
+    "hotkey.duplicate_alert.message_generic": {
+      "comment": "Generic duplication message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This shortcut is already in use by another function."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このショートカットは既に別の機能で使用されています。"
+          }
+        }
+      }
+    },
+    "hotkey.system_reserved_alert.title": {
+      "comment": "System reserved shortcut",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System Shortcut"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "システムショートカット"
+          }
+        }
+      }
+    },
+    "hotkey.system_reserved_alert.message": {
+      "comment": "System reserved shortcut message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The %@ shortcut cannot use key combinations reserved by the system (such as Cmd+C, Cmd+V).\n\nPlease select a different key combination."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ のショートカットには、システムで予約されているキーコンビネーション（Cmd+C、Cmd+Vなど）を使用できません。\n\n別のキーコンビネーションを選択してください。"
+          }
+        }
+      }
+    },
+    "hotkey.system_reserved_alert.message_generic": {
+      "comment": "Generic system reserved message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This shortcut is reserved by the system."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このショートカットはシステムで予約されています。"
+          }
+        }
+      }
+    },
     "hotkey.recording.cancel": {
       "comment": "Cancel hotkey recording button",
       "extractionState": "manual",
@@ -2152,6 +2386,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "キーを入力..."
+          }
+        }
+      }
+    },
+    "hotkey.reset.help": {
+      "comment": "Reset hotkey state help text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset this state"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この状態をリセット"
           }
         }
       }
