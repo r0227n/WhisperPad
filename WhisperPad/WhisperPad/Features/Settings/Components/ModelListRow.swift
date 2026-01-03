@@ -128,7 +128,7 @@ struct ModelListRow: View {
         Button(role: .destructive) {
             onDelete()
         } label: {
-            Label("common.delete", systemImage: "trash")
+            Label(String(localized: "common.delete", comment: "Delete button"), systemImage: "trash")
                 .font(.caption)
         }
         .buttonStyle(.bordered)
