@@ -102,7 +102,7 @@ struct AppReducer {
     // MARK: - Reducer Body
 
     var body: some Reducer<State, Action> {
-        Reduce { state, action in
+        Reduce<State, Action> { (state: inout State, action: Action) -> Effect<Action> in
             switch action {
             case .startRecording:
                 // 録音機能に委譲
@@ -281,11 +281,11 @@ struct AppReducer {
                 state.appStatus = .transcribing
                 return .none
 
-            case .streamingTranscription(.initializationCompleted):
+            case .streamingTranscription(.serviceInitializationCompleted):
                 state.appStatus = .streamingTranscribing
                 return .none
 
-            case let .streamingTranscription(.initializationFailed(message)):
+            case let .streamingTranscription(.serviceInitializationFailed(message)):
                 state.appStatus = .error(message)
                 return .none
 
