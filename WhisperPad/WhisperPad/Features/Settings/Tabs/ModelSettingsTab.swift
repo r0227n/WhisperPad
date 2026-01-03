@@ -121,7 +121,8 @@ struct ModelSettingsTab: View {
                         )
                     ) {
                         ForEach(store.availableLanguages) { language in
-                            Text(language.displayName).tag(language)
+                            Text(language.displayName(locale: store.settings.general.preferredLocale.locale))
+                                .tag(language)
                         }
                     }
                     .pickerStyle(.menu)
