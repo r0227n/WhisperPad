@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 //
 //  StreamingTranscriptionFeature.swift
 //  WhisperPad
@@ -176,7 +177,7 @@ struct StreamingTranscriptionFeature {
 
     var body: some Reducer<State, Action> {
         BindingReducer()
-        Reduce { state, action in
+        Reduce<State, Action> { (state: inout State, action: Action) -> Effect<Action> in
             switch action {
             case .binding:
                 return .none
@@ -313,7 +314,6 @@ struct StreamingTranscriptionFeature {
                 }
 
             case .whisperKitReady:
-                // WhisperKitが準備完了したので、Service初期化へ進む
                 return .send(.initializeStreamingService)
 
             case .initializeWhisperKit:
@@ -331,7 +331,6 @@ struct StreamingTranscriptionFeature {
 
             case .whisperKitInitialized:
                 state.whisperKitInitializing = false
-                // WhisperKit初期化完了後、Service初期化へ進む
                 return .send(.initializeStreamingService)
 
             case let .whisperKitInitFailed(error):
@@ -342,11 +341,13 @@ struct StreamingTranscriptionFeature {
                 return .none
 
             case .initializeStreamingService:
-                // ここでWhisperKitは必ず初期化済み
-                return .run { [streamingTranscription] send in
+                return .run { [streamingTranscription, userDefaultsClient] send in
                     do {
-                        // Service層は状態リセットのみ（WhisperKit初期化は不要）
-                        try await streamingTranscription.initialize(nil)
+                        // UserDefaultsから設定を読み込み
+                        let settings = await userDefaultsClient.loadSettings()
+                        let confirmationCount = settings.streaming.confirmationCount
+                        let language = settings.streaming.language
+                        try await streamingTranscription.initialize(nil, confirmationCount, language)
                         await send(.serviceInitializationCompleted)
                     } catch {
                         let message = (error as? StreamingTranscriptionError)?.errorDescription
@@ -358,10 +359,7 @@ struct StreamingTranscriptionFeature {
 
             case .serviceInitializationCompleted:
                 state.status = .recording(duration: 0, tokensPerSecond: 0)
-
-                // 音声ストリーミングとタイマーを開始
                 return .merge(
-                    // 音声ストリームを開始
                     .run { send in
                         do {
                             let stream = try await streamingAudio.startRecording()
@@ -373,8 +371,6 @@ struct StreamingTranscriptionFeature {
                         }
                     }
                     .cancellable(id: CancelID.audioStream),
-
-                    // タイマーを開始
                     .run { send in
                         for await _ in clock.timer(interval: .seconds(1)) {
                             await send(.timerTick)
@@ -394,6 +390,16 @@ struct StreamingTranscriptionFeature {
                     do {
                         let progress = try await streamingTranscription.processChunk(samples)
                         await send(.progressUpdated(progress))
+                    } catch let error as StreamingTranscriptionError {
+                        // 型安全なエラー処理
+                        switch error {
+                        case .bufferOverflow:
+                            // バッファオーバーフロー時は自動停止
+                            logger.error("Buffer overflow occurred, stopping recording")
+                            await send(.stopButtonTapped)
+                        default:
+                            logger.error("Streaming error: \(error.localizedDescription)")
+                        }
                     } catch {
                         logger.error("Chunk processing error: \(error.localizedDescription)")
                     }
@@ -404,8 +410,6 @@ struct StreamingTranscriptionFeature {
                 state.pendingText = progress.pendingText
                 state.decodingText = progress.decodingText
                 state.tokensPerSecond = progress.tokensPerSecond
-
-                // statusのtokensPerSecondも更新
                 if case let .recording(duration, _) = state.status {
                     state.status = .recording(duration: duration, tokensPerSecond: progress.tokensPerSecond)
                 }

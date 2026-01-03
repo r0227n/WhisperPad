@@ -32,6 +32,16 @@ actor StreamingTranscriptionService {
         return appSupport.appendingPathComponent("WhisperPad/models", isDirectory: true)
     }
 
+    // MARK: - Buffer Management Constants
+
+    private enum BufferLimits {
+        /// 警告閾値: 20秒分のサンプル (16000 samples/sec × 20)
+        static let warningThreshold: Int = 320_000
+
+        /// 最大閾値: 30秒分のサンプル (16000 samples/sec × 30)
+        static let maximumThreshold: Int = 480_000
+    }
+
     // MARK: - State
 
     private var confirmedSegments: [String] = []
@@ -41,6 +51,10 @@ actor StreamingTranscriptionService {
     private var language: String? = "ja"
     private var accumulatedSamples: [Float] = []
 
+    // 確認ロジック改善用
+    private var lastConfirmationTime: Date?
+    private var confirmationTimeout: TimeInterval = 5.0 // 5秒でタイムアウト
+
     // MARK: - Initialization
 
     /// ストリーミング文字起こしサービスを初期化
@@ -48,7 +62,7 @@ actor StreamingTranscriptionService {
     /// テキスト状態をリセットし、WhisperKitManager の共有インスタンスを使用します。
     /// 注意: このメソッドを呼び出す前に、Feature 層で WhisperKit を初期化しておく必要があります。
     /// WhisperKit が初期化されていない場合、エラーをスローします。
-    func initialize(modelName: String?, confirmationCount: Int = 2, language: String? = "ja") async throws {
+    func initialize(modelName: String?, confirmationCount: Int = 2, language: String? = nil) async throws {
         logger.info("Initializing StreamingTranscriptionService")
 
         // テキスト状態をリセット
@@ -56,6 +70,7 @@ actor StreamingTranscriptionService {
         pendingSegment = ""
         previousResults.removeAll()
         accumulatedSamples.removeAll()
+        lastConfirmationTime = nil
 
         self.confirmationCount = confirmationCount
         self.language = language
@@ -80,6 +95,9 @@ actor StreamingTranscriptionService {
         // サンプルを蓄積
         accumulatedSamples.append(contentsOf: samples)
 
+        // バッファオーバーフロー検出
+        try checkBufferOverflow()
+
         // 最低限のサンプル数が必要（約1秒分 = 16000サンプル）
         guard accumulatedSamples.count >= 16000 else {
             return TranscriptionProgress(
@@ -91,50 +109,11 @@ actor StreamingTranscriptionService {
         }
 
         do {
-            var options = DecodingOptions()
-            options.language = language
-            options.task = .transcribe
-            options.verbose = false
-
-            let startTime = CFAbsoluteTimeGetCurrent()
-
-            // 蓄積されたサンプルを文字起こし
-            let results = try await whisperKit.transcribe(
-                audioArray: accumulatedSamples,
-                decodeOptions: options
-            )
-
-            let endTime = CFAbsoluteTimeGetCurrent()
-            let duration = endTime - startTime
-
-            // 結果を結合
-            let transcribedText = results.map(\.text).joined(separator: "\n")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-
-            // トークン数を概算（文字数ベース: 1トークン ≒ 2文字と仮定）
-            let estimatedTokenCount = transcribedText.count / 2
-            let tokensPerSecond = duration > 0 ? Double(estimatedTokenCount) / duration : 0
-
-            // 確定ロジック
-            let isConfirmed = updateConfirmation(newText: transcribedText)
-
-            if isConfirmed, !transcribedText.isEmpty {
-                confirmedSegments.append(transcribedText)
-                pendingSegment = ""
-                previousResults.removeAll()
-                accumulatedSamples.removeAll()
-            } else {
-                pendingSegment = transcribedText
-            }
-
-            return TranscriptionProgress(
-                confirmedText: confirmedSegments.joined(separator: "\n"),
-                pendingText: pendingSegment,
-                decodingText: transcribedText,
-                tokensPerSecond: tokensPerSecond
-            )
+            return try await performTranscription(whisperKit: whisperKit)
         } catch {
             logger.error("Transcription failed: \(error.localizedDescription)")
+            // エラー時にバッファをクリアしてメモリリーク防止
+            accumulatedSamples.removeAll()
             throw StreamingTranscriptionError.processingFailed(error.localizedDescription)
         }
     }
@@ -172,12 +151,86 @@ actor StreamingTranscriptionService {
         pendingSegment = ""
         previousResults.removeAll()
         accumulatedSamples.removeAll()
+        lastConfirmationTime = nil
         logger.info("Service reset")
     }
 
     // MARK: - Private Methods
 
+    /// バッファオーバーフローをチェック
+    private func checkBufferOverflow() throws {
+        let bufferSize = accumulatedSamples.count
+        if bufferSize >= BufferLimits.maximumThreshold {
+            logger.error(
+                "Buffer overflow: \(bufferSize) samples exceeds max \(BufferLimits.maximumThreshold)"
+            )
+            accumulatedSamples.removeAll()
+            throw StreamingTranscriptionError.bufferOverflow
+        } else if bufferSize >= BufferLimits.warningThreshold {
+            logger.warning(
+                "Buffer approaching limit: \(bufferSize) samples (warning: \(BufferLimits.warningThreshold))"
+            )
+        }
+    }
+
+    /// 文字起こし処理を実行
+    private func performTranscription(whisperKit: WhisperKit) async throws -> TranscriptionProgress {
+        var options = DecodingOptions()
+        options.language = language
+        options.task = .transcribe
+        options.verbose = false
+
+        let startTime = CFAbsoluteTimeGetCurrent()
+
+        // 蓄積されたサンプルを文字起こし
+        let results = try await whisperKit.transcribe(
+            audioArray: accumulatedSamples,
+            decodeOptions: options
+        )
+
+        let endTime = CFAbsoluteTimeGetCurrent()
+        let duration = endTime - startTime
+
+        // 結果を結合
+        let transcribedText = results.map(\.text).joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // トークン数を概算（文字数ベース: 1トークン ≒ 2文字と仮定）
+        let estimatedTokenCount = transcribedText.count / 2
+        let tokensPerSecond = duration > 0 ? Double(estimatedTokenCount) / duration : 0
+
+        // 確定ロジック
+        let isConfirmed = updateConfirmation(newText: transcribedText)
+
+        if isConfirmed, !transcribedText.isEmpty {
+            confirmedSegments.append(transcribedText)
+            pendingSegment = ""
+            previousResults.removeAll()
+            accumulatedSamples.removeAll()
+        } else {
+            pendingSegment = transcribedText
+        }
+
+        return TranscriptionProgress(
+            confirmedText: confirmedSegments.joined(separator: "\n"),
+            pendingText: pendingSegment,
+            decodingText: transcribedText,
+            tokensPerSecond: tokensPerSecond
+        )
+    }
+
     private func updateConfirmation(newText: String) -> Bool {
+        let now = Date()
+
+        // タイムアウトチェック
+        if let lastTime = lastConfirmationTime,
+           now.timeIntervalSince(lastTime) >= confirmationTimeout,
+           !newText.isEmpty {
+            logger.info("Confirmation timeout reached, auto-confirming text")
+            lastConfirmationTime = now
+            return true
+        }
+
         previousResults.append(newText)
 
         if previousResults.count > confirmationCount {
@@ -185,6 +238,9 @@ actor StreamingTranscriptionService {
         }
 
         guard previousResults.count >= confirmationCount else {
+            if lastConfirmationTime == nil {
+                lastConfirmationTime = now
+            }
             return false
         }
 
@@ -192,6 +248,22 @@ actor StreamingTranscriptionService {
             return false
         }
 
-        return previousResults.allSatisfy { $0 == first }
+        // 最小文字数チェック（日本語は2文字以上、その他は3文字以上）
+        let minLength = (language == "ja") ? 2 : 3
+        guard first.count >= minLength else {
+            return false
+        }
+
+        // 完全一致チェック
+        let allMatch = previousResults.allSatisfy { $0 == first }
+        if allMatch {
+            lastConfirmationTime = now
+            return true
+        }
+
+        // 類似度チェック（オプション: 将来的な拡張）
+        // 現時点では完全一致のみ
+
+        return false
     }
 }
