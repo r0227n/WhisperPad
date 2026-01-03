@@ -278,9 +278,16 @@ actor TranscriptionService {
                 decodeOptions: options
             )
 
-            // 結果を結合
-            let transcribedText = results.map(\.text).joined(separator: "\n")
-            let trimmedText = transcribedText.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Phase 1: Combine segments with silence gap detection
+            let transcribedText = combineSegmentsWithSilenceBreaks(results: results)
+
+            // Phase 2: Remove Whisper special tokens
+            let cleanedText = transcribedText.removingWhisperTokens()
+
+            // Phase 3: Apply Japanese sentence breaks
+            let textWithLineBreaks = cleanedText.addingJapaneseSentenceBreaks()
+
+            let trimmedText = textWithLineBreaks.trimmingCharacters(in: .whitespacesAndNewlines)
 
             logger.info("Transcription completed: \(trimmedText.prefix(50))...")
             return trimmedText
@@ -288,6 +295,43 @@ actor TranscriptionService {
             logger.error("Transcription failed: \(error.localizedDescription)")
             throw TranscriptionError.transcriptionFailed(error.localizedDescription)
         }
+    }
+
+    /// Combine transcription segments with line breaks at silence gaps
+    ///
+    /// Detects silence gaps (≥1.0 second) between segments and inserts line breaks.
+    /// - Parameter results: Transcription results from WhisperKit
+    /// - Returns: Combined text with silence-based line breaks
+    private func combineSegmentsWithSilenceBreaks(results: [TranscriptionResult]) -> String {
+        let silenceThreshold: Float = 1.0 // 1 second
+
+        guard !results.isEmpty else { return "" }
+
+        // Extract all segments from all results
+        let allSegments = results.flatMap(\.segments)
+
+        guard !allSegments.isEmpty else { return "" }
+
+        var combinedText = ""
+
+        for (index, segment) in allSegments.enumerated() {
+            // Add segment text
+            combinedText += segment.text
+
+            // Check for silence gap after this segment
+            if index < allSegments.count - 1 {
+                let nextSegment = allSegments[index + 1]
+                let gap = nextSegment.start - segment.end
+
+                if gap >= silenceThreshold {
+                    // Silence gap detected - add line break
+                    logger.debug("Silence gap detected: \(gap)s at segment \(index)")
+                    combinedText += "\n"
+                }
+            }
+        }
+
+        return combinedText
     }
 
     // MARK: - Cleanup
