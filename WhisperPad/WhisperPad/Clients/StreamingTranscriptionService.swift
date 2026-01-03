@@ -120,9 +120,14 @@ actor StreamingTranscriptionService {
 
     /// 文字起こしを終了し、最終結果を返す
     func finalize() async throws -> String {
-        // 残りのサンプルを処理
-        if !accumulatedSamples.isEmpty,
-           let whisperKit = await WhisperKitManager.shared.getWhisperKit() {
+        // If there's pending text, confirm it (avoid re-transcribing)
+        if !pendingSegment.isEmpty {
+            confirmedSegments.append(pendingSegment)
+            pendingSegment = ""
+        } else if !accumulatedSamples.isEmpty,
+                  let whisperKit = await WhisperKitManager.shared.getWhisperKit() {
+            // Only transcribe if there's no pending segment
+            // (meaning new samples arrived after the last transcription)
             var options = DecodingOptions()
             options.language = language
             options.task = .transcribe

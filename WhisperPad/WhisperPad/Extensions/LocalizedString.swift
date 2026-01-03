@@ -8,8 +8,8 @@ import Foundation
 extension String {
     /// Initialize a localized string from a LocalizationKey constant
     ///
-    /// This initializer enables type-safe localization with String Catalogs in SPM
-    /// while supporting runtime language switching through LocalizationBundleManager.
+    /// This initializer enables type-safe localization with String Catalogs in SPM.
+    /// Falls back to the key itself if no localization is found.
     ///
     /// Usage:
     /// ```swift
@@ -18,6 +18,6 @@ extension String {
     ///
     /// - Parameter key: The localization key from LocalizationKey
     init(localized key: String) {
-        self = LocalizationBundleManager.shared.localizedString(key)
+        self = NSLocalizedString(key, bundle: .main, comment: "")
     }
 }

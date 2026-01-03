@@ -215,31 +215,55 @@ private struct TextDisplayView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
-                    // 確定済みテキスト
-                    if !store.confirmedText.isEmpty {
-                        Text(store.confirmedText)
-                            .foregroundColor(.primary)
-                    }
+                    switch store.status {
+                    case .idle, .initializing:
+                        // 何も表示しない
+                        EmptyView()
 
-                    // 未確定テキスト
-                    if !store.pendingText.isEmpty {
-                        Text(store.pendingText)
-                            .foregroundColor(.secondary)
-                    }
+                    case .recording:
+                        // confirmedText + pendingText + decodingText + カーソル
+                        if !store.confirmedText.isEmpty {
+                            Text(store.confirmedText)
+                                .foregroundColor(.primary)
+                        }
 
-                    // デコード中テキスト
-                    if !store.decodingText.isEmpty {
-                        Text(store.decodingText)
-                            .foregroundColor(.secondary)
-                            .opacity(0.7)
-                    }
+                        // 確定待ちテキスト
+                        if !store.pendingText.isEmpty {
+                            Text(store.pendingText)
+                                .foregroundColor(.secondary)
+                        }
 
-                    // カーソル（録音中のみ）
-                    if store.isRecording {
+                        if !store.decodingText.isEmpty {
+                            Text(store.decodingText)
+                                .foregroundColor(.secondary)
+                                .opacity(0.7)
+                        }
+
+                        // カーソル
                         Text("▋")
                             .foregroundColor(.secondary)
                             .opacity(0.5)
                             .accessibilityHidden(true)
+
+                    case .processing:
+                        // confirmedText + decodingText（カーソルなし）
+                        if !store.confirmedText.isEmpty {
+                            Text(store.confirmedText)
+                                .foregroundColor(.primary)
+                        }
+
+                        if !store.decodingText.isEmpty {
+                            Text(store.decodingText)
+                                .foregroundColor(.secondary)
+                                .opacity(0.7)
+                        }
+
+                    case .completed, .error:
+                        // confirmedText のみ
+                        if !store.confirmedText.isEmpty {
+                            Text(store.confirmedText)
+                                .foregroundColor(.primary)
+                        }
                     }
 
                     // スクロールアンカー
@@ -257,7 +281,19 @@ private struct TextDisplayView: View {
                 scrollToBottom(proxy: proxy)
             }
             .onChange(of: store.pendingText) { _, _ in
-                scrollToBottom(proxy: proxy)
+                // recording 時にスクロール
+                if case .recording = store.status {
+                    scrollToBottom(proxy: proxy)
+                }
+            }
+            .onChange(of: store.decodingText) { _, _ in
+                // recording と processing 時にスクロール
+                switch store.status {
+                case .recording, .processing:
+                    scrollToBottom(proxy: proxy)
+                default:
+                    break
+                }
             }
         }
         .frame(maxHeight: .infinity)
@@ -274,20 +310,45 @@ private struct TextDisplayView: View {
     }
 
     private var transcriptionAccessibilityLabel: String {
-        var parts: [String] = []
-        if !store.confirmedText.isEmpty {
-            parts.append(store.confirmedText)
-        }
-        if !store.pendingText.isEmpty {
-            parts.append(store.pendingText)
-        }
-        if !store.decodingText.isEmpty {
-            parts.append(store.decodingText)
-        }
-        if parts.isEmpty {
+        switch store.status {
+        case .idle, .initializing:
+            return "文字起こしテキストなし"
+
+        case .recording:
+            var parts: [String] = []
+            if !store.confirmedText.isEmpty {
+                parts.append(store.confirmedText)
+            }
+            if !store.pendingText.isEmpty {
+                parts.append(store.pendingText)
+            }
+            if !store.decodingText.isEmpty {
+                parts.append(store.decodingText)
+            }
+            if parts.isEmpty {
+                return "文字起こしテキストなし"
+            }
+            return "文字起こし: " + parts.joined(separator: " ")
+
+        case .processing:
+            var parts: [String] = []
+            if !store.confirmedText.isEmpty {
+                parts.append(store.confirmedText)
+            }
+            if !store.decodingText.isEmpty {
+                parts.append(store.decodingText)
+            }
+            if parts.isEmpty {
+                return "文字起こしテキストなし"
+            }
+            return "文字起こし: " + parts.joined(separator: " ")
+
+        case .completed, .error:
+            if !store.confirmedText.isEmpty {
+                return "文字起こし: " + store.confirmedText
+            }
             return "文字起こしテキストなし"
         }
-        return "文字起こし: " + parts.joined(separator: " ")
     }
 }
 
