@@ -39,9 +39,6 @@ enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
     case recording
     case cancel
     case recordingPause
-    case popupCopyAndClose
-    case popupSaveToFile
-    case popupClose
 
     var id: String { rawValue }
 }
@@ -53,7 +50,6 @@ extension HotkeyType {
     enum Category: String, CaseIterable, Identifiable {
         case recording = "録音"
         case cancel = "キャンセル"
-        case popup = "ポップアップ"
 
         var id: String { rawValue }
 
@@ -64,8 +60,6 @@ extension HotkeyType {
                 [.recording, .recordingPause]
             case .cancel:
                 [.cancel]
-            case .popup:
-                [.popupCopyAndClose, .popupSaveToFile, .popupClose]
             }
         }
     }
@@ -77,8 +71,6 @@ extension HotkeyType {
             .recording
         case .cancel:
             .cancel
-        case .popupCopyAndClose, .popupSaveToFile, .popupClose:
-            .popup
         }
     }
 
@@ -91,12 +83,6 @@ extension HotkeyType {
             "一時停止/再開"
         case .cancel:
             "録音キャンセル"
-        case .popupCopyAndClose:
-            "コピーして閉じる"
-        case .popupSaveToFile:
-            "ファイル保存"
-        case .popupClose:
-            "閉じる"
         }
     }
 
@@ -109,12 +95,6 @@ extension HotkeyType {
             "録音を一時停止または再開します"
         case .cancel:
             "進行中の録音をキャンセルします"
-        case .popupCopyAndClose:
-            "文字起こしをクリップボードにコピーしてポップアップを閉じます"
-        case .popupSaveToFile:
-            "文字起こしをファイルに保存します"
-        case .popupClose:
-            "ポップアップを閉じます"
         }
     }
 
@@ -127,12 +107,6 @@ extension HotkeyType {
             .recordingPauseDefault
         case .cancel:
             .cancelDefault
-        case .popupCopyAndClose:
-            .popupCopyAndCloseDefault
-        case .popupSaveToFile:
-            .popupSaveToFileDefault
-        case .popupClose:
-            .popupCloseDefault
         }
     }
 
@@ -145,12 +119,6 @@ extension HotkeyType {
             "pause.fill"
         case .cancel:
             "xmark.circle"
-        case .popupCopyAndClose:
-            "doc.on.clipboard"
-        case .popupSaveToFile:
-            "square.and.arrow.down"
-        case .popupClose:
-            "xmark"
         }
     }
 
@@ -163,12 +131,6 @@ extension HotkeyType {
             .paused
         case .cancel:
             .cancel
-        case .popupCopyAndClose:
-            .completed
-        case .popupSaveToFile:
-            .completed
-        case .popupClose:
-            .idle
         }
     }
 }

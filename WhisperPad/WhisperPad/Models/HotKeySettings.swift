@@ -19,15 +19,6 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     /// 録音一時停止のホットキー
     var recordingPauseHotKey: KeyComboSettings
 
-    /// ポップアップ: コピーして閉じるのホットキー
-    var popupCopyAndCloseHotKey: KeyComboSettings
-
-    /// ポップアップ: ファイル保存のホットキー
-    var popupSaveToFileHotKey: KeyComboSettings
-
-    /// ポップアップ: 閉じるのホットキー
-    var popupCloseHotKey: KeyComboSettings
-
     /// デフォルト設定
     static let `default` = HotKeySettings()
 
@@ -35,17 +26,11 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     init(
         recordingHotKey: KeyComboSettings = .recordingDefault,
         cancelHotKey: KeyComboSettings = .cancelDefault,
-        recordingPauseHotKey: KeyComboSettings = .recordingPauseDefault,
-        popupCopyAndCloseHotKey: KeyComboSettings = .popupCopyAndCloseDefault,
-        popupSaveToFileHotKey: KeyComboSettings = .popupSaveToFileDefault,
-        popupCloseHotKey: KeyComboSettings = .popupCloseDefault
+        recordingPauseHotKey: KeyComboSettings = .recordingPauseDefault
     ) {
         self.recordingHotKey = recordingHotKey
         self.cancelHotKey = cancelHotKey
         self.recordingPauseHotKey = recordingPauseHotKey
-        self.popupCopyAndCloseHotKey = popupCopyAndCloseHotKey
-        self.popupSaveToFileHotKey = popupSaveToFileHotKey
-        self.popupCloseHotKey = popupCloseHotKey
     }
 
     // MARK: - Codable (Migration Support)
@@ -53,7 +38,6 @@ struct HotKeySettings: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case recordingHotKey
         case cancelHotKey, recordingPauseHotKey
-        case popupCopyAndCloseHotKey, popupSaveToFileHotKey, popupCloseHotKey
     }
 
     init(from decoder: Decoder) throws {
@@ -65,16 +49,6 @@ struct HotKeySettings: Codable, Equatable, Sendable {
             ?? .cancelDefault
         recordingPauseHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .recordingPauseHotKey)
             ?? .recordingPauseDefault
-        popupCopyAndCloseHotKey = try container.decodeIfPresent(
-            KeyComboSettings.self,
-            forKey: .popupCopyAndCloseHotKey
-        ) ?? .popupCopyAndCloseDefault
-        popupSaveToFileHotKey = try container.decodeIfPresent(
-            KeyComboSettings.self,
-            forKey: .popupSaveToFileHotKey
-        ) ?? .popupSaveToFileDefault
-        popupCloseHotKey = try container.decodeIfPresent(KeyComboSettings.self, forKey: .popupCloseHotKey)
-            ?? .popupCloseDefault
     }
 
     func encode(to encoder: Encoder) throws {
@@ -82,9 +56,6 @@ struct HotKeySettings: Codable, Equatable, Sendable {
         try container.encode(recordingHotKey, forKey: .recordingHotKey)
         try container.encode(cancelHotKey, forKey: .cancelHotKey)
         try container.encode(recordingPauseHotKey, forKey: .recordingPauseHotKey)
-        try container.encode(popupCopyAndCloseHotKey, forKey: .popupCopyAndCloseHotKey)
-        try container.encode(popupSaveToFileHotKey, forKey: .popupSaveToFileHotKey)
-        try container.encode(popupCloseHotKey, forKey: .popupCloseHotKey)
     }
 }
 
@@ -116,24 +87,6 @@ extension HotKeySettings {
         /// 録音一時停止ホットキーのデフォルト（⌘⌥P）
         static let recordingPauseDefault = KeyComboSettings(
             carbonKeyCode: 35,
-            carbonModifiers: 2304
-        )
-
-        /// ポップアップ: コピーして閉じるのデフォルト（⌘⌥C）
-        static let popupCopyAndCloseDefault = KeyComboSettings(
-            carbonKeyCode: 8,
-            carbonModifiers: 2304
-        )
-
-        /// ポップアップ: ファイル保存のデフォルト（⌘⌥S）
-        static let popupSaveToFileDefault = KeyComboSettings(
-            carbonKeyCode: 1,
-            carbonModifiers: 2304
-        )
-
-        /// ポップアップ: 閉じるのデフォルト（⌘⌥.）
-        static let popupCloseDefault = KeyComboSettings(
-            carbonKeyCode: 47,
             carbonModifiers: 2304
         )
     }

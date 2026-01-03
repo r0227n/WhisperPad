@@ -161,12 +161,6 @@ struct HotkeySettingsTab: View {
             store.settings.hotKey.recordingPauseHotKey
         case .cancel:
             store.settings.hotKey.cancelHotKey
-        case .popupCopyAndClose:
-            store.settings.hotKey.popupCopyAndCloseHotKey
-        case .popupSaveToFile:
-            store.settings.hotKey.popupSaveToFileHotKey
-        case .popupClose:
-            store.settings.hotKey.popupCloseHotKey
         }
     }
 
@@ -191,12 +185,6 @@ struct HotkeySettingsTab: View {
             hotKey.recordingPauseHotKey = .recordingPauseDefault
         case .cancel:
             hotKey.cancelHotKey = .cancelDefault
-        case .popupCopyAndClose:
-            hotKey.popupCopyAndCloseHotKey = .popupCopyAndCloseDefault
-        case .popupSaveToFile:
-            hotKey.popupSaveToFileHotKey = .popupSaveToFileDefault
-        case .popupClose:
-            hotKey.popupCloseHotKey = .popupCloseDefault
         }
         store.send(.updateHotKeySettings(hotKey))
     }
