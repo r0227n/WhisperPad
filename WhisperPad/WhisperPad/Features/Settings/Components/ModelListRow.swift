@@ -153,8 +153,11 @@ struct ModelListRow: View {
         Button {
             onDownload()
         } label: {
-            Label(String(localized: "model.row.download.button", comment: "Download button"), systemImage: "arrow.down.circle")
-                .font(.caption)
+            Label(
+                String(localized: "model.row.download.button", comment: "Download button"),
+                systemImage: "arrow.down.circle"
+            )
+            .font(.caption)
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.small)

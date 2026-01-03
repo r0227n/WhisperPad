@@ -111,7 +111,7 @@ struct ShortcutKeyButton: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("hotkey.reset") {
+            Button("hotkey.reset", comment: "Reset to default") {
                 onResetToDefault()
             }
         }
