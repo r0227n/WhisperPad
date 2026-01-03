@@ -36,6 +36,17 @@ actor WhisperKitManager {
     private var customStorageURL: URL?
     private(set) var state: WhisperKitState = .unloaded
 
+    // MARK: - Idle Timeout State
+
+    /// 最後に使用された時刻
+    private var lastUsedTime: Date?
+    /// アイドルタイムアウトタスク
+    private var idleTimeoutTask: Task<Void, Never>?
+    /// タイムアウト設定（分単位）
+    private var idleTimeoutMinutes: Int = 15
+    /// アイドルタイムアウトの有効/無効
+    private var idleTimeoutEnabled: Bool = true
+
     private let logger = Logger(subsystem: "com.whisperpad", category: "WhisperKitManager")
 
     // MARK: - Types
@@ -141,6 +152,9 @@ actor WhisperKitManager {
             currentModelName = targetModel
             state = .ready
 
+            // アイドルタイムアウトタイマーを開始
+            startIdleTimer()
+
             logger.info("WhisperKit initialized successfully with model: \(targetModel)")
         } catch {
             state = .error(error.localizedDescription)
@@ -153,17 +167,92 @@ actor WhisperKitManager {
     ///
     /// - Returns: 初期化済みの WhisperKit インスタンス、または nil
     func getWhisperKit() -> WhisperKit? {
-        whisperKit
+        // 使用時刻を更新（タイマーをリセット）
+        updateLastUsedTime()
+        return whisperKit
     }
 
     /// リソースを解放
     func unload() async {
         logger.info("Unloading WhisperKit...")
+
+        // アイドルタイマーをキャンセル
+        cancelIdleTimer()
+
+        // WhisperKitのクリーンアップ（ベストプラクティスに準拠）
+        whisperKit?.clearState()
         await whisperKit?.unloadModels()
+
         whisperKit = nil
         currentModelName = nil
+        lastUsedTime = nil
         state = .unloaded
+
         logger.info("WhisperKit unloaded")
+    }
+
+    // MARK: - Idle Timeout Management
+
+    /// アイドルタイムアウト設定を更新
+    func configureIdleTimeout(enabled: Bool, minutes: Int) {
+        logger.info("Configuring idle timeout: enabled=\(enabled), minutes=\(minutes)")
+        idleTimeoutEnabled = enabled
+        idleTimeoutMinutes = minutes
+
+        // 設定変更後、タイマーを再起動
+        if state == .ready {
+            startIdleTimer()
+        }
+    }
+
+    /// 最後の使用時刻を更新し、タイマーをリセット
+    func updateLastUsedTime() {
+        lastUsedTime = Date()
+        logger.debug("Updated last used time")
+
+        // タイマーをリセット
+        if state == .ready {
+            startIdleTimer()
+        }
+    }
+
+    /// アイドルタイムアウトタイマーを開始
+    private func startIdleTimer() {
+        // 既存のタイマーをキャンセル
+        cancelIdleTimer()
+
+        guard idleTimeoutEnabled else {
+            logger.debug("Idle timeout disabled, not starting timer")
+            return
+        }
+
+        logger.debug("Starting idle timeout timer (\(self.idleTimeoutMinutes) minutes)")
+        lastUsedTime = Date()
+
+        idleTimeoutTask = Task {
+            while !Task.isCancelled {
+                // 1分ごとにチェック
+                try? await Task.sleep(for: .seconds(60))
+
+                guard let lastUsed = await self.lastUsedTime else { continue }
+
+                let elapsed = Date().timeIntervalSince(lastUsed)
+                let timeoutSeconds = await TimeInterval(self.idleTimeoutMinutes * 60)
+
+                if elapsed >= timeoutSeconds {
+                    await self.logger.info("Idle timeout reached (\(elapsed)s), unloading WhisperKit")
+                    await self.unload()
+                    break
+                }
+            }
+        }
+    }
+
+    /// アイドルタイムアウトタイマーをキャンセル
+    private func cancelIdleTimer() {
+        idleTimeoutTask?.cancel()
+        idleTimeoutTask = nil
+        logger.debug("Idle timeout timer cancelled")
     }
 }
 

@@ -153,6 +153,79 @@ struct GeneralSettingsTab: View {
                 Text("settings.general.notification.footer")
                     .foregroundStyle(.secondary)
             }
+
+            // MARK: - パフォーマンスセクション
+
+            Section {
+                SettingRowWithIcon(
+                    icon: "memorychip",
+                    iconColor: .indigo,
+                    title: "settings.general.whisperkit_auto_unload",
+                    isOn: Binding(
+                        get: { store.settings.general.whisperKitIdleTimeoutEnabled },
+                        set: { newValue in
+                            var general = store.settings.general
+                            general.whisperKitIdleTimeoutEnabled = newValue
+                            store.send(.updateGeneralSettings(general))
+                        }
+                    )
+                )
+                .help(
+                    String(
+                        localized: "settings.general.whisperkit_auto_unload.help",
+                        comment: "Auto-unload WhisperKit help"
+                    )
+                )
+                .accessibilityLabel(
+                    String(
+                        localized: "settings.general.whisperkit_auto_unload",
+                        comment: "Auto-release memory when idle"
+                    )
+                )
+                .accessibilityHint(
+                    String(
+                        localized: "settings.general.whisperkit_auto_unload.help",
+                        comment: "Auto-unload WhisperKit help"
+                    )
+                )
+
+                if store.settings.general.whisperKitIdleTimeoutEnabled {
+                    HStack(spacing: 12) {
+                        Image(systemName: "timer")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.teal)
+                            .frame(width: 20, alignment: .center)
+
+                        Text("settings.general.whisperkit_timeout")
+
+                        Spacer()
+
+                        Slider(
+                            value: Binding(
+                                get: { Double(store.settings.general.whisperKitIdleTimeoutMinutes) },
+                                set: { newValue in
+                                    var general = store.settings.general
+                                    general.whisperKitIdleTimeoutMinutes = Int(newValue)
+                                    store.send(.updateGeneralSettings(general))
+                                }
+                            ),
+                            in: 5 ... 60,
+                            step: 5
+                        )
+                        .frame(width: 150)
+
+                        Text("\(store.settings.general.whisperKitIdleTimeoutMinutes) min")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 60, alignment: .trailing)
+                    }
+                }
+            } header: {
+                Label("settings.general.performance", systemImage: "speedometer")
+            } footer: {
+                Text("settings.general.performance.footer")
+                    .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
         .padding()
