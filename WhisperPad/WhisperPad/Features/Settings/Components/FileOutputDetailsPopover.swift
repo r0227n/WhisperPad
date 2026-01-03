@@ -142,6 +142,7 @@ struct FileOutputDetailsPopover: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+        .environment(\.locale, store.settings.general.preferredLocale.locale)
     }
 
     /// 出力ディレクトリを選択

@@ -88,7 +88,7 @@ struct NotificationDetailsPopover: View {
                 Spacer()
                 Button(String(localized: "notification.custom.reset", comment: "Reset to Default")) {
                     var general = store.settings.general
-                    general.notificationTitle = "WhisperPad"
+                    general.notificationTitle = String(localized: "notification.default.title")
                     general.transcriptionCompleteMessage = String(
                         localized: "notification.transcription.complete.message"
                     )
@@ -107,6 +107,7 @@ struct NotificationDetailsPopover: View {
                 )
             }
         }
+        .environment(\.locale, store.settings.general.preferredLocale.locale)
     }
 }
 

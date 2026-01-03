@@ -206,8 +206,12 @@ struct AppReducer {
                 state.lastTranscription = text
                 let outputSettings = state.settings.settings.output
                 let generalSettings = state.settings.settings.general
-                let notificationTitle = generalSettings.notificationTitle
-                let transcriptionCompleteMessage = generalSettings.transcriptionCompleteMessage
+                let notificationTitle = generalSettings.notificationTitle.isEmpty
+                    ? String(localized: "notification.default.title")
+                    : generalSettings.notificationTitle
+                let transcriptionCompleteMessage = generalSettings.transcriptionCompleteMessage.isEmpty
+                    ? String(localized: "notification.transcription.complete.message")
+                    : generalSettings.transcriptionCompleteMessage
 
                 return .run { [outputClient, userDefaultsClient] send in
                     // クリップボードにコピー（設定が有効な場合）
@@ -229,15 +233,21 @@ struct AppReducer {
                             let url = try await outputClient.saveToFile(text, resolvedOutputSettings)
                             if generalSettings.showNotificationOnComplete {
                                 await outputClient.showNotification(
-                                    "WhisperPad",
-                                    "保存完了: \(url.lastPathComponent)"
+                                    notificationTitle,
+                                    String(
+                                        format: String(localized: "notification.file.save.success"),
+                                        url.lastPathComponent
+                                    )
                                 )
                             }
                         } catch {
                             if generalSettings.showNotificationOnComplete {
                                 await outputClient.showNotification(
-                                    "WhisperPad",
-                                    "ファイル保存に失敗: \(error.localizedDescription)"
+                                    notificationTitle,
+                                    String(
+                                        format: String(localized: "notification.file.save.failure"),
+                                        error.localizedDescription
+                                    )
                                 )
                             }
                         }

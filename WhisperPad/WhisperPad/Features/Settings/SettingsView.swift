@@ -16,31 +16,51 @@ struct SettingsView: View {
         TabView(selection: $store.selectedTab.sending(\.selectTab)) {
             GeneralSettingsTab(store: store)
                 .tabItem {
-                    Label(SettingsTab.general.displayName, systemImage: SettingsTab.general.iconName)
+                    Label {
+                        Text("settings.tab.general")
+                    } icon: {
+                        Image(systemName: SettingsTab.general.iconName)
+                    }
                 }
                 .tag(SettingsTab.general)
 
             IconSettingsTab(store: store)
                 .tabItem {
-                    Label(SettingsTab.icon.displayName, systemImage: SettingsTab.icon.iconName)
+                    Label {
+                        Text("settings.tab.icon")
+                    } icon: {
+                        Image(systemName: SettingsTab.icon.iconName)
+                    }
                 }
                 .tag(SettingsTab.icon)
 
             HotkeySettingsTab(store: store)
                 .tabItem {
-                    Label(SettingsTab.hotkey.displayName, systemImage: SettingsTab.hotkey.iconName)
+                    Label {
+                        Text("settings.tab.hotkey")
+                    } icon: {
+                        Image(systemName: SettingsTab.hotkey.iconName)
+                    }
                 }
                 .tag(SettingsTab.hotkey)
 
             RecordingSettingsTab(store: store)
                 .tabItem {
-                    Label(SettingsTab.recording.displayName, systemImage: SettingsTab.recording.iconName)
+                    Label {
+                        Text("settings.tab.recording")
+                    } icon: {
+                        Image(systemName: SettingsTab.recording.iconName)
+                    }
                 }
                 .tag(SettingsTab.recording)
 
             ModelSettingsTab(store: store)
                 .tabItem {
-                    Label(SettingsTab.model.displayName, systemImage: SettingsTab.model.iconName)
+                    Label {
+                        Text("settings.tab.model")
+                    } icon: {
+                        Image(systemName: SettingsTab.model.iconName)
+                    }
                 }
                 .tag(SettingsTab.model)
         }

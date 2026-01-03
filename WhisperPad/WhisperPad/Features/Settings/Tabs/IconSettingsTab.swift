@@ -45,7 +45,7 @@ struct IconSettingsTab: View {
                     .tag(status)
                 }
             } header: {
-                Text(String(localized: "icon.status", comment: "Icon Status"))
+                Text("icon.status")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -102,7 +102,7 @@ private struct IconListRow: View {
                 .frame(width: 24, height: 24)
 
             // 状態名
-            Text(status.localizedKey)
+            Text(LocalizedStringKey(status.localizedKey))
                 .lineLimit(1)
 
             Spacer()
@@ -202,7 +202,7 @@ private struct IconDetailPanel: View {
                 .cornerRadius(8)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(status.localizedKey)
+                Text(LocalizedStringKey(status.localizedKey))
                     .font(.title2)
                     .fontWeight(.semibold)
             }
@@ -222,14 +222,11 @@ private struct IconDetailPanel: View {
     /// 説明セクション
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(
-                String(localized: "icon.description", comment: "Description"),
-                systemImage: "info.circle"
-            )
-            .font(.headline)
-            .foregroundColor(.secondary)
+            Label("icon.description", systemImage: "info.circle")
+                .font(.headline)
+                .foregroundColor(.secondary)
 
-            Text(status.descriptionKey)
+            Text(LocalizedStringKey(status.descriptionKey))
                 .foregroundColor(.primary)
         }
     }
@@ -237,12 +234,9 @@ private struct IconDetailPanel: View {
     /// アイコン編集セクション
     private var iconEditSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label(
-                String(localized: "icon.icon", comment: "Icon"),
-                systemImage: "star"
-            )
-            .font(.headline)
-            .foregroundColor(.secondary)
+            Label("icon.icon", systemImage: "star")
+                .font(.headline)
+                .foregroundColor(.secondary)
 
             InlineSymbolPicker(selection: $config.symbolName)
         }
@@ -254,12 +248,9 @@ private struct IconDetailPanel: View {
     /// 色編集セクション
     private var colorEditSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label(
-                String(localized: "icon.color", comment: "Color"),
-                systemImage: "paintpalette"
-            )
-            .font(.headline)
-            .foregroundColor(.secondary)
+            Label("icon.color", systemImage: "paintpalette")
+                .font(.headline)
+                .foregroundColor(.secondary)
 
             HStack(spacing: 8) {
                 // ColorPicker

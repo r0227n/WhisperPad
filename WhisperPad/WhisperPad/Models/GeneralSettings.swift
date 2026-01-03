@@ -25,10 +25,10 @@ struct GeneralSettings: Equatable, Sendable {
     var menuBarIconSettings: MenuBarIconSettings = .default
 
     /// 通知のタイトル
-    var notificationTitle: String = "WhisperPad"
+    var notificationTitle: String = ""
 
     /// 通常録音完了時のメッセージ
-    var transcriptionCompleteMessage = String(localized: "notification.transcription.complete.message")
+    var transcriptionCompleteMessage: String = ""
 
     /// デフォルト設定
     static let `default` = GeneralSettings()
@@ -58,9 +58,9 @@ extension GeneralSettings: Codable {
         menuBarIconSettings = try container.decodeIfPresent(
             MenuBarIconSettings.self, forKey: .menuBarIconSettings
         ) ?? .default
-        notificationTitle = try container.decodeIfPresent(String.self, forKey: .notificationTitle) ?? "WhisperPad"
+        notificationTitle = try container.decodeIfPresent(String.self, forKey: .notificationTitle) ?? ""
         transcriptionCompleteMessage = try container.decodeIfPresent(
             String.self, forKey: .transcriptionCompleteMessage
-        ) ?? String(localized: "notification.transcription.complete.message")
+        ) ?? ""
     }
 }
