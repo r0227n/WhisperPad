@@ -138,20 +138,74 @@ struct AppReducer {
                 state.lastRecordingURL = url
                 // ダイアログ表示後に文字起こしを開始（設定から言語を取得）
                 let partialLanguage = state.settings.settings.transcription.language.whisperCode
+                // アプリ設定から言語コードを取得
+                let preferredLocale = state.settings.settings.general.preferredLocale
+                let languageCode: String
+                if let identifier = preferredLocale.identifier {
+                    languageCode = identifier
+                } else {
+                    // .system の場合、システムの優先言語を使用
+                    let systemLanguage = Locale.preferredLanguages.first ?? "en"
+                    languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
+                }
+
                 return .run { send in
                     await MainActor.run {
                         let alert = NSAlert()
                         alert.alertStyle = .warning
-                        alert.messageText = "録音の一部が保存されました"
-                        alert.informativeText = """
-                        音声ファイルの結合に失敗したため、\
-                        最初のセグメント（\(usedSegments)/\(totalSegments)）のみが保存されました。
-                        一時停止後の録音内容は失われています。
-                        """
-                        alert.addButton(withTitle: "OK")
+                        alert.messageText = Bundle.main.localizedString(
+                            forKey: "recording.partial_success.alert.title",
+                            preferredLanguage: languageCode
+                        )
+                        let messageFormat = Bundle.main.localizedString(
+                            forKey: "recording.partial_success.alert.message",
+                            preferredLanguage: languageCode
+                        )
+                        alert.informativeText = String(format: messageFormat, usedSegments, totalSegments)
+                        alert.addButton(
+                            withTitle: Bundle.main.localizedString(
+                                forKey: "common.ok",
+                                preferredLanguage: languageCode
+                            )
+                        )
                         alert.runModal()
                     }
                     await send(.transcription(.startTranscription(audioURL: url, language: partialLanguage)))
+                }
+
+            case .recording(.delegate(.whisperKitInitializing)):
+                // WhisperKit初期化中のアラートを表示
+                // アプリ設定から言語コードを取得
+                let preferredLocale = state.settings.settings.general.preferredLocale
+                let languageCode: String
+                if let identifier = preferredLocale.identifier {
+                    languageCode = identifier
+                } else {
+                    // .system の場合、システムの優先言語を使用
+                    let systemLanguage = Locale.preferredLanguages.first ?? "en"
+                    languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
+                }
+
+                return .run { _ in
+                    await MainActor.run {
+                        let alert = NSAlert()
+                        alert.alertStyle = .informational
+                        alert.messageText = Bundle.main.localizedString(
+                            forKey: "recording.whisperkit_initializing.alert.title",
+                            preferredLanguage: languageCode
+                        )
+                        alert.informativeText = Bundle.main.localizedString(
+                            forKey: "recording.whisperkit_initializing.alert.message",
+                            preferredLanguage: languageCode
+                        )
+                        alert.addButton(
+                            withTitle: Bundle.main.localizedString(
+                                forKey: "common.ok",
+                                preferredLanguage: languageCode
+                            )
+                        )
+                        alert.runModal()
+                    }
                 }
 
             // RecordingFeature の内部アクションで appStatus を更新
@@ -305,5 +359,21 @@ struct AppReducer {
         Scope(state: \.settings, action: \.settings) {
             SettingsFeature()
         }
+    }
+}
+
+// MARK: - Localization Helpers
+
+/// xcstrings ファイルから指定されたロケールに基づいて翻訳を取得する
+private extension Bundle {
+    func localizedString(forKey key: String, preferredLanguage: String) -> String {
+        // For xcstrings files, try to get bundle for preferred language
+        if let path = self.path(forResource: preferredLanguage, ofType: "lproj"),
+           let bundle = Bundle(path: path) {
+            return bundle.localizedString(forKey: key, value: nil, table: nil)
+        }
+
+        // Fallback to main bundle (will use sourceLanguage from xcstrings)
+        return self.localizedString(forKey: key, value: nil, table: nil)
     }
 }
