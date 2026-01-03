@@ -82,7 +82,7 @@ struct ShortcutKeyButton: View {
                         .stroke(Color.accentColor.opacity(0.8), lineWidth: 2)
                 )
 
-            Button("common.cancel") {
+            Button("common.cancel", comment: "Cancel button") {
                 onStopRecording()
             }
             .buttonStyle(.borderless)
