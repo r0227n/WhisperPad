@@ -87,7 +87,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// アプリ設定のロケールに基づいてローカライズされた文字列を取得
     func localizedAppString(forKey key: String) -> String {
-        let languageCode = store.settings.settings.general.preferredLocale.identifier ?? "en"
+        let languageCode: String
+
+        if let identifier = store.settings.settings.general.preferredLocale.identifier {
+            // ユーザーが明示的に言語を選択している場合（.en または .ja）
+            languageCode = identifier
+        } else {
+            // .system の場合、システムの優先言語を使用
+            let systemLanguage = Locale.preferredLanguages.first ?? "en"
+            languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
+        }
+
         if let path = Bundle.main.path(forResource: languageCode, ofType: "lproj"),
            let bundle = Bundle(path: path) {
             return bundle.localizedString(forKey: key, value: nil, table: nil)
