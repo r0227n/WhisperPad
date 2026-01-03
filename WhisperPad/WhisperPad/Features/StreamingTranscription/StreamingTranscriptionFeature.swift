@@ -176,7 +176,7 @@ struct StreamingTranscriptionFeature {
 
     var body: some Reducer<State, Action> {
         BindingReducer()
-        Reduce { state, action in
+        Reduce<State, Action> { (state: inout State, action: Action) -> Effect<Action> in
             switch action {
             case .binding:
                 return .none
@@ -351,11 +351,7 @@ struct StreamingTranscriptionFeature {
                         let language = settings.streaming.language
 
                         // Service層は状態リセットのみ（WhisperKit初期化は不要）
-                        try await streamingTranscription.initialize(
-                            modelName: nil,
-                            confirmationCount: confirmationCount,
-                            language: language
-                        )
+                        try await streamingTranscription.initialize(nil, confirmationCount, language)
                         await send(.serviceInitializationCompleted)
                     } catch {
                         let message = (error as? StreamingTranscriptionError)?.errorDescription
