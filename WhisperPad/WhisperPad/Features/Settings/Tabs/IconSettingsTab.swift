@@ -328,5 +328,5 @@ private extension NSColor {
             SettingsFeature()
         }
     )
-    .frame(width: 520, height: 500)
+    .frame(width: 650, height: 550)
 }
