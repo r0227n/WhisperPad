@@ -28,6 +28,8 @@ struct RecordingFeature {
         var permissionStatus: PermissionStatus = .undetermined
         /// WhisperKit初期化中フラグ
         var whisperKitInitializing: Bool = false
+        /// WhisperKit初期化完了後に自動的に録音を開始するか
+        var shouldAutoStartRecording: Bool = false
 
         /// 録音中かどうか
         var isRecording: Bool {
@@ -170,23 +172,34 @@ struct RecordingFeature {
 
             case .initializeWhisperKit:
                 state.whisperKitInitializing = true
-                return .run { [whisperKitClient, userDefaultsClient] send in
-                    do {
-                        let settings = await userDefaultsClient.loadSettings()
-                        let modelName = settings.transcription.modelName
-                        try await whisperKitClient.initialize(modelName)
-                        await send(.whisperKitInitialized)
-                    } catch {
-                        await send(.whisperKitInitFailed(error))
+                return .merge(
+                    // 即座にアラートを表示
+                    .send(.delegate(.whisperKitInitializing)),
+                    // 非同期で初期化を開始
+                    .run { [whisperKitClient, userDefaultsClient] send in
+                        do {
+                            let settings = await userDefaultsClient.loadSettings()
+                            let modelName = settings.transcription.modelName
+                            try await whisperKitClient.initialize(modelName)
+                            await send(.whisperKitInitialized)
+                        } catch {
+                            await send(.whisperKitInitFailed(error))
+                        }
                     }
-                }
+                )
 
             case .whisperKitInitialized:
                 state.whisperKitInitializing = false
-                return .send(.prepareRecording)
+                // フラグをチェックして、自動開始が設定されている場合のみ録音開始
+                if state.shouldAutoStartRecording {
+                    state.shouldAutoStartRecording = false
+                    return .send(.prepareRecording)
+                }
+                return .none
 
             case let .whisperKitInitFailed(error):
                 state.whisperKitInitializing = false
+                state.shouldAutoStartRecording = false
                 return .send(.delegate(.recordingFailed(.recordingFailed(error.localizedDescription))))
 
             case .whisperKitInitializingAlertShown:
