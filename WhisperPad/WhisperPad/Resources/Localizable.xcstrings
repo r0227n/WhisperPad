@@ -236,8 +236,9 @@
       }
     },
     "locale.english": {
-      "comment": "English",
+      "comment": "English (language name in native form)",
       "extractionState": "manual",
+      "shouldTranslate": false,
       "localizations": {
         "en": {
           "stringUnit": {
@@ -248,19 +249,20 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "英語"
+            "value": "English"
           }
         }
       }
     },
     "locale.japanese": {
-      "comment": "Japanese",
+      "comment": "Japanese (language name in native form)",
       "extractionState": "manual",
+      "shouldTranslate": false,
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Japanese"
+            "value": "日本語"
           }
         },
         "ja": {
@@ -3201,13 +3203,14 @@
       }
     },
     "notification.custom.reset": {
-      "comment": "Reset to default button",
+      "comment": "Reset to default button (fixed display)",
       "extractionState": "manual",
+      "shouldTranslate": false,
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset to Default"
+            "value": "デフォルトに戻す"
           }
         },
         "ja": {
