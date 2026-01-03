@@ -6,7 +6,7 @@
 //  Tests all three validation tiers: system reserved blocklist, Carbon API validation, and duplicate detection
 //
 
-// swiftlint:disable file_length type_body_length
+// swiftlint:disable file_length
 
 import XCTest
 
@@ -19,6 +19,7 @@ import XCTest
 /// 2. Carbon Event Manager registration validation
 /// 3. Application-level duplicate detection across 7 hotkey types
 @MainActor
+// swiftlint:disable:next type_body_length
 final class HotKeyValidatorTests: XCTestCase {
     // MARK: - Test Data Structures
 
