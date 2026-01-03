@@ -287,7 +287,7 @@ extension AppDelegate {
     private func generateDefaultFileName() -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd_HHmmss"
-        return "WhisperPad_\(formatter.string(from: Date())).txt"
+        return "WhisperPad_\(formatter.string(from: Date())).md"
     }
 
     @objc func debugRequestNotificationPermission() {

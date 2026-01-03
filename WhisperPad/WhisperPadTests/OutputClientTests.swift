@@ -248,7 +248,6 @@ final class OutputClientLiveTests: XCTestCase {
         var settings = FileOutputSettings.default
         settings.outputDirectory = testDirectory
         settings.fileNameFormat = .timestamp
-        settings.fileExtension = .md
         settings.includeMetadata = true
 
         let result = try await client.saveToFile("Test content", settings)
