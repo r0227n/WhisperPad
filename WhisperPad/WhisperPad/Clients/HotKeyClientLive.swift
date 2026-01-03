@@ -94,7 +94,6 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
-        // Validate BEFORE attempting to create HotKey instance
         let validation = HotKeyValidator.canRegister(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -102,16 +101,12 @@ private final class HotKeyManager {
 
         switch validation {
         case .success:
-            // Validation passed, proceed with registration
             break
         case let .failure(error):
-            logger.error(
-                """
+            logger.error("""
                 Cannot register recording hotkey: \(error). \
                 keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """
-            )
-            // Don't proceed with registration - keep old hotkey or leave as nil
+                """)
             return
         }
 
@@ -124,13 +119,9 @@ private final class HotKeyManager {
         )
         hotKey.keyDownHandler = handler
         recordingToggleHotKey = hotKey
-        logger
-            .info(
-                """
-                Recording hotkey registered with combo: \
-                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """
-            )
+        logger.info(
+            "Recording hotkey registered with combo: keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
+        )
     }
 
     /// 動的キーコンボでキャンセルホットキーを登録
@@ -141,7 +132,6 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
-        // Validate BEFORE attempting to create HotKey instance
         let validation = HotKeyValidator.canRegister(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -149,16 +139,11 @@ private final class HotKeyManager {
 
         switch validation {
         case .success:
-            // Validation passed, proceed with registration
             break
         case let .failure(error):
             logger.error(
-                """
-                Cannot register cancel hotkey: \(error). \
-                keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """
+                "Cannot register cancel hotkey: \(error). keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
             )
-            // Don't proceed with registration - keep old hotkey or leave as nil
             return
         }
 
@@ -188,7 +173,6 @@ private final class HotKeyManager {
         keyDownHandler: @escaping () -> Void,
         keyUpHandler: @escaping () -> Void
     ) {
-        // Validate BEFORE attempting to create HotKey instance
         let validation = HotKeyValidator.canRegister(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -196,16 +180,12 @@ private final class HotKeyManager {
 
         switch validation {
         case .success:
-            // Validation passed, proceed with registration
             break
         case let .failure(error):
-            logger.error(
-                """
+            logger.error("""
                 Cannot register streaming hotkey: \(error). \
                 keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """
-            )
-            // Don't proceed with registration - keep old hotkey or leave as nil
+                """)
             return
         }
 
@@ -240,7 +220,6 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
-        // Validate BEFORE attempting to create HotKey instance
         let validation = HotKeyValidator.canRegister(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -248,16 +227,12 @@ private final class HotKeyManager {
 
         switch validation {
         case .success:
-            // Validation passed, proceed with registration
             break
         case let .failure(error):
-            logger.error(
-                """
+            logger.error("""
                 Cannot register recording pause hotkey: \(error). \
                 keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """
-            )
-            // Don't proceed with registration - keep old hotkey or leave as nil
+                """)
             return
         }
 
@@ -297,7 +272,6 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
-        // Validate BEFORE attempting to create HotKey instance
         let validation = HotKeyValidator.canRegister(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -305,16 +279,12 @@ private final class HotKeyManager {
 
         switch validation {
         case .success:
-            // Validation passed, proceed with registration
             break
         case let .failure(error):
-            logger.error(
-                """
+            logger.error("""
                 Cannot register popup copy & close hotkey: \(error). \
                 keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """
-            )
-            // Don't proceed with registration - keep old hotkey or leave as nil
+                """)
             return
         }
 
@@ -340,7 +310,6 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
-        // Validate BEFORE attempting to create HotKey instance
         let validation = HotKeyValidator.canRegister(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -348,16 +317,12 @@ private final class HotKeyManager {
 
         switch validation {
         case .success:
-            // Validation passed, proceed with registration
             break
         case let .failure(error):
-            logger.error(
-                """
+            logger.error("""
                 Cannot register popup save to file hotkey: \(error). \
                 keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """
-            )
-            // Don't proceed with registration - keep old hotkey or leave as nil
+                """)
             return
         }
 
@@ -383,7 +348,6 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
-        // Validate BEFORE attempting to create HotKey instance
         let validation = HotKeyValidator.canRegister(
             carbonKeyCode: combo.carbonKeyCode,
             carbonModifiers: combo.carbonModifiers
@@ -391,16 +355,12 @@ private final class HotKeyManager {
 
         switch validation {
         case .success:
-            // Validation passed, proceed with registration
             break
         case let .failure(error):
-            logger.error(
-                """
+            logger.error("""
                 Cannot register popup close hotkey: \(error). \
                 keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-                """
-            )
-            // Don't proceed with registration - keep old hotkey or leave as nil
+                """)
             return
         }
 

@@ -788,9 +788,9 @@ final class HotKeyValidatorTests: XCTestCase {
                 carbonModifiers: TestModifiers.shift
             )
 
-            if case .failure(let error) = result {
-                // Allow this to fail on some systems, but log it
-                print("Warning: \(name) with Shift failed: \(error)")
+            if case .failure = result {
+                // Allow this to fail on some systems
+                continue
             }
         }
     }
@@ -980,13 +980,9 @@ final class HotKeyValidatorTests: XCTestCase {
             carbonKeyCode: TestKeyCodes.keyF10,
             carbonModifiers: 9999
         )
-        // Behavior depends on Carbon API
+        // Behavior depends on Carbon API - both success and failure are acceptable
         switch unusualResult {
-        case .success:
-            // If it succeeds, log it
-            print("Note: Unusual modifier value (9999) succeeded")
-        case .failure:
-            // Expected to fail
+        case .success, .failure:
             break
         }
     }
