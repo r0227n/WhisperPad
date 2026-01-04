@@ -18,26 +18,31 @@ WhisperPad で使用している主要ライブラリの調査で得られた知
 ### 重要な発見: サイレント失敗
 
 **DeepWiki 調査結果**:
+
 > If `RegisterEventHotKey` fails, the `HotKeysController` handles the error
 > silently by returning early from the register function. The package does
 > not throw an error or provide explicit error handling.
 
 **影響**:
+
 - 設定は保存されるが、実際のホットキーは登録されない
 - ユーザーは問題に気づかない
 
 **対応**:
+
 - Carbon API のテスト登録に依存しない
 - ブロックリストアプローチを採用
 
 ### Carbon API の挙動
 
 **RegisterEventHotKey 戻り値**:
+
 - `noErr (0)`: 成功
 - `-9878`: ホットキー既に使用中（他アプリ）
 - その他: 様々なエラー
 
 **問題点**:
+
 - 環境依存（他アプリの登録状況で結果が変わる）
 - 偽陽性が多い
 - テスト登録と実登録のタイミング差
@@ -45,11 +50,13 @@ WhisperPad で使用している主要ライブラリの調査で得られた知
 ### ブロックリストアプローチ
 
 **理由**:
+
 1. 主要なシステムショートカット（51個）をブロックリストでカバー
 2. Carbon API は信頼性が低い
 3. 他アプリとの競合はユーザー判断
 
 **実装**:
+
 ```swift
 static func canRegister(
     carbonKeyCode: UInt32,
@@ -103,19 +110,20 @@ let whisperKit = try await WhisperKit(
 
 ### モデルオプション
 
-| モデル | サイズ | 精度 | 速度 |
-|--------|--------|------|------|
-| tiny | ~39MB | 低 | 最速 |
-| base | ~74MB | 中低 | 速い |
-| small | ~244MB | 中 | 普通 |
-| medium | ~769MB | 中高 | 遅い |
-| large-v3 | ~1.5GB | 高 | 最遅 |
+| モデル   | サイズ | 精度 | 速度 |
+| -------- | ------ | ---- | ---- |
+| tiny     | ~39MB  | 低   | 最速 |
+| base     | ~74MB  | 中低 | 速い |
+| small    | ~244MB | 中   | 普通 |
+| medium   | ~769MB | 中高 | 遅い |
+| large-v3 | ~1.5GB | 高   | 最遅 |
 
 ### 初期化中の UX
 
 **問題**: 初期化に数秒かかる
 
 **対応**:
+
 - ダイアログ表示で初期化中であることを通知
 - 非同期で初期化
 
@@ -157,6 +165,7 @@ let result = try await whisperKit.transcribe(
 ### Dependency 注入パターン
 
 **定義**:
+
 ```swift
 // Client プロトコル
 struct HotKeyClient {
@@ -179,6 +188,7 @@ extension DependencyValues {
 ```
 
 **使用**:
+
 ```swift
 @Reducer
 struct SettingsFeature {
@@ -212,6 +222,7 @@ func test_example() async {
 ### Effect パターン
 
 **非同期処理**:
+
 ```swift
 return .run { send in
     let result = try await someAsyncWork()
@@ -220,11 +231,13 @@ return .run { send in
 ```
 
 **同期処理**:
+
 ```swift
 return .send(.someAction)
 ```
 
 **複数 Effect**:
+
 ```swift
 return .merge(
     .send(.action1),
@@ -241,13 +254,13 @@ return .merge(
 ```typescript
 // 構造確認
 mcp__deepwiki__read_wiki_structure({
-    repoName: "soffes/HotKey"
+  repoName: 'soffes/HotKey',
 })
 
 // 質問
 mcp__deepwiki__ask_question({
-    repoName: "soffes/HotKey",
-    question: "What happens when RegisterEventHotKey fails?"
+  repoName: 'soffes/HotKey',
+  question: 'What happens when RegisterEventHotKey fails?',
 })
 ```
 

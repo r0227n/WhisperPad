@@ -182,6 +182,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupModelChangeObserver()
         requestNotificationPermission()
         setupHotKeys()
+        initializeModelCache()
     }
 
     /// モデル変更通知の監視を設定
@@ -201,6 +202,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         cachedDownloadedModels = []
         // メニュー項目のタイトルを更新
         updateModelMenuForCurrentState()
+    }
+
+    /// 起動時にダウンロード済みモデルを取得してキャッシュを初期化
+    ///
+    /// メニューバーのモデル表示を正しく行うために、アプリ起動時に
+    /// ダウンロード済みモデルを取得してキャッシュに保存する。
+    private func initializeModelCache() {
+        Task { @MainActor in
+            do {
+                let models = try await modelClient.fetchDownloadedModelsAsWhisperModels()
+                cachedDownloadedModels = models
+
+                // defaultModel の整合性チェック
+                let modelIds = models.map(\.id)
+                let validationResult = modelClient.validateDefaultModel(modelIds)
+                switch validationResult {
+                case let .success(validModel):
+                    let currentDefault = loadDefaultModelSync()
+                    if currentDefault != validModel {
+                        store.send(.selectModel(validModel))
+                    }
+                case .failure:
+                    // モデルがない場合は何もしない（メニューで適切に表示される）
+                    break
+                }
+
+                // メニュー表示を更新
+                updateModelMenuForCurrentState()
+            } catch {
+                logger.error("Failed to initialize model cache: \(error.localizedDescription)")
+            }
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
