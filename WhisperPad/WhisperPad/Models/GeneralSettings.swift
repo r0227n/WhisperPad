@@ -37,6 +37,9 @@ struct GeneralSettings: Equatable, Sendable {
     /// 範囲: 5-60分、デフォルト: 15分
     var whisperKitIdleTimeoutMinutes: Int = 15
 
+    /// 録音キャンセル時に確認ダイアログを表示するかどうか
+    var showCancelConfirmation: Bool = true
+
     /// デフォルト設定
     static let `default` = GeneralSettings()
 }
@@ -54,6 +57,7 @@ extension GeneralSettings: Codable {
         case transcriptionCompleteMessage
         case whisperKitIdleTimeoutEnabled
         case whisperKitIdleTimeoutMinutes
+        case showCancelConfirmation
     }
 
     init(from decoder: Decoder) throws {
@@ -77,5 +81,8 @@ extension GeneralSettings: Codable {
         whisperKitIdleTimeoutMinutes = try container.decodeIfPresent(
             Int.self, forKey: .whisperKitIdleTimeoutMinutes
         ) ?? 15
+        showCancelConfirmation = try container.decodeIfPresent(
+            Bool.self, forKey: .showCancelConfirmation
+        ) ?? true
     }
 }

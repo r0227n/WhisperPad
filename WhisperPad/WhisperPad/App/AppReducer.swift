@@ -67,6 +67,8 @@ struct AppReducer {
         case resumeRecording
         /// 録音をキャンセル
         case cancelRecording
+        /// 録音キャンセルの確認
+        case confirmCancelRecording
         /// 文字起こしが完了
         case transcriptionCompleted(String)
         /// エラーが発生
@@ -110,7 +112,64 @@ struct AppReducer {
                 return .send(.recording(.resumeRecordingButtonTapped))
 
             case .cancelRecording:
-                // 録音機能に委譲
+                // 設定を確認
+                let showConfirmation = state.settings.settings.general.showCancelConfirmation
+
+                if showConfirmation {
+                    // 確認ダイアログを表示
+                    let preferredLocale = state.settings.settings.general.preferredLocale
+                    let languageCode: String
+                    if let identifier = preferredLocale.identifier {
+                        languageCode = identifier
+                    } else {
+                        let systemLanguage = Locale.preferredLanguages.first ?? "en"
+                        languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
+                    }
+
+                    return .run { send in
+                        let shouldCancel = await MainActor.run { () -> Bool in
+                            let alert = NSAlert()
+                            alert.alertStyle = .warning
+                            alert.messageText = Bundle.main.localizedString(
+                                forKey: "recording.cancel_confirmation.alert.title",
+                                preferredLanguage: languageCode
+                            )
+                            alert.informativeText = Bundle.main.localizedString(
+                                forKey: "recording.cancel_confirmation.alert.message",
+                                preferredLanguage: languageCode
+                            )
+                            // 第1ボタン: 録音を続ける（安全な選択、デフォルト）
+                            alert.addButton(
+                                withTitle: Bundle.main.localizedString(
+                                    forKey: "recording.cancel_confirmation.alert.continue",
+                                    preferredLanguage: languageCode
+                                )
+                            )
+                            // 第2ボタン: 破棄する（危険な選択）
+                            alert.addButton(
+                                withTitle: Bundle.main.localizedString(
+                                    forKey: "recording.cancel_confirmation.alert.discard",
+                                    preferredLanguage: languageCode
+                                )
+                            )
+                            let response = alert.runModal()
+                            // "破棄する" ボタンが押された場合は true を返す
+                            return response == .alertSecondButtonReturn
+                        }
+
+                        if shouldCancel {
+                            // "破棄する" ボタン → キャンセル実行
+                            await send(.confirmCancelRecording)
+                        }
+                        // shouldCancel == false → "録音を続ける" → 何もしない
+                    }
+                } else {
+                    // 確認なしで即座にキャンセル
+                    return .send(.confirmCancelRecording)
+                }
+
+            case .confirmCancelRecording:
+                // 実際のキャンセル処理を実行
                 return .send(.recording(.cancelRecordingButtonTapped))
 
             // RecordingFeature のデリゲートアクションを処理
