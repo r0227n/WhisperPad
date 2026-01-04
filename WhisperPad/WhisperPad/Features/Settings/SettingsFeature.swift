@@ -254,7 +254,7 @@ struct SettingsFeature {
     // MARK: - Dependencies
 
     @Dependency(\.userDefaultsClient) var userDefaultsClient
-    @Dependency(\.transcriptionClient) var transcriptionClient
+    @Dependency(\.modelClient) var modelClient
     @Dependency(\.audioRecorder) var audioRecorder
     @Dependency(\.continuousClock) var clock
 
@@ -354,19 +354,20 @@ struct SettingsFeature {
 
                 // カスタムストレージのブックマーク解決
                 if let bookmarkData = settings.transcription.storageBookmarkData {
-                    effects.append(.run { [transcriptionClient] _ in
+                    effects.append(.run { [modelClient] _ in
                         if let url = await userDefaultsClient.resolveBookmark(bookmarkData) {
-                            await transcriptionClient.setStorageLocation(url)
+                            await modelClient.setStorageLocation(url)
                         }
                     })
                 }
 
                 // デフォルトパス/カスタムパスに関わらず、ダウンロード済みモデルとストレージ使用量を取得
-                effects.append(.run { [transcriptionClient] send in
+                effects.append(.run { [modelClient] send in
                     await send(.fetchDownloadedModels)
-                    await send(.storageUsageResponse(transcriptionClient.getStorageUsage()))
+                    let usage = await modelClient.getStorageUsage()
+                    await send(.storageUsageResponse(usage))
                     // 現在のストレージパスを取得
-                    let storageURL = await transcriptionClient.getModelStorageURL()
+                    let storageURL = await modelClient.getModelStorageURL()
                     await send(.modelStorageURLResponse(storageURL))
                 })
                 // 出力ディレクトリのブックマークを解決
@@ -417,13 +418,13 @@ struct SettingsFeature {
 
             case .fetchModels:
                 state.isLoadingModels = true
-                return .run { send in
+                return .run { [modelClient] send in
                     do {
-                        let modelNames = try await transcriptionClient.fetchAvailableModels()
-                        let recommendedModel = await transcriptionClient.recommendedModel()
+                        let modelNames = try await modelClient.fetchAvailableModels()
+                        let recommendedModel = await modelClient.recommendedModel()
                         var models: [WhisperModel] = []
                         for name in modelNames {
-                            let isDownloaded = await transcriptionClient.isModelDownloaded(name)
+                            let isDownloaded = await modelClient.isModelDownloaded(name)
                             models.append(WhisperModel.from(
                                 id: name,
                                 isDownloaded: isDownloaded,
@@ -448,18 +449,23 @@ struct SettingsFeature {
                 return .none
 
             case .fetchDownloadedModels:
-                return .run { send in
-                    let modelNames = await transcriptionClient.fetchDownloadedModels()
-                    let recommendedModel = await transcriptionClient.recommendedModel()
-                    var models: [WhisperModel] = modelNames.map { name in
-                        WhisperModel.from(
-                            id: name,
-                            isDownloaded: true,
-                            isRecommended: name == recommendedModel
-                        )
+                return .run { [modelClient] send in
+                    do {
+                        let modelNames = try await modelClient.fetchDownloadedModels()
+                        let recommendedModel = await modelClient.recommendedModel()
+                        var models: [WhisperModel] = modelNames.map { name in
+                            WhisperModel.from(
+                                id: name,
+                                isDownloaded: true,
+                                isRecommended: name == recommendedModel
+                            )
+                        }
+                        models.sort { $0.id < $1.id }
+                        await send(.downloadedModelsResponse(models))
+                    } catch {
+                        // エラー時は空のリストを返す（既存の動作を維持）
+                        await send(.downloadedModelsResponse([]))
                     }
-                    models.sort { $0.id < $1.id }
-                    await send(.downloadedModelsResponse(models))
                 }
 
             case let .downloadedModelsResponse(models):
@@ -467,8 +473,16 @@ struct SettingsFeature {
                 // 現在のモデルがダウンロード済みリストに含まれていない場合、最初のモデルを選択
                 let currentModel = state.settings.transcription.modelName
                 if !models.isEmpty, !models.contains(where: { $0.id == currentModel }) {
-                    state.settings.transcription.modelName = models.first!.id
-                    return .send(.saveSettings)
+                    let newModel = models.first!.id
+                    state.settings.transcription.modelName = newModel
+                    return .merge(
+                        .send(.saveSettings),
+                        .send(.delegate(.modelChanged(newModel))),
+                        .run { [modelClient] _ in
+                            // 自動選択されたモデルを UserDefaults に保存
+                            await modelClient.saveDefaultModel(newModel)
+                        }
+                    )
                 }
                 return .none
 
@@ -493,18 +507,22 @@ struct SettingsFeature {
                 return .merge(
                     .send(.saveSettings),
                     .send(.delegate(.modelChanged(modelName))),
-                    .run { [userDefaultsClient] _ in
+                    .run { [modelClient] _ in
                         // デフォルトモデルを UserDefaults に保存
-                        await userDefaultsClient.saveDefaultModel(modelName)
+                        await modelClient.saveDefaultModel(modelName)
+                        // AppDelegate にモデル変更を通知（メニューキャッシュを更新）
+                        await MainActor.run {
+                            NotificationCenter.default.post(name: .modelChanged, object: modelName)
+                        }
                     }
                 )
 
             case let .downloadModel(modelName):
                 state.downloadingModelName = modelName
                 state.downloadProgress[modelName] = 0
-                return .run { send in
+                return .run { [modelClient] send in
                     do {
-                        let downloadedURL = try await transcriptionClient.downloadModel(modelName) { progress in
+                        let downloadedURL = try await modelClient.downloadModel(modelName) { progress in
                             Task { await send(.downloadProgress(modelName, progress)) }
                         }
                         await send(.downloadCompleted(modelName, .success(downloadedURL)))
@@ -536,9 +554,9 @@ struct SettingsFeature {
                 }
 
             case let .deleteModel(modelName):
-                return .run { send in
+                return .run { [modelClient] send in
                     do {
-                        try await transcriptionClient.deleteModel(modelName)
+                        try await modelClient.deleteModel(modelName)
                         await send(.deleteModelResponse(modelName, .success(())))
                     } catch {
                         await send(.deleteModelResponse(modelName, .failure(error)))
@@ -574,8 +592,8 @@ struct SettingsFeature {
                 }
 
             case .calculateStorageUsage:
-                return .run { send in
-                    let usage = await transcriptionClient.getStorageUsage()
+                return .run { [modelClient] send in
+                    let usage = await modelClient.getStorageUsage()
                     await send(.storageUsageResponse(usage))
                 }
 
@@ -584,8 +602,8 @@ struct SettingsFeature {
                 return .none
 
             case .fetchModelStorageURL:
-                return .run { send in
-                    let url = await transcriptionClient.getModelStorageURL()
+                return .run { [modelClient] send in
+                    let url = await modelClient.getModelStorageURL()
                     await send(.modelStorageURLResponse(url))
                 }
 
@@ -611,14 +629,14 @@ struct SettingsFeature {
             case let .storageLocationSelected(result):
                 switch result {
                 case let .success(url):
-                    return .run { [settings = state.settings] send in
+                    return .run { [settings = state.settings, modelClient, userDefaultsClient] send in
                         do {
                             let bookmarkData = try await userDefaultsClient.createBookmark(url)
                             var newSettings = settings
                             newSettings.transcription.customStorageURL = url
                             newSettings.transcription.storageBookmarkData = bookmarkData
                             await userDefaultsClient.saveStorageBookmark(bookmarkData)
-                            await transcriptionClient.setStorageLocation(url)
+                            await modelClient.setStorageLocation(url)
                             try await userDefaultsClient.saveSettings(newSettings)
                             await send(.settingsLoaded(newSettings))
                             await send(.calculateStorageUsage)
@@ -635,8 +653,8 @@ struct SettingsFeature {
             case .resetStorageLocation:
                 state.settings.transcription.customStorageURL = nil
                 state.settings.transcription.storageBookmarkData = nil
-                return .run { send in
-                    await transcriptionClient.setStorageLocation(nil)
+                return .run { [modelClient] send in
+                    await modelClient.setStorageLocation(nil)
                     await send(.saveSettings)
                     await send(.fetchDownloadedModels)
                     await send(.calculateStorageUsage)

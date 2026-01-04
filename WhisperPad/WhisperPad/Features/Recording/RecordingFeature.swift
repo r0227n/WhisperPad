@@ -118,7 +118,7 @@ struct RecordingFeature {
     @Dependency(\.continuousClock) var clock
     @Dependency(\.uuid) var uuid
     @Dependency(\.whisperKitClient) var whisperKitClient
-    @Dependency(\.userDefaultsClient) var userDefaultsClient
+    @Dependency(\.modelClient) var modelClient
 
     // MARK: - Reducer Body
 
@@ -174,10 +174,10 @@ struct RecordingFeature {
                     // 即座にアラートを表示
                     .send(.delegate(.whisperKitInitializing)),
                     // 非同期で初期化を開始
-                    .run { [whisperKitClient, userDefaultsClient] send in
+                    .run { [whisperKitClient, modelClient] send in
                         do {
-                            // UserDefaults からデフォルトモデルを読み込み（nil の場合は推奨モデルを使用）
-                            let defaultModel = await userDefaultsClient.loadDefaultModel()
+                            // ModelClient からデフォルトモデルを読み込み（nil の場合は推奨モデルを使用）
+                            let defaultModel = await modelClient.loadDefaultModel()
                             try await whisperKitClient.initialize(defaultModel)
                             await send(.whisperKitInitialized)
                         } catch {
@@ -188,10 +188,10 @@ struct RecordingFeature {
 
             case .whisperKitInitialized:
                 state.whisperKitInitializing = false
-                // 初期化完了後、使用されたモデル名を UserDefaults に保存
-                return .run { [whisperKitClient, userDefaultsClient] _ in
+                // 初期化完了後、使用されたモデル名を ModelClient 経由で保存
+                return .run { [whisperKitClient, modelClient] _ in
                     if let loadedModelName = await whisperKitClient.loadedModelName() {
-                        await userDefaultsClient.saveDefaultModel(loadedModelName)
+                        await modelClient.saveDefaultModel(loadedModelName)
                     }
                 }
 

@@ -143,6 +143,7 @@ struct AppReducer {
     @Dependency(\.whisperKitClient) var whisperKitClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
     @Dependency(\.transcriptionClient) var transcriptionClient
+    @Dependency(\.modelClient) var modelClient
 
     // MARK: - Reducer Body
 
@@ -300,9 +301,9 @@ struct AppReducer {
                 return .none
 
             case .fetchAvailableModels:
-                return .run { [transcriptionClient] send in
+                return .run { [modelClient] send in
                     do {
-                        let modelNames = try await transcriptionClient.fetchAvailableModels()
+                        let modelNames = try await modelClient.fetchAvailableModels()
                         await send(.modelsLoaded(modelNames))
                     } catch {
                         // エラー時は空のリストを設定
