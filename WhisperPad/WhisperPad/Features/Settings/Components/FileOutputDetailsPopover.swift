@@ -46,8 +46,10 @@ struct FileOutputDetailsPopover: View {
                                     .fill(Color(nsColor: .textBackgroundColor))
                             )
 
-                        Button(String(localized: "common.change", comment: "Change button label for output directory")) {
+                        Button {
                             selectOutputDirectory()
+                        } label: {
+                            Text("common.change", comment: "Change button label for output directory")
                         }
                         .accessibilityLabel(
                             String(localized: "file_output.change_location", comment: "Change location")
@@ -115,7 +117,6 @@ struct FileOutputDetailsPopover: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .environment(\.locale, store.settings.general.preferredLocale.locale)
     }
 
     /// 出力ディレクトリを選択
