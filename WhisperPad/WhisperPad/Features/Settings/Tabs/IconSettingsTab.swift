@@ -19,15 +19,11 @@ struct IconSettingsTab: View {
     @State private var selectedStatus: IconConfigStatus = .idle
 
     var body: some View {
-        HSplitView {
-            // 左パネル: アイコン状態一覧
-            iconListPanel
-                .frame(minWidth: 180, idealWidth: 200, maxWidth: 240)
-
-            // 右パネル: 詳細
-            detailPanel
-                .frame(minWidth: 300)
-        }
+        MasterDetailLayout(
+            detailMinWidth: 300,
+            primary: { iconListPanel },
+            detail: { detailPanel }
+        )
         .environment(\.locale, store.settings.general.preferredLocale.locale)
     }
 
@@ -130,17 +126,6 @@ private struct IconDetailPanel: View {
     /// SwiftUI Color として管理（NSColor との同期用）
     @State private var selectedColor: Color
 
-    /// プリセット色
-    private let presetColors: [NSColor] = [
-        .systemGray,
-        .systemRed,
-        .systemOrange,
-        .systemYellow,
-        .systemBlue,
-        .systemGreen,
-        .systemPurple
-    ]
-
     init(
         status: IconConfigStatus,
         config: Binding<StatusIconConfig>,
@@ -153,170 +138,32 @@ private struct IconDetailPanel: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // ヘッダー: アイコンとタイトル
-                headerSection
+        DetailPanelContainer {
+            // ヘッダー: アイコンとタイトル
+            DetailHeaderSection(
+                symbolName: config.symbolName,
+                symbolColor: Color(nsColor: config.color),
+                title: LocalizedStringKey(status.localizedKey),
+                onReset: onReset,
+                resetHelpText: String(localized: "icon.reset", comment: "Reset this status")
+            )
 
-                Divider()
+            Divider()
 
-                // 説明セクション
-                descriptionSection
+            // 説明セクション
+            DetailDescriptionSection(
+                descriptionText: LocalizedStringKey(status.descriptionKey)
+            )
 
-                // アイコン編集セクション
-                iconEditSection
+            // アイコン編集セクション
+            IconEditSection(symbolName: $config.symbolName)
 
-                // 色編集セクション
-                colorEditSection
-
-                Spacer(minLength: 0)
-            }
-            .padding(24)
+            // 色編集セクション
+            ColorEditSection(
+                selectedColor: $selectedColor,
+                nsColor: $config.color
+            )
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .onChange(of: selectedColor) { _, newColor in
-            config.color = NSColor(newColor)
-        }
-        .onChange(of: config.color) { _, newColor in
-            let newSwiftUIColor = Color(nsColor: newColor)
-            if selectedColor != newSwiftUIColor {
-                selectedColor = newSwiftUIColor
-            }
-        }
-        .onChange(of: status) { _, _ in
-            selectedColor = Color(nsColor: config.color)
-        }
-    }
-
-    // MARK: - Sections
-
-    /// ヘッダーセクション
-    private var headerSection: some View {
-        HStack(spacing: 12) {
-            Image(systemName: config.symbolName)
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(Color(nsColor: config.color))
-                .font(.title2)
-                .frame(width: 32, height: 32)
-                .background(Color(nsColor: config.color).opacity(0.1))
-                .cornerRadius(8)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(LocalizedStringKey(status.localizedKey))
-                    .font(.title2)
-                    .fontWeight(.semibold)
-            }
-
-            Spacer()
-
-            Button {
-                onReset()
-            } label: {
-                Image(systemName: "arrow.counterclockwise")
-            }
-            .buttonStyle(.borderless)
-            .help(String(localized: "icon.reset", comment: "Reset this status"))
-        }
-    }
-
-    /// 説明セクション
-    private var descriptionSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label("icon.description", systemImage: "info.circle")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            Text(LocalizedStringKey(status.descriptionKey))
-                .foregroundColor(.primary)
-        }
-    }
-
-    /// アイコン編集セクション
-    private var iconEditSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("icon.icon", systemImage: "star")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            InlineSymbolPicker(selection: $config.symbolName)
-        }
-        .padding(16)
-        .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(12)
-    }
-
-    /// 色編集セクション
-    private var colorEditSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("icon.color", systemImage: "paintpalette")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            HStack(spacing: 8) {
-                // ColorPicker
-                ColorPicker("", selection: $selectedColor)
-                    .labelsHidden()
-                    .frame(width: 44, height: 24)
-
-                Divider()
-                    .frame(height: 24)
-
-                // プリセット色ボタン
-                ForEach(presetColors, id: \.self) { presetColor in
-                    presetColorButton(for: presetColor)
-                }
-            }
-        }
-        .padding(16)
-        .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(12)
-    }
-
-    /// プリセット色ボタン
-    @ViewBuilder
-    private func presetColorButton(for presetColor: NSColor) -> some View {
-        let isSelected = config.color.isApproximatelyEqual(to: presetColor)
-
-        Button {
-            config.color = presetColor
-            selectedColor = Color(nsColor: presetColor)
-        } label: {
-            Circle()
-                .fill(Color(nsColor: presetColor))
-                .frame(width: 20, height: 20)
-                .overlay(
-                    Circle()
-                        .stroke(Color.primary.opacity(0.2), lineWidth: 1)
-                )
-                .overlay(
-                    isSelected
-                        ? Image(systemName: "checkmark")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(.white)
-                        : nil
-                )
-        }
-        .buttonStyle(.plain)
-        .help(presetColor.accessibilityName)
-        .accessibilityLabel(presetColor.accessibilityName)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-}
-
-// MARK: - NSColor Extension
-
-private extension NSColor {
-    /// 2つの色が近似的に等しいかを判定
-    func isApproximatelyEqual(to other: NSColor, tolerance: CGFloat = 0.01) -> Bool {
-        guard let selfRGB = self.usingColorSpace(.sRGB),
-              let otherRGB = other.usingColorSpace(.sRGB)
-        else {
-            return false
-        }
-
-        return abs(selfRGB.redComponent - otherRGB.redComponent) < tolerance
-            && abs(selfRGB.greenComponent - otherRGB.greenComponent) < tolerance
-            && abs(selfRGB.blueComponent - otherRGB.blueComponent) < tolerance
     }
 }
 
