@@ -75,6 +75,29 @@ struct GeneralSettingsTab: View {
                 .accessibilityHint(
                     String(localized: "settings.general.launch_at_login.help", comment: "Launch at login help")
                 )
+
+                SettingRowWithIcon(
+                    icon: "exclamationmark.triangle.fill",
+                    iconColor: .orange,
+                    title: "settings.general.cancel_confirmation",
+                    isOn: Binding(
+                        get: { store.settings.general.showCancelConfirmation },
+                        set: { newValue in
+                            var general = store.settings.general
+                            general.showCancelConfirmation = newValue
+                            store.send(.updateGeneralSettings(general))
+                        }
+                    )
+                )
+                .help(
+                    String(localized: "settings.general.cancel_confirmation.help", comment: "Cancel confirmation help")
+                )
+                .accessibilityLabel(
+                    String(localized: "settings.general.cancel_confirmation", comment: "Show cancel confirmation")
+                )
+                .accessibilityHint(
+                    String(localized: "settings.general.cancel_confirmation.help", comment: "Cancel confirmation help")
+                )
             } header: {
                 Label("settings.general.behavior", systemImage: "gearshape.2")
             }

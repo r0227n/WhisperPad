@@ -489,6 +489,42 @@
         }
       }
     },
+    "settings.general.cancel_confirmation": {
+      "comment": "Show cancel confirmation dialog",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show cancel confirmation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル確認を表示"
+          }
+        }
+      }
+    },
+    "settings.general.cancel_confirmation.help": {
+      "comment": "Help text for cancel confirmation setting",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask for confirmation before canceling recording"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "録音をキャンセルする前に確認する"
+          }
+        }
+      }
+    },
     "settings.general.notification": {
       "comment": "Notification section header",
       "extractionState": "manual",
@@ -1380,6 +1416,96 @@
           "stringUnit": {
             "state": "translated",
             "value": "結果をファイルに保存"
+          }
+        }
+      }
+    },
+    "recording.cancel_confirmation.alert.continue": {
+      "comment": "Continue recording button in cancel confirmation dialog",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue Recording"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "録音を続ける"
+          }
+        }
+      }
+    },
+    "recording.cancel_confirmation.alert.discard": {
+      "comment": "Discard button in cancel confirmation dialog",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "破棄する"
+          }
+        }
+      }
+    },
+    "recording.cancel_confirmation.alert.message": {
+      "comment": "Cancel confirmation dialog message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recorded data will be discarded."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "録音中のデータは破棄されます。"
+          }
+        }
+      }
+    },
+    "recording.cancel_confirmation.alert.title": {
+      "comment": "Cancel confirmation dialog title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel Recording?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "録音を中止しますか？"
+          }
+        }
+      }
+    },
+    "recording.cancel_confirmation.alert.dont_show_again": {
+      "comment": "Don't show again checkbox in cancel confirmation dialog",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't show this again"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今後表示しない"
           }
         }
       }
