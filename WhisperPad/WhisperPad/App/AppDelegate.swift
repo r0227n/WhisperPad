@@ -529,6 +529,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
+        // メインメニューが開かれた場合、モデルメニューの状態を更新
+        if menu == statusMenu {
+            updateModelMenuForCurrentState()
+        }
+
         // モデルサブメニューが開かれた場合、ダウンロード済みモデルを更新
         if menu == modelSubmenu {
             refreshModelSubmenu()

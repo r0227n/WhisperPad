@@ -305,7 +305,7 @@ extension AppDelegate {
         // ダウンロード済みモデルが0個の場合
         if cachedModels.isEmpty {
             modelItem.title = localizedAppString(forKey: "menu.model.download_to_start")
-            modelItem.isEnabled = true // 設定画面へのアクセスは許可
+            modelItem.isEnabled = false // サブメニューを開けないようにする
             recordingItem.isEnabled = false
             return
         }
