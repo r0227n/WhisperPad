@@ -386,7 +386,9 @@ private struct ShortcutDetailPanel: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 24)
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(12)
     }
