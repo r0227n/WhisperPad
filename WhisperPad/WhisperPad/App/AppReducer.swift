@@ -127,7 +127,17 @@ struct AppReducer {
 
             case let .recording(.delegate(.recordingFailed(error))):
                 state.appStatus = .error(error.localizedDescription)
+                let languageCode = state.resolveLanguageCode()
+
                 return .run { send in
+                    await MainActor.run {
+                        showLocalizedAlert(
+                            style: .critical,
+                            titleKey: "error.dialog.recording.title",
+                            message: error.localizedDescription,
+                            languageCode: languageCode
+                        )
+                    }
                     try await clock.sleep(for: .seconds(5))
                     await send(.resetToIdle)
                 }
@@ -138,73 +148,43 @@ struct AppReducer {
                 state.lastRecordingURL = url
                 // ダイアログ表示後に文字起こしを開始（設定から言語を取得）
                 let partialLanguage = state.settings.settings.transcription.language.whisperCode
-                // アプリ設定から言語コードを取得
-                let preferredLocale = state.settings.settings.general.preferredLocale
-                let languageCode: String
-                if let identifier = preferredLocale.identifier {
-                    languageCode = identifier
-                } else {
-                    // .system の場合、システムの優先言語を使用
-                    let systemLanguage = Locale.preferredLanguages.first ?? "en"
-                    languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
-                }
+                let languageCode = state.resolveLanguageCode()
 
                 return .run { send in
                     await MainActor.run {
-                        let alert = NSAlert()
-                        alert.alertStyle = .warning
-                        alert.messageText = Bundle.main.localizedString(
-                            forKey: "recording.partial_success.alert.title",
-                            preferredLanguage: languageCode
-                        )
                         let messageFormat = Bundle.main.localizedString(
                             forKey: "recording.partial_success.alert.message",
                             preferredLanguage: languageCode
                         )
-                        alert.informativeText = String(format: messageFormat, usedSegments, totalSegments)
-                        alert.addButton(
-                            withTitle: Bundle.main.localizedString(
-                                forKey: "common.ok",
-                                preferredLanguage: languageCode
-                            )
+                        let formattedMessage = String(format: messageFormat, usedSegments, totalSegments)
+
+                        showLocalizedAlert(
+                            style: .warning,
+                            titleKey: "recording.partial_success.alert.title",
+                            message: formattedMessage,
+                            languageCode: languageCode
                         )
-                        alert.runModal()
                     }
                     await send(.transcription(.startTranscription(audioURL: url, language: partialLanguage)))
                 }
 
             case .recording(.delegate(.whisperKitInitializing)):
                 // WhisperKit初期化中のアラートを表示
-                // アプリ設定から言語コードを取得
-                let preferredLocale = state.settings.settings.general.preferredLocale
-                let languageCode: String
-                if let identifier = preferredLocale.identifier {
-                    languageCode = identifier
-                } else {
-                    // .system の場合、システムの優先言語を使用
-                    let systemLanguage = Locale.preferredLanguages.first ?? "en"
-                    languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
-                }
+                let languageCode = state.resolveLanguageCode()
 
                 return .run { _ in
                     await MainActor.run {
-                        let alert = NSAlert()
-                        alert.alertStyle = .informational
-                        alert.messageText = Bundle.main.localizedString(
-                            forKey: "recording.whisperkit_initializing.alert.title",
-                            preferredLanguage: languageCode
-                        )
-                        alert.informativeText = Bundle.main.localizedString(
+                        let message = Bundle.main.localizedString(
                             forKey: "recording.whisperkit_initializing.alert.message",
                             preferredLanguage: languageCode
                         )
-                        alert.addButton(
-                            withTitle: Bundle.main.localizedString(
-                                forKey: "common.ok",
-                                preferredLanguage: languageCode
-                            )
+
+                        showLocalizedAlert(
+                            style: .informational,
+                            titleKey: "recording.whisperkit_initializing.alert.title",
+                            message: message,
+                            languageCode: languageCode
                         )
-                        alert.runModal()
                     }
                 }
 
@@ -333,7 +313,17 @@ struct AppReducer {
 
             case let .errorOccurred(message):
                 state.appStatus = .error(message)
+                let languageCode = state.resolveLanguageCode()
+
                 return .run { send in
+                    await MainActor.run {
+                        showLocalizedAlert(
+                            style: .critical,
+                            titleKey: "error.dialog.general.title",
+                            message: message,
+                            languageCode: languageCode
+                        )
+                    }
                     try await clock.sleep(for: .seconds(5))
                     await send(.resetToIdle)
                 }
@@ -358,6 +348,23 @@ struct AppReducer {
         // 設定機能の子 Reducer を統合
         Scope(state: \.settings, action: \.settings) {
             SettingsFeature()
+        }
+    }
+}
+
+// MARK: - Alert Helpers
+
+private extension AppReducer.State {
+    /// アプリ設定から言語コードを解決する
+    /// - Returns: 言語コード文字列（例: "en", "ja"）
+    func resolveLanguageCode() -> String {
+        let preferredLocale = settings.settings.general.preferredLocale
+        if let identifier = preferredLocale.identifier {
+            return identifier
+        } else {
+            // .system の場合、システムの優先言語を使用
+            let systemLanguage = Locale.preferredLanguages.first ?? "en"
+            return Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
         }
     }
 }
