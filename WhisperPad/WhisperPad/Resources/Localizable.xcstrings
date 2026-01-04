@@ -4067,6 +4067,60 @@
         }
       }
     },
+    "error.dialog.general.title": {
+      "comment": "Error dialog title for general errors",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エラー"
+          }
+        }
+      }
+    },
+    "error.dialog.recording.title": {
+      "comment": "Error dialog title for recording errors",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording Error"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "録音エラー"
+          }
+        }
+      }
+    },
+    "error.dialog.transcription.title": {
+      "comment": "Error dialog title for transcription errors",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription Error"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文字起こしエラー"
+          }
+        }
+      }
+    },
     "error.recording.permission_denied": {
       "comment": "Recording error: Microphone permission denied",
       "extractionState": "manual",
