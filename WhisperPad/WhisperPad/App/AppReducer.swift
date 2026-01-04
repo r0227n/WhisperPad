@@ -47,10 +47,35 @@ struct AppReducer {
         var transcription: TranscriptionFeature.State = .init()
 
         /// 設定機能の状態
-        var settings: SettingsFeature.State = .init()
+        var settings: SettingsFeature.State
 
         /// 最後に録音されたファイルの URL
         var lastRecordingURL: URL?
+
+        /// 初期化
+        ///
+        /// - Parameters:
+        ///   - appStatus: アプリステータス（デフォルト: .idle）
+        ///   - lastTranscription: 最後の文字起こし結果
+        ///   - recording: 録音機能の状態
+        ///   - transcription: 文字起こし機能の状態
+        ///   - settings: 設定機能の状態
+        ///   - lastRecordingURL: 最後に録音されたファイルの URL
+        init(
+            appStatus: AppStatus = .idle,
+            lastTranscription: String? = nil,
+            recording: RecordingFeature.State = .init(),
+            transcription: TranscriptionFeature.State = .init(),
+            settings: SettingsFeature.State = .init(),
+            lastRecordingURL: URL? = nil
+        ) {
+            self.appStatus = appStatus
+            self.lastTranscription = lastTranscription
+            self.recording = recording
+            self.transcription = transcription
+            self.settings = settings
+            self.lastRecordingURL = lastRecordingURL
+        }
     }
 
     // MARK: - Action
@@ -128,6 +153,7 @@ struct AppReducer {
             case let .recording(.delegate(.recordingFailed(error))):
                 state.appStatus = .error(error.localizedDescription)
                 let languageCode = state.resolveLanguageCode()
+                let iconSettings = state.settings.settings.general.menuBarIconSettings
 
                 return .run { send in
                     await MainActor.run {
@@ -135,7 +161,8 @@ struct AppReducer {
                             style: .critical,
                             titleKey: "error.dialog.recording.title",
                             message: error.localizedDescription,
-                            languageCode: languageCode
+                            languageCode: languageCode,
+                            iconSettings: iconSettings
                         )
                     }
                     try await clock.sleep(for: .seconds(5))
@@ -149,6 +176,7 @@ struct AppReducer {
                 // ダイアログ表示後に文字起こしを開始（設定から言語を取得）
                 let partialLanguage = state.settings.settings.transcription.language.whisperCode
                 let languageCode = state.resolveLanguageCode()
+                let iconSettings = state.settings.settings.general.menuBarIconSettings
 
                 return .run { send in
                     await MainActor.run {
@@ -162,7 +190,8 @@ struct AppReducer {
                             style: .warning,
                             titleKey: "recording.partial_success.alert.title",
                             message: formattedMessage,
-                            languageCode: languageCode
+                            languageCode: languageCode,
+                            iconSettings: iconSettings
                         )
                     }
                     await send(.transcription(.startTranscription(audioURL: url, language: partialLanguage)))
@@ -171,6 +200,7 @@ struct AppReducer {
             case .recording(.delegate(.whisperKitInitializing)):
                 // WhisperKit初期化中のアラートを表示
                 let languageCode = state.resolveLanguageCode()
+                let iconSettings = state.settings.settings.general.menuBarIconSettings
 
                 return .run { _ in
                     await MainActor.run {
@@ -183,7 +213,8 @@ struct AppReducer {
                             style: .informational,
                             titleKey: "recording.whisperkit_initializing.alert.title",
                             message: message,
-                            languageCode: languageCode
+                            languageCode: languageCode,
+                            iconSettings: iconSettings
                         )
                     }
                 }
@@ -314,6 +345,7 @@ struct AppReducer {
             case let .errorOccurred(message):
                 state.appStatus = .error(message)
                 let languageCode = state.resolveLanguageCode()
+                let iconSettings = state.settings.settings.general.menuBarIconSettings
 
                 return .run { send in
                     await MainActor.run {
@@ -321,7 +353,8 @@ struct AppReducer {
                             style: .critical,
                             titleKey: "error.dialog.general.title",
                             message: message,
-                            languageCode: languageCode
+                            languageCode: languageCode,
+                            iconSettings: iconSettings
                         )
                     }
                     try await clock.sleep(for: .seconds(5))
