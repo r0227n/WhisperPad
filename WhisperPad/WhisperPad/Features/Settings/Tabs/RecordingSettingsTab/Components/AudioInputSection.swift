@@ -17,9 +17,9 @@ struct AudioInputSection: View {
             HStack(alignment: .center, spacing: 16) {
                 // セクションヘッダー
                 SettingSectionHeader(
-                    icon: "waveform",
+                    icon: "mic.circle.fill",
                     iconColor: .blue,
-                    title: String(localized: "recording.input_device.title", comment: "Input Device")
+                    title: "recording.input_device.title"
                 )
 
                 Spacer()
@@ -39,9 +39,12 @@ struct AudioInputSection: View {
                     Text("recording.input_device.system_default", comment: "System Default").tag(nil as String?)
 
                     ForEach(store.availableInputDevices) { device in
-                        HStack {
+                        HStack(spacing: 6) {
                             Text(device.name)
                             if device.isDefault {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                    .font(.caption)
                                 Text("recording.input_device.default_marker", comment: "(Default)")
                                     .foregroundColor(.secondary)
                             }
