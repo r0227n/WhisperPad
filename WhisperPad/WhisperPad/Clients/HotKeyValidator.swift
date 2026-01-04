@@ -12,8 +12,7 @@ private let logger = Logger(subsystem: "com.r0227n.WhisperPad", category: "HotKe
 
 enum HotKeyValidator {
     enum ValidationError: Error, Equatable {
-        case systemConflict(OSStatus)
-        case invalidCombo
+        /// システム予約済みショートカット（ブロックリストに含まれる）
         case reservedSystemShortcut
     }
 
@@ -113,12 +112,16 @@ enum HotKeyValidator {
         return systemReservedShortcuts.contains(shortcut)
     }
 
-    /// hotkeyが登録可能かテスト（実際には登録せず、即座にアンレジスター）
+    /// ホットキーが登録可能かをチェック
+    ///
+    /// ブロックリストに含まれるシステム予約済みショートカットのみを拒否し、
+    /// それ以外は許可します。Carbon API による検証は環境依存で信頼性が低いため、
+    /// スキップしています。
     static func canRegister(
         carbonKeyCode: UInt32,
         carbonModifiers: UInt32
     ) -> Result<Void, ValidationError> {
-        // Check blocklist first to prevent crashes from system-reserved shortcuts
+        // ブロックリストチェックのみ
         if isSystemReservedShortcut(
             carbonKeyCode: carbonKeyCode,
             carbonModifiers: carbonModifiers
@@ -129,36 +132,9 @@ enum HotKeyValidator {
             return .failure(.reservedSystemShortcut)
         }
 
-        var eventHotKey: EventHotKeyRef?
-        guard let testSignature = FourCharCode("TEST") else {
-            logger.error("Failed to create test FourCharCode signature")
-            return .failure(.invalidCombo)
-        }
-        let testID = EventHotKeyID(
-            signature: testSignature,
-            id: UInt32.random(in: 1 ... 1_000_000)
-        )
-
-        let status = RegisterEventHotKey(
-            carbonKeyCode,
-            carbonModifiers,
-            testID,
-            GetEventDispatcherTarget(),
-            0,
-            &eventHotKey
-        )
-
-        if status == noErr, let hotKeyRef = eventHotKey {
-            // テスト成功 → 即座にアンレジスター
-            UnregisterEventHotKey(hotKeyRef)
-            logger.debug("HotKey validation succeeded: keyCode=\(carbonKeyCode), modifiers=\(carbonModifiers)")
-            return .success(())
-        } else {
-            logger.warning(
-                "HotKey validation failed: keyCode=\(carbonKeyCode), modifiers=\(carbonModifiers), status=\(status)"
-            )
-            return .failure(.systemConflict(status))
-        }
+        // ブロックリストにないショートカットは許可
+        logger.debug("HotKey validation passed: keyCode=\(carbonKeyCode), modifiers=\(carbonModifiers)")
+        return .success(())
     }
 
     /// アプリ内で重複しているホットキーをチェック
