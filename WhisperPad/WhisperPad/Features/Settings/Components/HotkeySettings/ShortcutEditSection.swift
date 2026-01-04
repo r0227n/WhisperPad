@@ -92,18 +92,16 @@ struct ShortcutEditSection: View {
 #Preview("Not Recording") {
     @Previewable @State var keyCombo = HotKeySettings.KeyComboSettings(
         carbonKeyCode: 15,
-        carbonModifiers: 768,
-        displayString: "⌘⌥R"
+        carbonModifiers: 768
     )
 
     ShortcutEditSection(
         keyCombo: $keyCombo,
         defaultKeyCombo: HotKeySettings.KeyComboSettings(
             carbonKeyCode: 15,
-            carbonModifiers: 768,
-            displayString: "⌘⌥R"
+            carbonModifiers: 768
         ),
-        hotkeyType: .recordingHotKey,
+        hotkeyType: .recording,
         isRecording: false,
         hotkeyConflict: nil,
         onStartRecording: {},
@@ -117,18 +115,16 @@ struct ShortcutEditSection: View {
 #Preview("With Conflict Warning") {
     @Previewable @State var keyCombo = HotKeySettings.KeyComboSettings(
         carbonKeyCode: 15,
-        carbonModifiers: 768,
-        displayString: "⌘⌥R"
+        carbonModifiers: 768
     )
 
     ShortcutEditSection(
         keyCombo: $keyCombo,
         defaultKeyCombo: HotKeySettings.KeyComboSettings(
             carbonKeyCode: 15,
-            carbonModifiers: 768,
-            displayString: "⌘⌥R"
+            carbonModifiers: 768
         ),
-        hotkeyType: .recordingHotKey,
+        hotkeyType: .recording,
         isRecording: false,
         hotkeyConflict: "This shortcut is already used by another application",
         onStartRecording: {},
@@ -142,18 +138,16 @@ struct ShortcutEditSection: View {
 #Preview("Recording") {
     @Previewable @State var keyCombo = HotKeySettings.KeyComboSettings(
         carbonKeyCode: 0,
-        carbonModifiers: 0,
-        displayString: ""
+        carbonModifiers: 0
     )
 
     ShortcutEditSection(
         keyCombo: $keyCombo,
         defaultKeyCombo: HotKeySettings.KeyComboSettings(
             carbonKeyCode: 15,
-            carbonModifiers: 768,
-            displayString: "⌘⌥R"
+            carbonModifiers: 768
         ),
-        hotkeyType: .recordingHotKey,
+        hotkeyType: .recording,
         isRecording: true,
         hotkeyConflict: nil,
         onStartRecording: {},

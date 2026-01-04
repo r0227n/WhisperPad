@@ -362,11 +362,11 @@ extension AppDelegate {
     @objc func debugFetchAvailableModels() {
         debugLogger.debug("Debug: Fetching available models")
 
-        @Dependency(\.transcriptionClient) var transcriptionClient
+        @Dependency(\.modelClient) var modelClient
 
         Task {
             do {
-                let models = try await transcriptionClient.fetchAvailableModels()
+                let models = try await modelClient.fetchAvailableModels()
                 debugLogger.info("Debug: Found \(models.count) models")
                 for model in models {
                     debugLogger.info("  - \(model)")
@@ -389,10 +389,10 @@ extension AppDelegate {
     @objc func debugGetRecommendedModel() {
         debugLogger.debug("Debug: Getting recommended model")
 
-        @Dependency(\.transcriptionClient) var transcriptionClient
+        @Dependency(\.modelClient) var modelClient
 
         Task {
-            let recommended = await transcriptionClient.recommendedModel()
+            let recommended = await modelClient.recommendedModel()
             debugLogger.info("Debug: Recommended model: \(recommended)")
             await MainActor.run {
                 showAlert(title: "Recommended Model", message: recommended)
@@ -403,7 +403,7 @@ extension AppDelegate {
     @objc func debugDownloadTinyModel() {
         debugLogger.debug("Debug: Downloading tiny model")
 
-        @Dependency(\.transcriptionClient) var transcriptionClient
+        @Dependency(\.modelClient) var modelClient
 
         Task {
             do {
@@ -413,7 +413,7 @@ extension AppDelegate {
                         message: "Downloading openai_whisper-tiny model...\nThis may take a while."
                     )
                 }
-                let url = try await transcriptionClient.downloadModel("openai_whisper-tiny") { progress in
+                let url = try await modelClient.downloadModel("openai_whisper-tiny") { progress in
                     self.debugLogger.debug("Debug: Download progress: \(Int(progress * 100))%")
                 }
                 debugLogger.info("Debug: Model downloaded to: \(url.path)")

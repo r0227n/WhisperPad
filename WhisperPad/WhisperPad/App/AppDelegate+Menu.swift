@@ -17,6 +17,8 @@ extension AppDelegate {
         addRecordingItems(to: menu)
         addCancelItem(to: menu)
         menu.addItem(NSMenuItem.separator())
+        addModelSelectionItem(to: menu)
+        menu.addItem(NSMenuItem.separator())
         addSettingsItem(to: menu)
         menu.addItem(NSMenuItem.separator())
 
@@ -97,6 +99,35 @@ extension AppDelegate {
         quitItem.target = self
         menu.addItem(quitItem)
     }
+
+    private func addModelSelectionItem(to menu: NSMenu) {
+        // デフォルトモデルを読み込んでタイトルを設定
+        let defaultModelName = loadDefaultModelSync()
+        let modelTitle: String = if let modelName = defaultModelName {
+            localizedAppString(forKey: "menu.model.selection") + ": " + modelName
+        } else {
+            localizedAppString(forKey: "menu.model.selection") + ": " +
+                localizedAppString(forKey: "menu.model.unloaded")
+        }
+
+        let modelItem = NSMenuItem(
+            title: modelTitle,
+            action: nil,
+            keyEquivalent: ""
+        )
+        modelItem.tag = MenuItemTag.modelSelection.rawValue
+        modelItem.image = NSImage(systemSymbolName: "cpu", accessibilityDescription: nil)
+
+        // サブメニューを作成（delegate を設定してサブメニューを開くたびに更新）
+        let submenu = NSMenu()
+        submenu.delegate = self
+        modelItem.submenu = submenu
+
+        // サブメニューの参照を保持
+        self.modelSubmenu = submenu
+
+        menu.addItem(modelItem)
+    }
 }
 
 // MARK: - Menu Item Configuration
@@ -153,11 +184,14 @@ extension AppDelegate {
         _ hotKey: HotKeySettings
     ) {
         let toggleKey = hotKey.recordingHotKey
+        // モデルがダウンロードされていない場合は録音を無効化
+        let hasModels = !getCachedDownloadedModels().isEmpty
         configureMenuItem(
             recordingItem,
             title: localizedAppString(forKey: "menu.recording.start"),
-            action: #selector(startRecording),
+            action: hasModels ? #selector(startRecording) : nil,
             symbol: "mic.fill",
+            isEnabled: hasModels,
             keyEquivalent: toggleKey.keyEquivalentCharacter,
             keyEquivalentModifierMask: toggleKey.keyEquivalentModifierMask
         )
@@ -253,5 +287,58 @@ extension AppDelegate {
         )
         pauseResumeItem.isHidden = true
         cancelItem.isHidden = true
+    }
+
+    /// モデルメニューの状態を更新
+    ///
+    /// UserDefaults からデフォルトモデルを読み込み、メニュー項目のタイトルを更新する。
+    /// ダウンロード済みモデルがない場合は、録音メニューを無効化する。
+    /// サブメニューの更新は `menuWillOpen` で行うため、ここでは行わない。
+    func updateModelMenuForCurrentState() {
+        guard let menu = statusMenu,
+              let modelItem = menu.item(withTag: MenuItemTag.modelSelection.rawValue),
+              let recordingItem = menu.item(withTag: MenuItemTag.recording.rawValue)
+        else { return }
+
+        let cachedModels = getCachedDownloadedModels()
+
+        // ダウンロード済みモデルが0個の場合
+        if cachedModels.isEmpty {
+            modelItem.title = localizedAppString(forKey: "menu.model.download_to_start")
+            modelItem.isEnabled = false // サブメニューを開けないようにする
+            recordingItem.isEnabled = false
+            return
+        }
+
+        // メインメニュー項目のタイトルを更新
+        let modelPrefix = localizedAppString(forKey: "menu.model.selection")
+        let modelStatus: String
+
+            // デフォルトモデルを UserDefaults から読み込み（displayName形式で表示）
+            = if let defaultModelId = loadDefaultModelSync() {
+            // キャッシュ内のモデルから displayName を取得
+            if let model = cachedModels.first(where: { $0.id == defaultModelId }) {
+                model.displayName
+            } else {
+                // キャッシュにない場合は直接変換（WhisperModel.displayName と同じロジック）
+                defaultModelId
+                    .replacingOccurrences(of: "openai_whisper-", with: "")
+                    .replacingOccurrences(of: "_", with: " ")
+            }
+        } else {
+            localizedAppString(forKey: "menu.model.unloaded")
+        }
+
+        modelItem.title = "\(modelPrefix): \(modelStatus)"
+
+        // アプリがアイドル状態の場合のみモデル選択を有効化
+        let isAppIdle: Bool = {
+            if case .idle = store.appStatus {
+                return true
+            }
+            return false
+        }()
+        modelItem.isEnabled = isAppIdle
+        recordingItem.isEnabled = true
     }
 }

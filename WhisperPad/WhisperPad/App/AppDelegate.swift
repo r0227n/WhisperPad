@@ -14,6 +14,9 @@ import UserNotifications
 extension Notification.Name {
     /// ホットキー設定が変更された通知
     static let hotKeySettingsChanged = Notification.Name("hotKeySettingsChanged")
+
+    /// モデル選択が変更された通知
+    static let modelChanged = Notification.Name("modelChanged")
 }
 
 /// メニューバーアプリケーションを管理する AppDelegate
@@ -50,6 +53,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// 現在のロケール（変更検出用）
     private var currentLocale: AppLocale?
 
+    /// モデル選択サブメニュー
+    var modelSubmenu: NSMenu?
+
+    /// ダウンロード済みモデルのキャッシュ
+    private var cachedDownloadedModels: [WhisperModel] = []
+
     /// ロガー
     let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.example.WhisperPad",
@@ -61,6 +70,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// 出力クライアント
     @Dependency(\.outputClient) var outputClient
+
+    /// モデル管理クライアント
+    @Dependency(\.modelClient) var modelClient
 
     /// ホットキー再登録タスク（デバウンス用）
     private var hotKeyRegistrationTask: Task<Void, Never>?
@@ -84,6 +96,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // HotKey registration task accessor
     func getHotKeyRegistrationTask() -> Task<Void, Never>? { hotKeyRegistrationTask }
     func setHotKeyRegistrationTask(_ task: Task<Void, Never>?) { hotKeyRegistrationTask = task }
+
+    // Model cache accessor
+    func getCachedDownloadedModels() -> [WhisperModel] { cachedDownloadedModels }
+    func setCachedDownloadedModels(_ models: [WhisperModel]) { cachedDownloadedModels = models }
 
     /// アプリ設定のロケールに基づいてローカライズされた文字列を取得
     func localizedAppString(forKey key: String) -> String {
@@ -115,6 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case quit = 300
         case micPermissionStatus = 400
         case notificationPermissionStatus = 500
+        case modelSelection = 600
         case cancel = 700
     }
 
@@ -155,8 +172,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusItem()
         setupObservation()
         setupHotKeyObserver()
+        setupModelChangeObserver()
         requestNotificationPermission()
         setupHotKeys()
+        initializeModelCache()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -168,6 +187,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // NotificationCenter オブザーバーを解除
         NotificationCenter.default.removeObserver(self, name: .hotKeySettingsChanged, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .modelChanged, object: nil)
 
         // ホットキーを解除
         Task {
@@ -214,6 +234,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             self.updateMenuForCurrentState()
+            self.updateModelMenuForCurrentState()
             self.updateIconForCurrentState()
             self.updateTooltip()
         }
@@ -424,16 +445,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func quitApplication() {
         logger.info("Quit application requested")
         NSApp.terminate(nil)
-    }
-}
-
-// MARK: - NSMenuDelegate
-
-extension AppDelegate: NSMenuDelegate {
-    func menuWillOpen(_ menu: NSMenu) {
-        #if DEBUG
-        updatePermissionMenuItems()
-        updateOutputMenuItems()
-        #endif
     }
 }
