@@ -112,83 +112,7 @@ struct AppReducer {
                 return .send(.recording(.resumeRecordingButtonTapped))
 
             case .cancelRecording:
-                // 設定を確認
-                let showConfirmation = state.settings.settings.general.showCancelConfirmation
-
-                if showConfirmation {
-                    // 確認ダイアログを表示
-                    let preferredLocale = state.settings.settings.general.preferredLocale
-                    let languageCode: String
-                    if let identifier = preferredLocale.identifier {
-                        languageCode = identifier
-                    } else {
-                        let systemLanguage = Locale.preferredLanguages.first ?? "en"
-                        languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
-                    }
-
-                    // 現在の設定を保存（後で更新するため）
-                    var currentGeneral = state.settings.settings.general
-
-                    return .run { send in
-                        let (shouldCancel, dontShowAgain) = await MainActor.run { () -> (Bool, Bool) in
-                            let alert = NSAlert()
-                            alert.alertStyle = .warning
-                            alert.messageText = Bundle.main.localizedString(
-                                forKey: "recording.cancel_confirmation.alert.title",
-                                preferredLanguage: languageCode
-                            )
-                            alert.informativeText = Bundle.main.localizedString(
-                                forKey: "recording.cancel_confirmation.alert.message",
-                                preferredLanguage: languageCode
-                            )
-
-                            // チェックボックスを作成
-                            let checkboxText = Bundle.main.localizedString(
-                                forKey: "recording.cancel_confirmation.alert.dont_show_again",
-                                preferredLanguage: languageCode
-                            )
-                            let checkbox = NSButton(checkboxWithTitle: checkboxText, target: nil, action: nil)
-                            checkbox.state = .off
-                            alert.accessoryView = checkbox
-
-                            // 第1ボタン: 録音を続ける（安全な選択、デフォルト）
-                            alert.addButton(
-                                withTitle: Bundle.main.localizedString(
-                                    forKey: "recording.cancel_confirmation.alert.continue",
-                                    preferredLanguage: languageCode
-                                )
-                            )
-                            // 第2ボタン: 破棄する（危険な選択）
-                            alert.addButton(
-                                withTitle: Bundle.main.localizedString(
-                                    forKey: "recording.cancel_confirmation.alert.discard",
-                                    preferredLanguage: languageCode
-                                )
-                            )
-
-                            let response = alert.runModal()
-                            let shouldCancel = response == .alertSecondButtonReturn
-                            let dontShowAgain = checkbox.state == .on
-
-                            return (shouldCancel, dontShowAgain)
-                        }
-
-                        // チェックボックスがONの場合、設定を更新
-                        if dontShowAgain {
-                            currentGeneral.showCancelConfirmation = false
-                            await send(.settings(.updateGeneralSettings(currentGeneral)))
-                        }
-
-                        if shouldCancel {
-                            // "破棄する" ボタン → キャンセル実行
-                            await send(.confirmCancelRecording)
-                        }
-                        // shouldCancel == false → "録音を続ける" → 何もしない
-                    }
-                } else {
-                    // 確認なしで即座にキャンセル
-                    return .send(.confirmCancelRecording)
-                }
+                return handleCancelRecording(state: &state)
 
             case .confirmCancelRecording:
                 // 実際のキャンセル処理を実行
@@ -217,77 +141,15 @@ struct AppReducer {
             case let .recording(.delegate(.recordingPartialSuccess(url, usedSegments, totalSegments))):
                 state.appStatus = .transcribing
                 state.lastRecordingURL = url
-                // ダイアログ表示後に文字起こしを開始（設定から言語を取得）
-                let partialLanguage = state.settings.settings.transcription.language.whisperCode
-                // アプリ設定から言語コードを取得
-                let preferredLocale = state.settings.settings.general.preferredLocale
-                let languageCode: String
-                if let identifier = preferredLocale.identifier {
-                    languageCode = identifier
-                } else {
-                    // .system の場合、システムの優先言語を使用
-                    let systemLanguage = Locale.preferredLanguages.first ?? "en"
-                    languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
-                }
-
-                return .run { send in
-                    await MainActor.run {
-                        let alert = NSAlert()
-                        alert.alertStyle = .warning
-                        alert.messageText = Bundle.main.localizedString(
-                            forKey: "recording.partial_success.alert.title",
-                            preferredLanguage: languageCode
-                        )
-                        let messageFormat = Bundle.main.localizedString(
-                            forKey: "recording.partial_success.alert.message",
-                            preferredLanguage: languageCode
-                        )
-                        alert.informativeText = String(format: messageFormat, usedSegments, totalSegments)
-                        alert.addButton(
-                            withTitle: Bundle.main.localizedString(
-                                forKey: "common.ok",
-                                preferredLanguage: languageCode
-                            )
-                        )
-                        alert.runModal()
-                    }
-                    await send(.transcription(.startTranscription(audioURL: url, language: partialLanguage)))
-                }
+                return handlePartialSuccess(
+                    url: url,
+                    usedSegments: usedSegments,
+                    totalSegments: totalSegments,
+                    state: state
+                )
 
             case .recording(.delegate(.whisperKitInitializing)):
-                // WhisperKit初期化中のアラートを表示
-                // アプリ設定から言語コードを取得
-                let preferredLocale = state.settings.settings.general.preferredLocale
-                let languageCode: String
-                if let identifier = preferredLocale.identifier {
-                    languageCode = identifier
-                } else {
-                    // .system の場合、システムの優先言語を使用
-                    let systemLanguage = Locale.preferredLanguages.first ?? "en"
-                    languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
-                }
-
-                return .run { _ in
-                    await MainActor.run {
-                        let alert = NSAlert()
-                        alert.alertStyle = .informational
-                        alert.messageText = Bundle.main.localizedString(
-                            forKey: "recording.whisperkit_initializing.alert.title",
-                            preferredLanguage: languageCode
-                        )
-                        alert.informativeText = Bundle.main.localizedString(
-                            forKey: "recording.whisperkit_initializing.alert.message",
-                            preferredLanguage: languageCode
-                        )
-                        alert.addButton(
-                            withTitle: Bundle.main.localizedString(
-                                forKey: "common.ok",
-                                preferredLanguage: languageCode
-                            )
-                        )
-                        alert.runModal()
-                    }
-                }
+                return handleWhisperKitInitializing(state: state)
 
             // RecordingFeature の内部アクションで appStatus を更新
             case .recording(.recordingStarted):
@@ -345,72 +207,7 @@ struct AppReducer {
             case let .transcriptionCompleted(text):
                 state.appStatus = .completed
                 state.lastTranscription = text
-                let outputSettings = state.settings.settings.output
-                let generalSettings = state.settings.settings.general
-                let notificationTitle = generalSettings.notificationTitle.isEmpty
-                    ? String(localized: "notification.default.title")
-                    : generalSettings.notificationTitle
-                let transcriptionCompleteMessage = generalSettings.transcriptionCompleteMessage.isEmpty
-                    ? String(localized: "notification.transcription.complete.message")
-                    : generalSettings.transcriptionCompleteMessage
-
-                return .run { [outputClient, userDefaultsClient] send in
-                    // クリップボードにコピー（設定が有効な場合）
-                    if outputSettings.copyToClipboard {
-                        _ = await outputClient.copyToClipboard(text)
-                    }
-
-                    // 自動ファイル出力が有効な場合
-                    if outputSettings.isEnabled {
-                        var resolvedOutputSettings = outputSettings
-
-                        // ブックマークを解決してアクセス権を取得
-                        if let bookmarkData = outputSettings.outputBookmarkData,
-                           let resolvedURL = await userDefaultsClient.resolveBookmark(bookmarkData) {
-                            resolvedOutputSettings.outputDirectory = resolvedURL
-                        }
-
-                        do {
-                            let url = try await outputClient.saveToFile(text, resolvedOutputSettings)
-                            if generalSettings.showNotificationOnComplete {
-                                await outputClient.showNotification(
-                                    notificationTitle,
-                                    String(
-                                        format: String(localized: "notification.file.save.success"),
-                                        url.lastPathComponent
-                                    )
-                                )
-                            }
-                        } catch {
-                            if generalSettings.showNotificationOnComplete {
-                                await outputClient.showNotification(
-                                    notificationTitle,
-                                    String(
-                                        format: String(localized: "notification.file.save.failure"),
-                                        error.localizedDescription
-                                    )
-                                )
-                            }
-                        }
-                    } else {
-                        if generalSettings.showNotificationOnComplete {
-                            await outputClient.showNotification(
-                                notificationTitle,
-                                transcriptionCompleteMessage
-                            )
-                        }
-                    }
-
-                    // 完了音を再生（設定が有効な場合）
-                    if generalSettings.playSoundOnComplete {
-                        await outputClient.playCompletionSound()
-                    }
-
-                    // 自動リセット
-                    try await clock.sleep(for: .seconds(3))
-                    await send(.resetToIdle)
-                }
-                .cancellable(id: "autoReset")
+                return handleTranscriptionCompleted(text: text, state: state)
 
             case let .errorOccurred(message):
                 state.appStatus = .error(message)
@@ -443,18 +240,149 @@ struct AppReducer {
     }
 }
 
-// MARK: - Localization Helpers
+// MARK: - Helper Methods
 
-/// xcstrings ファイルから指定されたロケールに基づいて翻訳を取得する
-private extension Bundle {
-    func localizedString(forKey key: String, preferredLanguage: String) -> String {
-        // For xcstrings files, try to get bundle for preferred language
-        if let path = self.path(forResource: preferredLanguage, ofType: "lproj"),
-           let bundle = Bundle(path: path) {
-            return bundle.localizedString(forKey: key, value: nil, table: nil)
+private extension AppReducer {
+    func handleCancelRecording(state: inout State) -> Effect<Action> {
+        let showConfirmation = state.settings.settings.general.showCancelConfirmation
+
+        if showConfirmation {
+            let languageCode = getLanguageCode(from: state.settings.settings.general.preferredLocale)
+            var currentGeneral = state.settings.settings.general
+
+            return .run { send in
+                let (shouldCancel, dontShowAgain) = await AppAlertHelper.showCancelConfirmationDialog(
+                    languageCode: languageCode
+                )
+
+                if dontShowAgain {
+                    currentGeneral.showCancelConfirmation = false
+                    await send(.settings(.updateGeneralSettings(currentGeneral)))
+                }
+
+                if shouldCancel {
+                    await send(.confirmCancelRecording)
+                }
+            }
+        } else {
+            return .send(.confirmCancelRecording)
         }
+    }
 
-        // Fallback to main bundle (will use sourceLanguage from xcstrings)
-        return self.localizedString(forKey: key, value: nil, table: nil)
+    func handlePartialSuccess(
+        url: URL,
+        usedSegments: Int,
+        totalSegments: Int,
+        state: State
+    ) -> Effect<Action> {
+        let language = state.settings.settings.transcription.language.whisperCode
+        let languageCode = getLanguageCode(from: state.settings.settings.general.preferredLocale)
+
+        return .run { send in
+            await AppAlertHelper.showPartialSuccessDialog(
+                usedSegments: usedSegments,
+                totalSegments: totalSegments,
+                languageCode: languageCode
+            )
+            await send(.transcription(.startTranscription(audioURL: url, language: language)))
+        }
+    }
+
+    func handleWhisperKitInitializing(state: State) -> Effect<Action> {
+        let languageCode = getLanguageCode(from: state.settings.settings.general.preferredLocale)
+
+        return .run { _ in
+            await AppAlertHelper.showWhisperKitInitializingDialog(languageCode: languageCode)
+        }
+    }
+
+    func handleTranscriptionCompleted(text: String, state: State) -> Effect<Action> {
+        let outputSettings = state.settings.settings.output
+        let generalSettings = state.settings.settings.general
+
+        return .run { [outputClient, userDefaultsClient, clock] send in
+            if outputSettings.copyToClipboard {
+                _ = await outputClient.copyToClipboard(text)
+            }
+
+            await handleOutputAndNotification(
+                text: text,
+                outputSettings: outputSettings,
+                generalSettings: generalSettings,
+                outputClient: outputClient,
+                userDefaultsClient: userDefaultsClient
+            )
+
+            if generalSettings.playSoundOnComplete {
+                await outputClient.playCompletionSound()
+            }
+
+            try await clock.sleep(for: .seconds(3))
+            await send(.resetToIdle)
+        }
+        .cancellable(id: "autoReset")
+    }
+
+    func handleOutputAndNotification(
+        text: String,
+        outputSettings: FileOutputSettings,
+        generalSettings: GeneralSettings,
+        outputClient: OutputClient,
+        userDefaultsClient: UserDefaultsClient
+    ) async {
+        let notificationTitle = generalSettings.notificationTitle.isEmpty
+            ? String(localized: "notification.default.title")
+            : generalSettings.notificationTitle
+        let transcriptionCompleteMessage = generalSettings.transcriptionCompleteMessage.isEmpty
+            ? String(localized: "notification.transcription.complete.message")
+            : generalSettings.transcriptionCompleteMessage
+
+        if outputSettings.isEnabled {
+            var resolvedOutputSettings = outputSettings
+
+            if let bookmarkData = outputSettings.outputBookmarkData,
+               let resolvedURL = await userDefaultsClient.resolveBookmark(bookmarkData) {
+                resolvedOutputSettings.outputDirectory = resolvedURL
+            }
+
+            do {
+                let url = try await outputClient.saveToFile(text, resolvedOutputSettings)
+                if generalSettings.showNotificationOnComplete {
+                    await outputClient.showNotification(
+                        notificationTitle,
+                        String(
+                            format: String(localized: "notification.file.save.success"),
+                            url.lastPathComponent
+                        )
+                    )
+                }
+            } catch {
+                if generalSettings.showNotificationOnComplete {
+                    await outputClient.showNotification(
+                        notificationTitle,
+                        String(
+                            format: String(localized: "notification.file.save.failure"),
+                            error.localizedDescription
+                        )
+                    )
+                }
+            }
+        } else {
+            if generalSettings.showNotificationOnComplete {
+                await outputClient.showNotification(
+                    notificationTitle,
+                    transcriptionCompleteMessage
+                )
+            }
+        }
+    }
+
+    func getLanguageCode(from preferredLocale: AppLocale) -> String {
+        if let identifier = preferredLocale.identifier {
+            return identifier
+        } else {
+            let systemLanguage = Locale.preferredLanguages.first ?? "en"
+            return Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
+        }
     }
 }
