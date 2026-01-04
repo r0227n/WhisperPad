@@ -466,9 +466,11 @@ final class HotKeyValidatorTests: XCTestCase {
         }
     }
 
-    /// Tests invalid key codes return appropriate error
-    func test_canRegister_invalidKeyCode_returnsError() {
-        // Test with clearly invalid key code (way out of range)
+    /// Tests that unusual/out-of-range key codes succeed
+    /// (blocklist check only, Carbon API validation removed)
+    func test_canRegister_unusualKeyCode_succeeds() {
+        // Test with unusual key code (out of typical range)
+        // Since we no longer use Carbon API, any key code not in blocklist succeeds
         let result = HotKeyValidator.canRegister(
             carbonKeyCode: 999,
             carbonModifiers: TestModifiers.cmd
@@ -476,12 +478,10 @@ final class HotKeyValidatorTests: XCTestCase {
 
         switch result {
         case .success:
-            XCTFail("Expected invalid key code to fail")
+            // Expected - key code 999 is not in blocklist
+            break
         case let .failure(error):
-            XCTAssertTrue(
-                error == .systemConflict(0) || error == .invalidCombo,
-                "Expected systemConflict or invalidCombo error"
-            )
+            XCTFail("Expected unusual key code to succeed, but got error: \(error)")
         }
     }
 
@@ -562,10 +562,7 @@ final class HotKeyValidatorTests: XCTestCase {
         let hotkeyTypes: [HotkeyType] = [
             .recording,
             .cancel,
-            .recordingPause,
-            .popupCopyAndClose,
-            .popupSaveToFile,
-            .popupClose
+            .recordingPause
         ]
 
         for existingType in hotkeyTypes {
@@ -580,12 +577,6 @@ final class HotKeyValidatorTests: XCTestCase {
                 settings = makeTestSettings(cancel: testCombo)
             case .recordingPause:
                 settings = makeTestSettings(recordingPause: testCombo)
-            case .popupCopyAndClose:
-                settings = makeTestSettings(popupCopyAndClose: testCombo)
-            case .popupSaveToFile:
-                settings = makeTestSettings(popupSaveToFile: testCombo)
-            case .popupClose:
-                settings = makeTestSettings(popupClose: testCombo)
             }
 
             for checkType in hotkeyTypes where checkType != existingType {
@@ -603,27 +594,6 @@ final class HotKeyValidatorTests: XCTestCase {
                 )
             }
         }
-    }
-
-    /// Tests duplicate detection with popup shortcuts
-    func test_findDuplicate_popupShortcuts_detectConflicts() {
-        let sharedCombo: (UInt32, UInt32) = (TestKeyCodes.returnKey, TestModifiers.cmd)
-
-        let settings = makeTestSettings(
-            popupCopyAndClose: sharedCombo,
-            popupSaveToFile: (1, 256),
-            popupClose: (53, 256)
-        )
-
-        // Try to set popupSaveToFile to same as popupCopyAndClose
-        let result = HotKeyValidator.findDuplicate(
-            carbonKeyCode: sharedCombo.0,
-            carbonModifiers: sharedCombo.1,
-            currentType: .popupSaveToFile,
-            in: settings
-        )
-
-        XCTAssertEqual(result, .popupCopyAndClose)
     }
 
     // MARK: - Key Code Range Coverage Tests
@@ -1069,16 +1039,67 @@ final class HotKeyValidatorTests: XCTestCase {
         )
     }
 
+    // MARK: - Simplified Validation Tests (Carbon API Skipped)
+
+    /// Tests that Cmd+Option+, succeeds (not in blocklist)
+    /// This is the key test for the simplified validation approach
+    func test_canRegister_cmdOptionComma_succeeds() {
+        // cmd+option+, (keyCode: 43, modifiers: 2304)
+        let result = HotKeyValidator.canRegister(
+            carbonKeyCode: 43,
+            carbonModifiers: 2304 // cmdKey(256) + optionKey(2048)
+        )
+
+        switch result {
+        case .success:
+            // Expected - Cmd+Option+, is not in the blocklist
+            break
+        case let .failure(error):
+            XCTFail("Cmd+Option+, should succeed, but got error: \(error)")
+        }
+    }
+
+    /// Tests that Option+Control+[ succeeds (potential @ key on JIS keyboard)
+    func test_canRegister_optionControlBracket_succeeds() {
+        // option+control+[ (keyCode: 33, modifiers: 6144)
+        let result = HotKeyValidator.canRegister(
+            carbonKeyCode: 33, // [ key (@ on some keyboard layouts)
+            carbonModifiers: 6144 // optionKey(2048) + controlKey(4096)
+        )
+
+        switch result {
+        case .success:
+            // Expected - Option+Control+[ is not in the blocklist
+            break
+        case let .failure(error):
+            XCTFail("Option+Control+[ should succeed, but got error: \(error)")
+        }
+    }
+
+    /// Tests that Cmd+Shift+Option+F12 succeeds (unusual combo)
+    func test_canRegister_cmdShiftOptionF12_succeeds() {
+        // cmd+shift+option+F12 (keyCode: 111, modifiers: 2816)
+        let result = HotKeyValidator.canRegister(
+            carbonKeyCode: 111, // F12
+            carbonModifiers: 2816 // cmdKey(256) + shiftKey(512) + optionKey(2048)
+        )
+
+        switch result {
+        case .success:
+            // Expected - unusual combo not in blocklist
+            break
+        case let .failure(error):
+            XCTFail("Cmd+Shift+Option+F12 should succeed, but got error: \(error)")
+        }
+    }
+
     // MARK: - Helper Methods
 
     /// Creates test HotKeySettings with specified key combinations
     private func makeTestSettings(
         recording: (UInt32, UInt32) = (49, 2048),
         cancel: (UInt32, UInt32) = (53, 0),
-        recordingPause: (UInt32, UInt32) = (35, 2560),
-        popupCopyAndClose: (UInt32, UInt32) = (8, 768),
-        popupSaveToFile: (UInt32, UInt32) = (1, 768),
-        popupClose: (UInt32, UInt32) = (53, 0)
+        recordingPause: (UInt32, UInt32) = (35, 2560)
     ) -> HotKeySettings {
         HotKeySettings(
             recordingHotKey: .init(
@@ -1092,18 +1113,6 @@ final class HotKeyValidatorTests: XCTestCase {
             recordingPauseHotKey: .init(
                 carbonKeyCode: recordingPause.0,
                 carbonModifiers: recordingPause.1
-            ),
-            popupCopyAndCloseHotKey: .init(
-                carbonKeyCode: popupCopyAndClose.0,
-                carbonModifiers: popupCopyAndClose.1
-            ),
-            popupSaveToFileHotKey: .init(
-                carbonKeyCode: popupSaveToFile.0,
-                carbonModifiers: popupSaveToFile.1
-            ),
-            popupCloseHotKey: .init(
-                carbonKeyCode: popupClose.0,
-                carbonModifiers: popupClose.1
             )
         )
     }

@@ -107,7 +107,6 @@ struct NotificationDetailsPopover: View {
                 )
             }
         }
-        .environment(\.locale, store.settings.general.preferredLocale.locale)
     }
 }
 

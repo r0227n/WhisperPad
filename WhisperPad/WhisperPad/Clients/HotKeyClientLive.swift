@@ -83,6 +83,8 @@ private final class HotKeyManager {
     // MARK: - 動的キーコンボ対応
 
     /// 動的キーコンボで録音ホットキーを登録
+    ///
+    /// バリデーションは SettingsFeature で実施済みのため、ここでは直接登録します。
     /// - Parameters:
     ///   - combo: キーコンボ設定
     ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
@@ -90,22 +92,6 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
-        let validation = HotKeyValidator.canRegister(
-            carbonKeyCode: combo.carbonKeyCode,
-            carbonModifiers: combo.carbonModifiers
-        )
-
-        switch validation {
-        case .success:
-            break
-        case let .failure(error):
-            logger.error("""
-            Cannot register recording hotkey: \(error). \
-            keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-            """)
-            return
-        }
-
         if let oldHotKey = recordingToggleHotKey { scheduleDeallocation(oldHotKey) }
         recordingToggleHotKey = nil
 
@@ -121,6 +107,8 @@ private final class HotKeyManager {
     }
 
     /// 動的キーコンボでキャンセルホットキーを登録
+    ///
+    /// バリデーションは SettingsFeature で実施済みのため、ここでは直接登録します。
     /// - Parameters:
     ///   - combo: キーコンボ設定
     ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
@@ -128,21 +116,6 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
-        let validation = HotKeyValidator.canRegister(
-            carbonKeyCode: combo.carbonKeyCode,
-            carbonModifiers: combo.carbonModifiers
-        )
-
-        switch validation {
-        case .success:
-            break
-        case let .failure(error):
-            logger.error(
-                "Cannot register cancel hotkey: \(error). keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)"
-            )
-            return
-        }
-
         if let oldHotKey = cancelHotKey { scheduleDeallocation(oldHotKey) }
         cancelHotKey = nil
 
@@ -160,6 +133,8 @@ private final class HotKeyManager {
     // MARK: - Recording Pause (⌥⇧P)
 
     /// 動的キーコンボで録音一時停止ホットキーを登録
+    ///
+    /// バリデーションは SettingsFeature で実施済みのため、ここでは直接登録します。
     /// - Parameters:
     ///   - combo: キーコンボ設定
     ///   - handler: ホットキーが押されたときに呼ばれるハンドラー
@@ -167,22 +142,6 @@ private final class HotKeyManager {
         _ combo: HotKeySettings.KeyComboSettings,
         handler: @escaping () -> Void
     ) {
-        let validation = HotKeyValidator.canRegister(
-            carbonKeyCode: combo.carbonKeyCode,
-            carbonModifiers: combo.carbonModifiers
-        )
-
-        switch validation {
-        case .success:
-            break
-        case let .failure(error):
-            logger.error("""
-            Cannot register recording pause hotkey: \(error). \
-            keyCode=\(combo.carbonKeyCode), mods=\(combo.carbonModifiers)
-            """)
-            return
-        }
-
         if let oldHotKey = recordingPauseHotKey { scheduleDeallocation(oldHotKey) }
         recordingPauseHotKey = nil
 

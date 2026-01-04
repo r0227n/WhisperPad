@@ -20,7 +20,7 @@ struct OutputSettingsSection: View {
                 SettingSectionHeader(
                     icon: "arrow.up.doc",
                     iconColor: .green,
-                    title: String(localized: "recording.output.title", comment: "Output Settings")
+                    title: "recording.output.title"
                 )
 
                 // クリップボードにコピー

@@ -47,10 +47,35 @@ struct AppReducer {
         var transcription: TranscriptionFeature.State = .init()
 
         /// 設定機能の状態
-        var settings: SettingsFeature.State = .init()
+        var settings: SettingsFeature.State
 
         /// 最後に録音されたファイルの URL
         var lastRecordingURL: URL?
+
+        /// 初期化
+        ///
+        /// - Parameters:
+        ///   - appStatus: アプリステータス（デフォルト: .idle）
+        ///   - lastTranscription: 最後の文字起こし結果
+        ///   - recording: 録音機能の状態
+        ///   - transcription: 文字起こし機能の状態
+        ///   - settings: 設定機能の状態
+        ///   - lastRecordingURL: 最後に録音されたファイルの URL
+        init(
+            appStatus: AppStatus = .idle,
+            lastTranscription: String? = nil,
+            recording: RecordingFeature.State = .init(),
+            transcription: TranscriptionFeature.State = .init(),
+            settings: SettingsFeature.State = .init(),
+            lastRecordingURL: URL? = nil
+        ) {
+            self.appStatus = appStatus
+            self.lastTranscription = lastTranscription
+            self.recording = recording
+            self.transcription = transcription
+            self.settings = settings
+            self.lastRecordingURL = lastRecordingURL
+        }
     }
 
     // MARK: - Action
@@ -132,7 +157,19 @@ struct AppReducer {
 
             case let .recording(.delegate(.recordingFailed(error))):
                 state.appStatus = .error(error.localizedDescription)
+                let languageCode = state.resolveLanguageCode()
+                let iconSettings = state.settings.settings.general.menuBarIconSettings
+
                 return .run { send in
+                    await MainActor.run {
+                        showLocalizedAlert(
+                            style: .critical,
+                            titleKey: "error.dialog.recording.title",
+                            message: error.localizedDescription,
+                            languageCode: languageCode,
+                            iconSettings: iconSettings
+                        )
+                    }
                     try await clock.sleep(for: .seconds(5))
                     await send(.resetToIdle)
                 }
@@ -211,7 +248,19 @@ struct AppReducer {
 
             case let .errorOccurred(message):
                 state.appStatus = .error(message)
+                let languageCode = state.resolveLanguageCode()
+                let iconSettings = state.settings.settings.general.menuBarIconSettings
+
                 return .run { send in
+                    await MainActor.run {
+                        showLocalizedAlert(
+                            style: .critical,
+                            titleKey: "error.dialog.general.title",
+                            message: message,
+                            languageCode: languageCode,
+                            iconSettings: iconSettings
+                        )
+                    }
                     try await clock.sleep(for: .seconds(5))
                     await send(.resetToIdle)
                 }
@@ -236,6 +285,23 @@ struct AppReducer {
         // 設定機能の子 Reducer を統合
         Scope(state: \.settings, action: \.settings) {
             SettingsFeature()
+        }
+    }
+}
+
+// MARK: - State Helpers
+
+private extension AppReducer.State {
+    /// アプリ設定から言語コードを解決する
+    /// - Returns: 言語コード文字列（例: "en", "ja"）
+    func resolveLanguageCode() -> String {
+        let preferredLocale = settings.settings.general.preferredLocale
+        if let identifier = preferredLocale.identifier {
+            return identifier
+        } else {
+            // .system の場合、システムの優先言語を使用
+            let systemLanguage = Locale.preferredLanguages.first ?? "en"
+            return Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
         }
     }
 }

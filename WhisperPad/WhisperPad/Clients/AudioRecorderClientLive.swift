@@ -41,16 +41,16 @@ extension AudioRecorderClient: DependencyKey {
             currentLevel: {
                 await audioRecorder.currentLevel
             },
+            getCurrentAudioLevel: {
+                await audioRecorder.getCurrentAudioLevel()
+            },
             observeAudioLevel: {
                 AsyncStream { continuation in
                     let task = Task {
                         while !Task.isCancelled {
-                            if let level = await audioRecorder.currentLevel {
-                                continuation.yield(level)
-                            } else {
-                                // 録音していない場合はデフォルト値（-60dB = 無音）
-                                continuation.yield(-60.0)
-                            }
+                            // ✅ actor境界を1回だけ越える
+                            let level = await audioRecorder.getCurrentAudioLevel()
+                            continuation.yield(level)
                             // 30fps (33ms間隔) で更新
                             try? await Task.sleep(for: .milliseconds(33))
                         }
@@ -61,6 +61,12 @@ extension AudioRecorderClient: DependencyKey {
                         task.cancel()
                     }
                 }
+            },
+            startMonitoring: {
+                try await audioRecorder.startMonitoring()
+            },
+            stopMonitoring: {
+                await audioRecorder.stopMonitoring()
             },
             pauseRecording: {
                 await audioRecorder.pause()
