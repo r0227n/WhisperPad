@@ -13,6 +13,7 @@ struct HoverPopoverButton<Content: View>: View {
     let icon: String
     @ViewBuilder var popoverContent: () -> Content
 
+    @Environment(\.locale) private var locale
     @State private var isShowingPopover = false
     @State private var isHovering = false
 
@@ -50,6 +51,7 @@ struct HoverPopoverButton<Content: View>: View {
         }
         .popover(isPresented: $isShowingPopover, arrowEdge: .trailing) {
             popoverContent()
+                .environment(\.locale, locale)
                 .padding()
                 .frame(minWidth: 280)
         }

@@ -53,6 +53,9 @@ actor AudioRecorder {
     private var baseIdentifier: String = ""
     private var accumulatedDuration: TimeInterval = 0
 
+    /// モニタリング専用レコーダー（設定画面のマイクテスト用）
+    private var monitoringRecorder: AVAudioRecorder?
+
     /// ロガー
     private let logger = Logger(subsystem: "com.whisperpad", category: "AudioRecorder")
 
@@ -77,6 +80,18 @@ actor AudioRecorder {
     /// 現在の音声レベル (dB)
     var currentLevel: Float? {
         guard let recorder, recorder.isRecording else { return nil }
+        recorder.updateMeters()
+        return recorder.averagePower(forChannel: 0)
+    }
+
+    /// モニタリング中かどうか
+    var isMonitoring: Bool {
+        monitoringRecorder?.isRecording ?? false
+    }
+
+    /// モニタリング用の音声レベル (dB)
+    var monitoringLevel: Float? {
+        guard let recorder = monitoringRecorder, recorder.isRecording else { return nil }
         recorder.updateMeters()
         return recorder.averagePower(forChannel: 0)
     }
@@ -217,6 +232,82 @@ actor AudioRecorder {
         segmentURLs.append(url)
 
         logger.info("Recording resumed - new segment \(self.currentSegmentIndex)")
+    }
+
+    // MARK: - Monitoring Methods
+
+    /// モニタリングを開始（設定画面のマイクテスト用）
+    ///
+    /// 一時ファイルに録音することで音声レベルを取得可能にします。
+    /// 録音ファイル自体は使用されず、モニタリング停止時に削除されます。
+    func startMonitoring() async throws {
+        // 既にモニタリング中の場合は何もしない
+        guard monitoringRecorder == nil else { return }
+
+        // 一時ファイルに録音（実際には使用しない）
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("whisperpad_monitor_\(UUID().uuidString).wav")
+
+        do {
+            monitoringRecorder = try AVAudioRecorder(url: tempURL, settings: Self.recordingSettings)
+        } catch {
+            logger.error("Failed to create monitoring recorder: \(error.localizedDescription)")
+            try? FileManager.default.removeItem(at: tempURL)
+            throw RecordingError.audioFileCreationFailed(
+                "Failed to create monitoring recorder: \(error.localizedDescription)"
+            )
+        }
+
+        guard let recorder = monitoringRecorder else {
+            try? FileManager.default.removeItem(at: tempURL)
+            throw RecordingError.recorderStartFailed("Monitoring recorder instance is nil")
+        }
+
+        // メータリングを有効化
+        recorder.isMeteringEnabled = true
+
+        // 録音開始
+        guard recorder.record() else {
+            monitoringRecorder = nil
+            try? FileManager.default.removeItem(at: tempURL)
+            throw RecordingError.recorderStartFailed("Failed to start monitoring")
+        }
+
+        logger.info("Monitoring started")
+    }
+
+    /// モニタリングを停止
+    func stopMonitoring() async {
+        guard let recorder = monitoringRecorder else { return }
+
+        let fileURL = recorder.url
+        recorder.stop()
+        monitoringRecorder = nil
+
+        // 一時ファイルを削除
+        try? FileManager.default.removeItem(at: fileURL)
+
+        logger.info("Monitoring stopped")
+    }
+
+    /// 現在の音声レベルを取得（モニタリング中または録音中）
+    ///
+    /// - Returns: 音声レベル（dB）、デフォルトは -60.0（無音）
+    func getCurrentAudioLevel() -> Float {
+        // モニタリング中のレベルを優先
+        if let recorder = monitoringRecorder, recorder.isRecording {
+            recorder.updateMeters()
+            return recorder.averagePower(forChannel: 0)
+        }
+
+        // 録音中のレベルを次に確認
+        if let recorder, recorder.isRecording {
+            recorder.updateMeters()
+            return recorder.averagePower(forChannel: 0)
+        }
+
+        // どちらでもない場合はデフォルト値
+        return -60.0
     }
 
     // MARK: - Private Methods
