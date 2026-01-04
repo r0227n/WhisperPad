@@ -103,6 +103,24 @@ extension UserDefaultsClient: DependencyKey {
                     logger.error("Failed to create bookmark: \(error.localizedDescription)")
                     throw UserDefaultsError.bookmarkCreationFailed(error.localizedDescription)
                 }
+            },
+            loadDefaultModel: {
+                let modelName = UserDefaults.standard.string(forKey: AppSettings.Keys.defaultModel)
+                if let modelName {
+                    logger.info("Default model loaded: \(modelName)")
+                } else {
+                    logger.debug("No default model found")
+                }
+                return modelName
+            },
+            saveDefaultModel: { modelName in
+                if let modelName {
+                    UserDefaults.standard.set(modelName, forKey: AppSettings.Keys.defaultModel)
+                    logger.info("Default model saved: \(modelName)")
+                } else {
+                    UserDefaults.standard.removeObject(forKey: AppSettings.Keys.defaultModel)
+                    logger.info("Default model removed")
+                }
             }
         )
     }

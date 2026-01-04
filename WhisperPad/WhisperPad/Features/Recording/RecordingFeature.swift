@@ -176,9 +176,9 @@ struct RecordingFeature {
                     // 非同期で初期化を開始
                     .run { [whisperKitClient, userDefaultsClient] send in
                         do {
-                            let settings = await userDefaultsClient.loadSettings()
-                            let modelName = settings.transcription.modelName
-                            try await whisperKitClient.initialize(modelName)
+                            // UserDefaults からデフォルトモデルを読み込み（nil の場合は推奨モデルを使用）
+                            let defaultModel = await userDefaultsClient.loadDefaultModel()
+                            try await whisperKitClient.initialize(defaultModel)
                             await send(.whisperKitInitialized)
                         } catch {
                             await send(.whisperKitInitFailed(error))
@@ -188,8 +188,12 @@ struct RecordingFeature {
 
             case .whisperKitInitialized:
                 state.whisperKitInitializing = false
-                // 初期化完了のみ、自動録音開始しない
-                return .none
+                // 初期化完了後、使用されたモデル名を UserDefaults に保存
+                return .run { [whisperKitClient, userDefaultsClient] _ in
+                    if let loadedModelName = await whisperKitClient.loadedModelName() {
+                        await userDefaultsClient.saveDefaultModel(loadedModelName)
+                    }
+                }
 
             case let .whisperKitInitFailed(error):
                 state.whisperKitInitializing = false

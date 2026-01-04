@@ -52,6 +52,15 @@ struct AppReducer {
         /// 最後に録音されたファイルの URL
         var lastRecordingURL: URL?
 
+        /// モデルの状態
+        var modelState: TranscriptionModelState = .unloaded
+
+        /// 利用可能なモデル一覧（モデル名の配列）
+        var availableModels: [String] = []
+
+        /// 現在読み込まれているモデル名
+        var currentModelName: String?
+
         /// 初期化
         ///
         /// - Parameters:
@@ -61,13 +70,19 @@ struct AppReducer {
         ///   - transcription: 文字起こし機能の状態
         ///   - settings: 設定機能の状態
         ///   - lastRecordingURL: 最後に録音されたファイルの URL
+        ///   - modelState: モデルの状態
+        ///   - availableModels: 利用可能なモデル一覧
+        ///   - currentModelName: 現在のモデル名
         init(
             appStatus: AppStatus = .idle,
             lastTranscription: String? = nil,
             recording: RecordingFeature.State = .init(),
             transcription: TranscriptionFeature.State = .init(),
             settings: SettingsFeature.State = .init(),
-            lastRecordingURL: URL? = nil
+            lastRecordingURL: URL? = nil,
+            modelState: TranscriptionModelState = .unloaded,
+            availableModels: [String] = [],
+            currentModelName: String? = nil
         ) {
             self.appStatus = appStatus
             self.lastTranscription = lastTranscription
@@ -75,6 +90,9 @@ struct AppReducer {
             self.transcription = transcription
             self.settings = settings
             self.lastRecordingURL = lastRecordingURL
+            self.modelState = modelState
+            self.availableModels = availableModels
+            self.currentModelName = currentModelName
         }
     }
 
@@ -104,6 +122,16 @@ struct AppReducer {
         case transcription(TranscriptionFeature.Action)
         /// 設定機能のアクション
         case settings(SettingsFeature.Action)
+        /// 利用可能なモデル一覧を取得
+        case fetchAvailableModels
+        /// モデル一覧取得完了
+        case modelsLoaded([String])
+        /// モデルを選択
+        case selectModel(String)
+        /// モデル状態を更新
+        case modelStateUpdated(TranscriptionModelState)
+        /// 現在のモデル名を更新
+        case currentModelNameUpdated(String?)
     }
 
     // MARK: - Dependencies
@@ -112,6 +140,7 @@ struct AppReducer {
     @Dependency(\.outputClient) var outputClient
     @Dependency(\.whisperKitClient) var whisperKitClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
+    @Dependency(\.transcriptionClient) var transcriptionClient
 
     // MARK: - Reducer Body
 
@@ -364,6 +393,33 @@ struct AppReducer {
 
             case .resetToIdle:
                 state.appStatus = .idle
+                return .none
+
+            case .fetchAvailableModels:
+                return .run { [transcriptionClient] send in
+                    do {
+                        let modelNames = try await transcriptionClient.fetchAvailableModels()
+                        await send(.modelsLoaded(modelNames))
+                    } catch {
+                        // エラー時は空のリストを設定
+                        await send(.modelsLoaded([]))
+                    }
+                }
+
+            case let .modelsLoaded(models):
+                state.availableModels = models
+                return .none
+
+            case let .selectModel(modelName):
+                // 設定機能に委譲
+                return .send(.settings(.selectModel(modelName)))
+
+            case let .modelStateUpdated(modelState):
+                state.modelState = modelState
+                return .none
+
+            case let .currentModelNameUpdated(modelName):
+                state.currentModelName = modelName
                 return .none
             }
         }

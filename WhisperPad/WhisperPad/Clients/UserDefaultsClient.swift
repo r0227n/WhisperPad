@@ -38,6 +38,14 @@ struct UserDefaultsClient: Sendable {
     /// - Parameter url: Bookmark を作成する URL
     /// - Returns: 作成された Bookmark データ
     var createBookmark: @Sendable (URL) async throws -> Data
+
+    /// デフォルトモデル名を読み込み
+    /// - Returns: 保存されているモデル名（未設定の場合は nil）
+    var loadDefaultModel: @Sendable () async -> String?
+
+    /// デフォルトモデル名を保存
+    /// - Parameter modelName: 保存するモデル名（nil の場合は削除）
+    var saveDefaultModel: @Sendable (String?) async -> Void
 }
 
 // MARK: - UserDefaultsError
@@ -96,6 +104,13 @@ extension UserDefaultsClient: TestDependencyKey {
             createBookmark: { url in
                 clientLogger.debug("[PREVIEW] createBookmark called for \(url.path)")
                 return Data()
+            },
+            loadDefaultModel: {
+                clientLogger.debug("[PREVIEW] loadDefaultModel called")
+                return nil
+            },
+            saveDefaultModel: { modelName in
+                clientLogger.debug("[PREVIEW] saveDefaultModel called with \(modelName ?? "nil")")
             }
         )
     }
@@ -123,6 +138,13 @@ extension UserDefaultsClient: TestDependencyKey {
             createBookmark: { url in
                 clientLogger.debug("[TEST] createBookmark called for \(url.path)")
                 return Data()
+            },
+            loadDefaultModel: {
+                clientLogger.debug("[TEST] loadDefaultModel called")
+                return nil
+            },
+            saveDefaultModel: { modelName in
+                clientLogger.debug("[TEST] saveDefaultModel called with \(modelName ?? "nil")")
             }
         )
     }

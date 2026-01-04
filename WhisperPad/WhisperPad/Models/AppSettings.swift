@@ -56,5 +56,6 @@ extension AppSettings {
     enum Keys {
         static let settings = "WhisperPad.settings"
         static let storageBookmark = "WhisperPad.storageBookmark"
+        static let defaultModel = "WhisperPad.defaultModel"
     }
 }

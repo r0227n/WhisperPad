@@ -492,7 +492,11 @@ struct SettingsFeature {
 
                 return .merge(
                     .send(.saveSettings),
-                    .send(.delegate(.modelChanged(modelName)))
+                    .send(.delegate(.modelChanged(modelName))),
+                    .run { [userDefaultsClient] _ in
+                        // デフォルトモデルを UserDefaults に保存
+                        await userDefaultsClient.saveDefaultModel(modelName)
+                    }
                 )
 
             case let .downloadModel(modelName):
