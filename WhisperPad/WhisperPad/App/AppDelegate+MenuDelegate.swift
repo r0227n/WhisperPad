@@ -4,6 +4,7 @@
 //
 
 import AppKit
+import ComposableArchitecture
 import Dependencies
 
 // MARK: - NSMenuDelegate

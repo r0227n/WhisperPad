@@ -2,8 +2,6 @@
 //  WhisperPadApp.swift
 //  WhisperPad
 //
-//  Created by RyoNishimura on 2025/12/27.
-//
 
 import ComposableArchitecture
 import SwiftUI
