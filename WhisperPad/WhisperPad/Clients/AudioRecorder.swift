@@ -252,12 +252,14 @@ actor AudioRecorder {
             monitoringRecorder = try AVAudioRecorder(url: tempURL, settings: Self.recordingSettings)
         } catch {
             logger.error("Failed to create monitoring recorder: \(error.localizedDescription)")
+            try? FileManager.default.removeItem(at: tempURL)
             throw RecordingError.audioFileCreationFailed(
                 "Failed to create monitoring recorder: \(error.localizedDescription)"
             )
         }
 
         guard let recorder = monitoringRecorder else {
+            try? FileManager.default.removeItem(at: tempURL)
             throw RecordingError.recorderStartFailed("Monitoring recorder instance is nil")
         }
 
@@ -267,6 +269,7 @@ actor AudioRecorder {
         // 録音開始
         guard recorder.record() else {
             monitoringRecorder = nil
+            try? FileManager.default.removeItem(at: tempURL)
             throw RecordingError.recorderStartFailed("Failed to start monitoring")
         }
 
