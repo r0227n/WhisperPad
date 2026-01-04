@@ -352,27 +352,28 @@ struct SettingsFeature {
 
                 var effects: [Effect<Action>] = []
 
-                // カスタムストレージのブックマーク解決
-                if let bookmarkData = settings.transcription.storageBookmarkData {
-                    effects.append(.run { [modelClient] _ in
+                // カスタムストレージのブックマーク解決と後続処理を順次実行
+                effects.append(.run { [modelClient, userDefaultsClient] send in
+                    // 1. カスタムストレージ場所を設定
+                    if let bookmarkData = settings.transcription.storageBookmarkData {
                         if let url = await userDefaultsClient.resolveBookmark(bookmarkData) {
                             await modelClient.setStorageLocation(url)
                         }
-                    })
-                }
+                    }
 
-                // デフォルトパス/カスタムパスに関わらず、ダウンロード済みモデルとストレージ使用量を取得
-                effects.append(.run { [modelClient] send in
+                    // 2. ストレージ設定完了後にダウンロード済みモデルを取得
                     await send(.fetchDownloadedModels)
+
+                    // 3. ストレージ使用量とURL取得
                     let usage = await modelClient.getStorageUsage()
                     await send(.storageUsageResponse(usage))
-                    // 現在のストレージパスを取得
                     let storageURL = await modelClient.getModelStorageURL()
                     await send(.modelStorageURLResponse(storageURL))
                 })
-                // 出力ディレクトリのブックマークを解決
+
+                // 出力ディレクトリのブックマークを解決（独立して実行可能）
                 if let outputBookmark = settings.output.outputBookmarkData {
-                    effects.append(.run { send in
+                    effects.append(.run { [userDefaultsClient] send in
                         if let url = await userDefaultsClient.resolveBookmark(outputBookmark) {
                             await send(.outputDirectoryResolved(url))
                         }

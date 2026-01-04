@@ -211,6 +211,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func initializeModelCache() {
         Task { @MainActor in
             do {
+                // カスタムストレージ場所を設定（ブックマーク解決）
+                let settings = store.settings.settings
+                if let bookmarkData = settings.transcription.storageBookmarkData {
+                    @Dependency(\.userDefaultsClient) var userDefaultsClient
+                    if let url = await userDefaultsClient.resolveBookmark(bookmarkData) {
+                        await modelClient.setStorageLocation(url)
+                    }
+                }
+
                 let models = try await modelClient.fetchDownloadedModelsAsWhisperModels()
                 cachedDownloadedModels = models
 
