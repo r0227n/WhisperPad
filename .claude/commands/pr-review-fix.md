@@ -1,14 +1,14 @@
 ---
 description: PR レビューコメントを分析し、1件ずつ対応・コミット
 argument-hint: [--skip-confirm]
-allowed-tools: Bash(gh api:*), Bash(gh pr view:*), Bash(git -C add:*), Bash(git -C commit:*), Bash(git -C diff:*), Bash(git -C push:*), Bash(git -C status:*), Read, Grep, Glob, Edit, TodoWrite, EnterPlanMode, ExitPlanMode
+allowed-tools: Bash(gh api:*), Bash(gh pr view:*), Bash(git -C add:*), Bash(git -C commit:*), Bash(git -C diff:*), Bash(git -C push:*), Bash(git -C status:*), Read, Grep, Glob, Edit, TodoWrite, AskUserQuestion, EnterPlanMode, ExitPlanMode
 ---
 
 # PR Comments: レビューコメント対応
 
 ## 引数
 
-- `$ARGUMENTS`: `--skip-confirm` が指定された場合、plan mode 確認をスキップ
+- `$ARGUMENTS`: `--skip-confirm` が指定された場合、ユーザー確認をスキップして自動で推奨対応を実行
 
 ## 概要
 
@@ -79,12 +79,24 @@ gh api /repos/{owner}/{repo}/issues/{number}/comments
 
 ### 分析結果の形式
 
+以下の形式で各コメントの情報を整理:
+
 ```markdown
-| #   | ファイル           | 問題         | 対応 | 理由         |
-| --- | ------------------ | ------------ | ---- | ------------ |
-| 1   | path/to/file.swift | 未使用変数   | 要   | -            |
-| 2   | path/to/file.swift | 設計上の懸念 | 不要 | 意図的な実装 |
+| #   | ファイル                       | 問題の概要                   | 推奨対応 | 理由                   | 修正内容の要約                           |
+| --- | ------------------------------ | ---------------------------- | -------- | ---------------------- | ---------------------------------------- |
+| 1   | AudioRecorder.swift            | 一時ファイル未クリーンアップ | 修正要   | リソースリーク防止     | エラーパスに FileManager.removeItem 追加 |
+| 2   | FileOutputDetailsPopover.swift | 翻訳者コメント欠落           | 修正要   | 翻訳コンテキスト維持   | String(localized:comment:) に戻す        |
+| 3   | SettingsFeature.swift          | 監視停止未実行               | 修正要   | リソースクリーンアップ | stopAudioLevelObservation 呼び出し       |
 ```
+
+**含めるべき情報:**
+
+- コメント番号 (#)
+- 対象ファイルパス
+- 問題の概要 (簡潔に)
+- 推奨される対応 (修正要/不要)
+- 推奨理由
+- 修正内容の要約 (修正要の場合)
 
 ---
 
@@ -92,15 +104,37 @@ gh api /repos/{owner}/{repo}/issues/{number}/comments
 
 `--skip-confirm` が **指定されていない** 場合:
 
-1. 分析結果を表示
-2. `EnterPlanMode` を使用してユーザー確認を求める
-3. ユーザーが承認したら Step 4 へ進む
+### 1. 分析結果の表示
 
-ユーザーは以下のアクションが可能:
+Step 2 で作成した分析結果の表を表示し、全体像を把握できるようにする。
 
-- **承認**: そのまま実行
-- **修正依頼**: 対応方針の変更を指示
-- **キャンセル**: 実行せずに終了
+### 2. AskUserQuestion での個別確認
+
+各レビューコメントについて、`AskUserQuestion` を使用して個別に対応を確認する。
+
+**質問形式の例:**
+
+```
+コメント #1: AudioRecorder.swift - 一時ファイル未クリーンアップ
+推奨: 修正要
+理由: リソースリーク防止のため、エラーパス発生時に一時ファイルをクリーンアップする必要がある
+修正内容: エラーパスに FileManager.removeItem 追加
+
+このコメントにどう対応しますか?
+```
+
+**選択肢:**
+
+- **推奨通り修正する**: Step 4 で修正・コミット・返信を実行
+- **対応不要として返信する**: コード修正せず、理由を添えてコメントに返信のみ
+- **スキップ (後で手動対応)**: 現時点では何もせず、後で手動で対応する
+
+### 3. ユーザーの選択に基づいて実行計画を作成
+
+各コメントへのユーザーの選択を記録し、Step 4 で実行する内容を確定する。
+
+**`--skip-confirm` フラグが指定された場合:**
+全てのコメントに対して自動で推奨対応を実行 (AskUserQuestion をスキップ)
 
 ---
 

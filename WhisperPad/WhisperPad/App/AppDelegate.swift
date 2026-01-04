@@ -121,8 +121,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Initialization
 
+    /// UserDefaults から設定を同期的に読み込む
+    ///
+    /// Store 初期化時に設定を読み込むことで、起動直後から正しいアイコン設定を反映する。
+    /// 非同期の `loadSettings` アクションを待たずに済むため、タイミング問題を解消する。
+    private static func loadSettingsSync() -> AppSettings {
+        guard let data = UserDefaults.standard.data(forKey: AppSettings.Keys.settings) else {
+            return .default
+        }
+        return (try? JSONDecoder().decode(AppSettings.self, from: data)) ?? .default
+    }
+
     override init() {
-        self.store = Store(initialState: AppReducer.State()) {
+        let initialSettings = Self.loadSettingsSync()
+
+        self.store = Store(
+            initialState: AppReducer.State(
+                settings: SettingsFeature.State(settings: initialSettings)
+            )
+        ) {
             AppReducer()
         }
         super.init()
@@ -132,6 +149,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         logger.info("Application did finish launching")
+
+        // 設定は init() で同期的に読み込み済み（loadSettingsSync()）
+        // 非同期の loadSettings は不要
+
         setupStatusItem()
         setupObservation()
         setupHotKeyObserver()
@@ -182,6 +203,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupObservation() {
         observe { [weak self] in
             guard let self else { return }
+
+            // アイコン設定の変更を監視（設定読み込み時に更新をトリガーするため）
+            _ = self.store.settings.settings.general.menuBarIconSettings
 
             // Detect locale changes and rebuild menu
             let newLocale = self.store.settings.settings.general.preferredLocale

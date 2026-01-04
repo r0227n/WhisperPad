@@ -15,17 +15,17 @@ struct SettingSectionHeader: View {
     /// アイコンの色
     let iconColor: Color
     /// タイトル
-    let title: String
+    let title: LocalizedStringKey
     /// ヘルプテキスト（オプション）
-    let helpText: String?
+    let helpText: LocalizedStringKey?
     /// フォントサイズ
     let fontSize: CGFloat
 
     init(
         icon: String,
         iconColor: Color = .accentColor,
-        title: String,
-        helpText: String? = nil,
+        title: LocalizedStringKey,
+        helpText: LocalizedStringKey? = nil,
         fontSize: CGFloat = 14
     ) {
         self.icon = icon

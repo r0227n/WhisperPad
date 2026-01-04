@@ -47,19 +47,35 @@ struct AppReducer {
         var transcription: TranscriptionFeature.State = .init()
 
         /// 設定機能の状態
-        var settings: SettingsFeature.State = .init()
+        var settings: SettingsFeature.State
 
         /// 最後に録音されたファイルの URL
         var lastRecordingURL: URL?
 
-        /// 現在ロード中/ロード済みのモデル名
-        var currentModelName: String?
-
-        /// モデルの状態
-        var modelState: TranscriptionModelState = .unloaded
-
-        /// 利用可能なモデル一覧
-        var availableModels: [String] = []
+        /// 初期化
+        ///
+        /// - Parameters:
+        ///   - appStatus: アプリステータス（デフォルト: .idle）
+        ///   - lastTranscription: 最後の文字起こし結果
+        ///   - recording: 録音機能の状態
+        ///   - transcription: 文字起こし機能の状態
+        ///   - settings: 設定機能の状態
+        ///   - lastRecordingURL: 最後に録音されたファイルの URL
+        init(
+            appStatus: AppStatus = .idle,
+            lastTranscription: String? = nil,
+            recording: RecordingFeature.State = .init(),
+            transcription: TranscriptionFeature.State = .init(),
+            settings: SettingsFeature.State = .init(),
+            lastRecordingURL: URL? = nil
+        ) {
+            self.appStatus = appStatus
+            self.lastTranscription = lastTranscription
+            self.recording = recording
+            self.transcription = transcription
+            self.settings = settings
+            self.lastRecordingURL = lastRecordingURL
+        }
     }
 
     // MARK: - Action
@@ -82,16 +98,6 @@ struct AppReducer {
         case errorOccurred(String)
         /// 待機状態にリセット
         case resetToIdle
-        /// 利用可能なモデル一覧を取得
-        case fetchAvailableModels
-        /// モデル一覧取得完了
-        case availableModelsFetched([String])
-        /// モデルを選択
-        case selectModel(String)
-        /// モデル状態更新
-        case modelStateUpdated(TranscriptionModelState)
-        /// モデル変更完了
-        case modelChanged(String)
         /// 録音機能のアクション
         case recording(RecordingFeature.Action)
         /// 文字起こし機能のアクション
@@ -105,7 +111,6 @@ struct AppReducer {
     @Dependency(\.continuousClock) var clock
     @Dependency(\.outputClient) var outputClient
     @Dependency(\.whisperKitClient) var whisperKitClient
-    @Dependency(\.transcriptionClient) var transcriptionClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
 
     // MARK: - Reducer Body
@@ -147,7 +152,19 @@ struct AppReducer {
 
             case let .recording(.delegate(.recordingFailed(error))):
                 state.appStatus = .error(error.localizedDescription)
+                let languageCode = state.resolveLanguageCode()
+                let iconSettings = state.settings.settings.general.menuBarIconSettings
+
                 return .run { send in
+                    await MainActor.run {
+                        showLocalizedAlert(
+                            style: .critical,
+                            titleKey: "error.dialog.recording.title",
+                            message: error.localizedDescription,
+                            languageCode: languageCode,
+                            iconSettings: iconSettings
+                        )
+                    }
                     try await clock.sleep(for: .seconds(5))
                     await send(.resetToIdle)
                 }
@@ -158,73 +175,47 @@ struct AppReducer {
                 state.lastRecordingURL = url
                 // ダイアログ表示後に文字起こしを開始（設定から言語を取得）
                 let partialLanguage = state.settings.settings.transcription.language.whisperCode
-                // アプリ設定から言語コードを取得
-                let preferredLocale = state.settings.settings.general.preferredLocale
-                let languageCode: String
-                if let identifier = preferredLocale.identifier {
-                    languageCode = identifier
-                } else {
-                    // .system の場合、システムの優先言語を使用
-                    let systemLanguage = Locale.preferredLanguages.first ?? "en"
-                    languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
-                }
+                let languageCode = state.resolveLanguageCode()
+                let iconSettings = state.settings.settings.general.menuBarIconSettings
 
                 return .run { send in
                     await MainActor.run {
-                        let alert = NSAlert()
-                        alert.alertStyle = .warning
-                        alert.messageText = Bundle.main.localizedString(
-                            forKey: "recording.partial_success.alert.title",
-                            preferredLanguage: languageCode
-                        )
                         let messageFormat = Bundle.main.localizedString(
                             forKey: "recording.partial_success.alert.message",
                             preferredLanguage: languageCode
                         )
-                        alert.informativeText = String(format: messageFormat, usedSegments, totalSegments)
-                        alert.addButton(
-                            withTitle: Bundle.main.localizedString(
-                                forKey: "common.ok",
-                                preferredLanguage: languageCode
-                            )
+                        let formattedMessage = String(format: messageFormat, usedSegments, totalSegments)
+
+                        showLocalizedAlert(
+                            style: .warning,
+                            titleKey: "recording.partial_success.alert.title",
+                            message: formattedMessage,
+                            languageCode: languageCode,
+                            iconSettings: iconSettings
                         )
-                        alert.runModal()
                     }
                     await send(.transcription(.startTranscription(audioURL: url, language: partialLanguage)))
                 }
 
             case .recording(.delegate(.whisperKitInitializing)):
                 // WhisperKit初期化中のアラートを表示
-                // アプリ設定から言語コードを取得
-                let preferredLocale = state.settings.settings.general.preferredLocale
-                let languageCode: String
-                if let identifier = preferredLocale.identifier {
-                    languageCode = identifier
-                } else {
-                    // .system の場合、システムの優先言語を使用
-                    let systemLanguage = Locale.preferredLanguages.first ?? "en"
-                    languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
-                }
+                let languageCode = state.resolveLanguageCode()
+                let iconSettings = state.settings.settings.general.menuBarIconSettings
 
                 return .run { _ in
                     await MainActor.run {
-                        let alert = NSAlert()
-                        alert.alertStyle = .informational
-                        alert.messageText = Bundle.main.localizedString(
-                            forKey: "recording.whisperkit_initializing.alert.title",
-                            preferredLanguage: languageCode
-                        )
-                        alert.informativeText = Bundle.main.localizedString(
+                        let message = Bundle.main.localizedString(
                             forKey: "recording.whisperkit_initializing.alert.message",
                             preferredLanguage: languageCode
                         )
-                        alert.addButton(
-                            withTitle: Bundle.main.localizedString(
-                                forKey: "common.ok",
-                                preferredLanguage: languageCode
-                            )
+
+                        showLocalizedAlert(
+                            style: .informational,
+                            titleKey: "recording.whisperkit_initializing.alert.title",
+                            message: message,
+                            languageCode: languageCode,
+                            iconSettings: iconSettings
                         )
-                        alert.runModal()
                     }
                 }
 
@@ -353,7 +344,19 @@ struct AppReducer {
 
             case let .errorOccurred(message):
                 state.appStatus = .error(message)
+                let languageCode = state.resolveLanguageCode()
+                let iconSettings = state.settings.settings.general.menuBarIconSettings
+
                 return .run { send in
+                    await MainActor.run {
+                        showLocalizedAlert(
+                            style: .critical,
+                            titleKey: "error.dialog.general.title",
+                            message: message,
+                            languageCode: languageCode,
+                            iconSettings: iconSettings
+                        )
+                    }
                     try await clock.sleep(for: .seconds(5))
                     await send(.resetToIdle)
                 }
@@ -361,55 +364,6 @@ struct AppReducer {
 
             case .resetToIdle:
                 state.appStatus = .idle
-                return .none
-
-            case .fetchAvailableModels:
-                // ダウンロード済みモデルのみを取得
-                return .run { [transcriptionClient] send in
-                    let downloadedModels = await transcriptionClient.fetchDownloadedModels()
-                    // ソート（アルファベット順）
-                    let sortedModels = downloadedModels.sorted()
-                    await send(.availableModelsFetched(sortedModels))
-
-                    // 現在のモデル状態を取得
-                    let modelState = await transcriptionClient.modelState()
-                    await send(.modelStateUpdated(modelState))
-
-                    // 現在のモデル名を取得
-                    if let currentModel = await transcriptionClient.currentModelName() {
-                        await send(.modelChanged(currentModel))
-                    }
-                }
-
-            case let .availableModelsFetched(models):
-                state.availableModels = models
-                return .none
-
-            case let .selectModel(modelName):
-                // モデルを選択して初期化
-                state.modelState = .loading
-                state.currentModelName = modelName
-                return .run { [transcriptionClient] send in
-                    do {
-                        // モデルを初期化（自動ダウンロード・ロード）
-                        try await transcriptionClient.initialize(modelName)
-
-                        // 初期化完了後の状態を取得
-                        let modelState = await transcriptionClient.modelState()
-                        await send(.modelStateUpdated(modelState))
-                        await send(.modelChanged(modelName))
-                    } catch {
-                        await send(.modelStateUpdated(.error(error.localizedDescription)))
-                    }
-                }
-
-            case let .modelStateUpdated(newState):
-                state.modelState = newState
-                return .none
-
-            case let .modelChanged(modelName):
-                state.currentModelName = modelName
-                state.modelState = .loaded
                 return .none
             }
         }
@@ -427,6 +381,23 @@ struct AppReducer {
         // 設定機能の子 Reducer を統合
         Scope(state: \.settings, action: \.settings) {
             SettingsFeature()
+        }
+    }
+}
+
+// MARK: - Alert Helpers
+
+private extension AppReducer.State {
+    /// アプリ設定から言語コードを解決する
+    /// - Returns: 言語コード文字列（例: "en", "ja"）
+    func resolveLanguageCode() -> String {
+        let preferredLocale = settings.settings.general.preferredLocale
+        if let identifier = preferredLocale.identifier {
+            return identifier
+        } else {
+            // .system の場合、システムの優先言語を使用
+            let systemLanguage = Locale.preferredLanguages.first ?? "en"
+            return Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
         }
     }
 }
