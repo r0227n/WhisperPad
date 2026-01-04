@@ -283,9 +283,7 @@ struct SettingsFeature {
             case .onDisappear:
                 // 音声レベル監視が有効な場合は停止
                 if state.isMonitoringAudio {
-                    state.isMonitoringAudio = false
-                    state.currentAudioLevel = -60.0
-                    return .cancel(id: "audioLevelObservation")
+                    return .send(.stopAudioLevelObservation)
                 }
                 return .none
 
