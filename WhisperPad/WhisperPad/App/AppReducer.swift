@@ -51,6 +51,15 @@ struct AppReducer {
 
         /// 最後に録音されたファイルの URL
         var lastRecordingURL: URL?
+
+        /// 現在ロード中/ロード済みのモデル名
+        var currentModelName: String?
+
+        /// モデルの状態
+        var modelState: TranscriptionModelState = .unloaded
+
+        /// 利用可能なモデル一覧
+        var availableModels: [String] = []
     }
 
     // MARK: - Action
@@ -73,6 +82,16 @@ struct AppReducer {
         case errorOccurred(String)
         /// 待機状態にリセット
         case resetToIdle
+        /// 利用可能なモデル一覧を取得
+        case fetchAvailableModels
+        /// モデル一覧取得完了
+        case availableModelsFetched([String])
+        /// モデルを選択
+        case selectModel(String)
+        /// モデル状態更新
+        case modelStateUpdated(TranscriptionModelState)
+        /// モデル変更完了
+        case modelChanged(String)
         /// 録音機能のアクション
         case recording(RecordingFeature.Action)
         /// 文字起こし機能のアクション
@@ -86,6 +105,7 @@ struct AppReducer {
     @Dependency(\.continuousClock) var clock
     @Dependency(\.outputClient) var outputClient
     @Dependency(\.whisperKitClient) var whisperKitClient
+    @Dependency(\.transcriptionClient) var transcriptionClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
 
     // MARK: - Reducer Body
@@ -341,6 +361,62 @@ struct AppReducer {
 
             case .resetToIdle:
                 state.appStatus = .idle
+                return .none
+
+            case .fetchAvailableModels:
+                // 利用可能なモデル一覧を取得（ダウンロード済み + リモート）
+                return .run { [transcriptionClient] send in
+                    let downloadedModels = await transcriptionClient.fetchDownloadedModels()
+                    let allModels: [String]
+                    do {
+                        allModels = try await transcriptionClient.fetchAvailableModels()
+                    } catch {
+                        // リモート取得失敗時はダウンロード済みモデルのみ使用
+                        allModels = downloadedModels
+                    }
+                    // 重複を除去してソート
+                    let uniqueModels = Array(Set(allModels)).sorted()
+                    await send(.availableModelsFetched(uniqueModels))
+
+                    // 現在のモデル状態を取得
+                    let modelState = await transcriptionClient.modelState()
+                    await send(.modelStateUpdated(modelState))
+
+                    // 現在のモデル名を取得
+                    if let currentModel = await transcriptionClient.currentModelName() {
+                        await send(.modelChanged(currentModel))
+                    }
+                }
+
+            case let .availableModelsFetched(models):
+                state.availableModels = models
+                return .none
+
+            case let .selectModel(modelName):
+                // モデルを選択して初期化
+                state.modelState = .loading
+                state.currentModelName = modelName
+                return .run { [transcriptionClient] send in
+                    do {
+                        // モデルを初期化（自動ダウンロード・ロード）
+                        try await transcriptionClient.initialize(modelName)
+
+                        // 初期化完了後の状態を取得
+                        let modelState = await transcriptionClient.modelState()
+                        await send(.modelStateUpdated(modelState))
+                        await send(.modelChanged(modelName))
+                    } catch {
+                        await send(.modelStateUpdated(.error(error.localizedDescription)))
+                    }
+                }
+
+            case let .modelStateUpdated(newState):
+                state.modelState = newState
+                return .none
+
+            case let .modelChanged(modelName):
+                state.currentModelName = modelName
+                state.modelState = .loaded
                 return .none
             }
         }

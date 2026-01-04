@@ -17,6 +17,8 @@ extension AppDelegate {
         addRecordingItems(to: menu)
         addCancelItem(to: menu)
         menu.addItem(NSMenuItem.separator())
+        addModelSelectionItem(to: menu)
+        menu.addItem(NSMenuItem.separator())
         addSettingsItem(to: menu)
         menu.addItem(NSMenuItem.separator())
 
@@ -96,6 +98,26 @@ extension AppDelegate {
         quitItem.tag = MenuItemTag.quit.rawValue
         quitItem.target = self
         menu.addItem(quitItem)
+    }
+
+    private func addModelSelectionItem(to menu: NSMenu) {
+        let modelItem = NSMenuItem(
+            title: localizedAppString(forKey: "menu.model.selection") + ": " +
+                localizedAppString(forKey: "menu.model.unloaded"),
+            action: nil,
+            keyEquivalent: ""
+        )
+        modelItem.tag = MenuItemTag.modelSelection.rawValue
+        modelItem.image = NSImage(systemSymbolName: "cpu", accessibilityDescription: nil)
+
+        // サブメニューを作成
+        let submenu = NSMenu()
+        modelItem.submenu = submenu
+
+        menu.addItem(modelItem)
+
+        // 初期化時にモデル一覧を取得
+        store.send(.fetchAvailableModels)
     }
 }
 
@@ -253,5 +275,85 @@ extension AppDelegate {
         )
         pauseResumeItem.isHidden = true
         cancelItem.isHidden = true
+    }
+
+    /// モデルメニューの状態を更新
+    func updateModelMenuForCurrentState() {
+        guard let menu = statusMenu,
+              let modelItem = menu.item(withTag: MenuItemTag.modelSelection.rawValue),
+              let submenu = modelItem.submenu
+        else { return }
+
+        // メインメニュー項目のタイトルを更新
+        let modelPrefix = localizedAppString(forKey: "menu.model.selection")
+        let modelStatus: String
+
+        switch store.modelState {
+        case .unloaded:
+            modelStatus = localizedAppString(forKey: "menu.model.unloaded")
+            modelItem.isEnabled = true
+
+        case let .downloading(progress):
+            let progressPercent = Int(progress * 100)
+            modelStatus = localizedAppString(forKey: "menu.model.downloading")
+                .replacingOccurrences(of: "{progress}", with: "\(progressPercent)")
+            modelItem.isEnabled = false
+
+        case .loading:
+            modelStatus = localizedAppString(forKey: "menu.model.loading")
+            modelItem.isEnabled = false
+
+        case .loaded:
+            if let currentModel = store.currentModelName {
+                modelStatus = currentModel
+            } else {
+                modelStatus = localizedAppString(forKey: "menu.model.unloaded")
+            }
+            modelItem.isEnabled = true
+
+        case .error:
+            modelStatus = localizedAppString(forKey: "menu.model.error")
+            modelItem.isEnabled = true
+        }
+
+        modelItem.title = "\(modelPrefix): \(modelStatus)"
+
+        // サブメニューを更新
+        updateModelSubmenu(submenu)
+    }
+
+    /// モデルサブメニューを更新
+    private func updateModelSubmenu(_ submenu: NSMenu) {
+        submenu.removeAllItems()
+
+        // 利用可能なモデルがない場合
+        guard !store.availableModels.isEmpty else {
+            let noModelsItem = NSMenuItem(
+                title: localizedAppString(forKey: "menu.model.no_models"),
+                action: nil,
+                keyEquivalent: ""
+            )
+            noModelsItem.isEnabled = false
+            submenu.addItem(noModelsItem)
+            return
+        }
+
+        // 各モデルをサブメニューに追加
+        for modelName in store.availableModels {
+            let modelMenuItem = NSMenuItem(
+                title: modelName,
+                action: #selector(modelMenuItemTapped(_:)),
+                keyEquivalent: ""
+            )
+            modelMenuItem.target = self
+            modelMenuItem.representedObject = modelName
+
+            // 現在のモデルにチェックマークを付ける
+            if modelName == store.currentModelName {
+                modelMenuItem.state = .on
+            }
+
+            submenu.addItem(modelMenuItem)
+        }
     }
 }

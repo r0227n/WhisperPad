@@ -4481,6 +4481,114 @@
         }
       }
     },
+    "menu.model.selection": {
+      "comment": "Model selection menu item prefix",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モデル"
+          }
+        }
+      }
+    },
+    "menu.model.unloaded": {
+      "comment": "Model not loaded state",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not loaded"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未読み込み"
+          }
+        }
+      }
+    },
+    "menu.model.downloading": {
+      "comment": "Model downloading state with progress placeholder",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading... ({progress}%)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロード中... ({progress}%)"
+          }
+        }
+      }
+    },
+    "menu.model.loading": {
+      "comment": "Model initializing state",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Initializing..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "初期化中..."
+          }
+        }
+      }
+    },
+    "menu.model.error": {
+      "comment": "Model error state",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エラー"
+          }
+        }
+      }
+    },
+    "menu.model.no_models": {
+      "comment": "No models available message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No models available"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用可能なモデルがありません"
+          }
+        }
+      }
+    },
     "hotkey.conflict.help": {
       "comment": "Help text for hotkey conflict warning",
       "extractionState": "manual",

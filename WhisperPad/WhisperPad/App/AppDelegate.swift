@@ -115,6 +115,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case quit = 300
         case micPermissionStatus = 400
         case notificationPermissionStatus = 500
+        case modelSelection = 600
         case cancel = 700
     }
 
@@ -190,6 +191,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             self.updateMenuForCurrentState()
+            self.updateModelMenuForCurrentState()
             self.updateIconForCurrentState()
             self.updateTooltip()
         }
@@ -400,6 +402,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func quitApplication() {
         logger.info("Quit application requested")
         NSApp.terminate(nil)
+    }
+
+    /// モデルメニュー項目がタップされた
+    @objc func modelMenuItemTapped(_ sender: NSMenuItem) {
+        guard let modelName = sender.representedObject as? String else {
+            logger.warning("Model menu item tapped but no model name found")
+            return
+        }
+        logger.info("Model selected: \(modelName)")
+        store.send(.selectModel(modelName))
     }
 }
 
