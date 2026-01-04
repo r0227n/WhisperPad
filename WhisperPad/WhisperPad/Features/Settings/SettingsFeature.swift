@@ -451,16 +451,7 @@ struct SettingsFeature {
             case .fetchDownloadedModels:
                 return .run { [modelClient] send in
                     do {
-                        let modelNames = try await modelClient.fetchDownloadedModels()
-                        let recommendedModel = await modelClient.recommendedModel()
-                        var models: [WhisperModel] = modelNames.map { name in
-                            WhisperModel.from(
-                                id: name,
-                                isDownloaded: true,
-                                isRecommended: name == recommendedModel
-                            )
-                        }
-                        models.sort { $0.id < $1.id }
+                        let models = try await modelClient.fetchDownloadedModelsAsWhisperModels()
                         await send(.downloadedModelsResponse(models))
                     } catch {
                         // エラー時は空のリストを返す（既存の動作を維持）
