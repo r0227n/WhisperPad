@@ -16,15 +16,10 @@ struct HotkeySettingsTab: View {
     @Environment(\.locale) private var locale
 
     var body: some View {
-        HSplitView {
-            // 左パネル: ショートカット一覧
-            shortcutListPanel
-                .frame(minWidth: 180, idealWidth: 200, maxWidth: 240)
-
-            // 右パネル: 詳細
-            detailPanel
-                .frame(minWidth: 280)
-        }
+        MasterDetailLayout(
+            primary: { shortcutListPanel },
+            detail: { detailPanel }
+        )
         .onAppear {
             // 初期選択
             if store.selectedShortcut == nil {
@@ -32,92 +27,7 @@ struct HotkeySettingsTab: View {
             }
         }
         .environment(\.locale, store.settings.general.preferredLocale.locale)
-        .alert(
-            Text("hotkey.conflict_alert.title"),
-            isPresented: Binding(
-                get: { store.showHotkeyConflictAlert },
-                set: { if !$0 { store.send(.dismissConflictAlert) } }
-            )
-        ) {
-            Button("common.ok", role: .cancel) {
-                store.send(.dismissConflictAlert)
-            }
-        } message: {
-            if let type = store.conflictingHotkeyType {
-                let userLocale = store.settings.general.preferredLocale.locale
-                let languageCode = userLocale.language.languageCode?.identifier ?? "en"
-                let format = Bundle.main.localizedString(
-                    forKey: "hotkey.conflict_alert.message",
-                    preferredLanguage: languageCode
-                )
-                let typeName = Bundle.main.localizedString(
-                    forKey: type.localizedKeyString,
-                    preferredLanguage: languageCode
-                )
-                Text(verbatim: String(format: format, typeName))
-            } else {
-                Text("hotkey.conflict_alert.message_generic")
-            }
-        }
-        .alert(
-            Text("hotkey.duplicate_alert.title"),
-            isPresented: Binding(
-                get: { store.showDuplicateHotkeyAlert },
-                set: { if !$0 { store.send(.dismissDuplicateAlert) } }
-            )
-        ) {
-            Button("common.ok", role: .cancel) {
-                store.send(.dismissDuplicateAlert)
-            }
-        } message: {
-            if let targetType = store.conflictingHotkeyType,
-               let duplicateType = store.duplicateWithHotkeyType {
-                let userLocale = store.settings.general.preferredLocale.locale
-                let languageCode = userLocale.language.languageCode?.identifier ?? "en"
-                let format = Bundle.main.localizedString(
-                    forKey: "hotkey.duplicate_alert.message",
-                    preferredLanguage: languageCode
-                )
-                let targetName = Bundle.main.localizedString(
-                    forKey: targetType.localizedKeyString,
-                    preferredLanguage: languageCode
-                )
-                let duplicateName = Bundle.main.localizedString(
-                    forKey: duplicateType.localizedKeyString,
-                    preferredLanguage: languageCode
-                )
-                Text(verbatim: String(format: format, targetName, duplicateName))
-            } else {
-                Text("hotkey.duplicate_alert.message_generic")
-            }
-        }
-        .alert(
-            Text("hotkey.system_reserved_alert.title"),
-            isPresented: Binding(
-                get: { store.showSystemReservedAlert },
-                set: { if !$0 { store.send(.dismissSystemReservedAlert) } }
-            )
-        ) {
-            Button("common.ok", role: .cancel) {
-                store.send(.dismissSystemReservedAlert)
-            }
-        } message: {
-            if let type = store.conflictingHotkeyType {
-                let userLocale = store.settings.general.preferredLocale.locale
-                let languageCode = userLocale.language.languageCode?.identifier ?? "en"
-                let format = Bundle.main.localizedString(
-                    forKey: "hotkey.system_reserved_alert.message",
-                    preferredLanguage: languageCode
-                )
-                let typeName = Bundle.main.localizedString(
-                    forKey: type.localizedKeyString,
-                    preferredLanguage: languageCode
-                )
-                Text(verbatim: String(format: format, typeName))
-            } else {
-                Text("hotkey.system_reserved_alert.message_generic")
-            }
-        }
+        .hotkeyConflictAlerts(store: store)
     }
 
     // MARK: - Left Panel
@@ -218,22 +128,6 @@ struct HotkeySettingsTab: View {
     }
 }
 
-// MARK: - Localization Helpers
-
-/// xcstrings ファイルから指定されたロケールに基づいて翻訳を取得する
-private extension Bundle {
-    func localizedString(forKey key: String, preferredLanguage: String) -> String {
-        // For xcstrings files, try to get bundle for preferred language
-        if let path = self.path(forResource: preferredLanguage, ofType: "lproj"),
-           let bundle = Bundle(path: path) {
-            return bundle.localizedString(forKey: key, value: nil, table: nil)
-        }
-
-        // Fallback to main bundle (will use sourceLanguage from xcstrings)
-        return self.localizedString(forKey: key, value: nil, table: nil)
-    }
-}
-
 // MARK: - ShortcutListRow
 
 /// ショートカット一覧の行
@@ -286,109 +180,36 @@ private struct ShortcutDetailPanel: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // ヘッダー：アイコンとタイトル
-                headerSection
+        DetailPanelContainer {
+            // ヘッダー：アイコンとタイトル
+            DetailHeaderSection(
+                symbolName: iconConfig.symbolName,
+                symbolColor: Color(iconConfig.color),
+                title: hotkeyType.localizedKey,
+                category: hotkeyType.category.localizedKey,
+                onReset: onResetToDefault,
+                resetHelpText: String(localized: "hotkey.reset.help", comment: "Reset this state")
+            )
 
-                Divider()
+            Divider()
 
-                // 説明セクション
-                descriptionSection
+            // 説明セクション
+            DetailDescriptionSection(
+                descriptionText: hotkeyType.descriptionKey
+            )
 
-                // ショートカット入力セクション
-                shortcutInputSection
-
-                Spacer(minLength: 0)
-            }
-            .padding(24)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    }
-
-    /// ヘッダーセクション
-    private var headerSection: some View {
-        HStack(spacing: 12) {
-            Image(systemName: iconConfig.symbolName)
-                .font(.title2)
-                .foregroundColor(Color(iconConfig.color))
-                .frame(width: 32, height: 32)
-                .background(Color(iconConfig.color).opacity(0.1))
-                .cornerRadius(8)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(hotkeyType.localizedKey)
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                Text(hotkeyType.category.localizedKey)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            Button {
-                onResetToDefault()
-            } label: {
-                Image(systemName: "arrow.counterclockwise")
-            }
-            .buttonStyle(.borderless)
-            .help(String(localized: "hotkey.reset.help", comment: "Reset this state"))
-        }
-    }
-
-    /// 説明セクション
-    private var descriptionSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label("hotkey.description", systemImage: "info.circle")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            Text(hotkeyType.descriptionKey)
-                .foregroundColor(.primary)
-        }
-    }
-
-    /// ショートカット入力セクション
-    private var shortcutInputSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("hotkey.shortcut_key", systemImage: "keyboard")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            // キー設定ボタン
-            ShortcutKeyButton(
+            // ショートカット入力セクション
+            ShortcutEditSection(
                 keyCombo: $keyCombo,
                 defaultKeyCombo: hotkeyType.defaultKeyCombo,
                 hotkeyType: hotkeyType,
                 isRecording: isRecording,
+                hotkeyConflict: hotkeyConflict,
                 onStartRecording: onStartRecording,
                 onStopRecording: onStopRecording,
                 onResetToDefault: onResetToDefault
             )
-
-            // 競合警告
-            if let conflict = hotkeyConflict {
-                Label(conflict, systemImage: "exclamationmark.triangle.fill")
-                    .foregroundColor(.red)
-                    .font(.footnote)
-                    .accessibilityLabel(
-                        String(
-                            localized: "hotkey.accessibility.conflict_warning",
-                            comment: "Shortcut conflict warning: "
-                        ) + conflict
-                    )
-            }
-
-            // 注意メッセージ
-            Text("hotkey.conflict.help")
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
-        .padding(16)
-        .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(12)
     }
 }
 

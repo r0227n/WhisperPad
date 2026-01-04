@@ -69,7 +69,7 @@ struct ShortcutKeyButton: View {
 
     /// 録音中の表示
     private var recordingView: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 16) {
             Text("hotkey.recording.placeholder", comment: "Press key...")
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
                 .foregroundColor(.white)
