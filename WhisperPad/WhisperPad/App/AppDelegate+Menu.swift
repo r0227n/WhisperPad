@@ -288,10 +288,18 @@ extension AppDelegate {
         let modelPrefix = localizedAppString(forKey: "menu.model.selection")
         let modelStatus: String
 
+        // Check if app is in idle state (required to enable model selection)
+        let isAppIdle: Bool = {
+            if case .idle = store.appStatus {
+                return true
+            }
+            return false
+        }()
+
         switch store.modelState {
         case .unloaded:
             modelStatus = localizedAppString(forKey: "menu.model.unloaded")
-            modelItem.isEnabled = true
+            modelItem.isEnabled = isAppIdle
 
         case let .downloading(progress):
             let progressPercent = Int(progress * 100)
@@ -309,11 +317,11 @@ extension AppDelegate {
             } else {
                 modelStatus = localizedAppString(forKey: "menu.model.unloaded")
             }
-            modelItem.isEnabled = true
+            modelItem.isEnabled = isAppIdle
 
         case .error:
             modelStatus = localizedAppString(forKey: "menu.model.error")
-            modelItem.isEnabled = true
+            modelItem.isEnabled = isAppIdle
         }
 
         modelItem.title = "\(modelPrefix): \(modelStatus)"

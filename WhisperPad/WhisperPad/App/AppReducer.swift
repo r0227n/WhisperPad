@@ -364,19 +364,12 @@ struct AppReducer {
                 return .none
 
             case .fetchAvailableModels:
-                // 利用可能なモデル一覧を取得（ダウンロード済み + リモート）
+                // ダウンロード済みモデルのみを取得
                 return .run { [transcriptionClient] send in
                     let downloadedModels = await transcriptionClient.fetchDownloadedModels()
-                    let allModels: [String]
-                    do {
-                        allModels = try await transcriptionClient.fetchAvailableModels()
-                    } catch {
-                        // リモート取得失敗時はダウンロード済みモデルのみ使用
-                        allModels = downloadedModels
-                    }
-                    // 重複を除去してソート
-                    let uniqueModels = Array(Set(allModels)).sorted()
-                    await send(.availableModelsFetched(uniqueModels))
+                    // ソート（アルファベット順）
+                    let sortedModels = downloadedModels.sorted()
+                    await send(.availableModelsFetched(sortedModels))
 
                     // 現在のモデル状態を取得
                     let modelState = await transcriptionClient.modelState()
