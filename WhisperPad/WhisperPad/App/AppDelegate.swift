@@ -99,6 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // Model cache accessor
     func getCachedDownloadedModels() -> [WhisperModel] { cachedDownloadedModels }
+    func setCachedDownloadedModels(_ models: [WhisperModel]) { cachedDownloadedModels = models }
 
     /// アプリ設定のロケールに基づいてローカライズされた文字列を取得
     func localizedAppString(forKey key: String) -> String {
@@ -147,14 +148,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return (try? JSONDecoder().decode(AppSettings.self, from: data)) ?? .default
     }
 
-    /// UserDefaults からデフォルトモデルを同期的に読み込む
-    ///
-    /// メニュー表示時にデフォルトモデル名を取得するために使用する。
-    /// - Returns: 保存されているモデル名、未設定の場合は nil
-    func loadDefaultModelSync() -> String? {
-        modelClient.loadDefaultModelSync()
-    }
-
     override init() {
         let initialSettings = Self.loadSettingsSync()
 
@@ -183,66 +176,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         requestNotificationPermission()
         setupHotKeys()
         initializeModelCache()
-    }
-
-    /// モデル変更通知の監視を設定
-    private func setupModelChangeObserver() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleModelChanged),
-            name: .modelChanged,
-            object: nil
-        )
-    }
-
-    /// モデル変更通知を受信した際の処理
-    @objc private func handleModelChanged(_ notification: Notification) {
-        logger.debug("Model change notification received")
-        // キャッシュを無効化し、次回メニュー表示時に再取得
-        cachedDownloadedModels = []
-        // メニュー項目のタイトルを更新
-        updateModelMenuForCurrentState()
-    }
-
-    /// 起動時にダウンロード済みモデルを取得してキャッシュを初期化
-    ///
-    /// メニューバーのモデル表示を正しく行うために、アプリ起動時に
-    /// ダウンロード済みモデルを取得してキャッシュに保存する。
-    private func initializeModelCache() {
-        Task { @MainActor in
-            do {
-                // カスタムストレージ場所を設定（ブックマーク解決）
-                let settings = store.settings.settings
-                if let bookmarkData = settings.transcription.storageBookmarkData {
-                    @Dependency(\.userDefaultsClient) var userDefaultsClient
-                    if let url = await userDefaultsClient.resolveBookmark(bookmarkData) {
-                        await modelClient.setStorageLocation(url)
-                    }
-                }
-
-                let models = try await modelClient.fetchDownloadedModelsAsWhisperModels()
-                cachedDownloadedModels = models
-
-                // defaultModel の整合性チェック
-                let modelIds = models.map(\.id)
-                let validationResult = modelClient.validateDefaultModel(modelIds)
-                switch validationResult {
-                case let .success(validModel):
-                    let currentDefault = loadDefaultModelSync()
-                    if currentDefault != validModel {
-                        store.send(.selectModel(validModel))
-                    }
-                case .failure:
-                    // モデルがない場合は何もしない（メニューで適切に表示される）
-                    break
-                }
-
-                // メニュー表示を更新
-                updateModelMenuForCurrentState()
-            } catch {
-                logger.error("Failed to initialize model cache: \(error.localizedDescription)")
-            }
-        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -512,154 +445,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func quitApplication() {
         logger.info("Quit application requested")
         NSApp.terminate(nil)
-    }
-
-    /// モデルメニュー項目がタップされた
-    @objc func modelMenuItemTapped(_ sender: NSMenuItem) {
-        guard let modelName = sender.representedObject as? String else {
-            logger.warning("Model menu item tapped but no model name found")
-            return
-        }
-        logger.info("Model selected: \(modelName)")
-        store.send(.selectModel(modelName))
-    }
-}
-
-// MARK: - NSMenuDelegate
-
-extension AppDelegate: NSMenuDelegate {
-    func menuWillOpen(_ menu: NSMenu) {
-        // メインメニューが開かれた場合、モデルメニューの状態を更新
-        if menu == statusMenu {
-            updateModelMenuForCurrentState()
-        }
-
-        // モデルサブメニューが開かれた場合、ダウンロード済みモデルを更新
-        if menu == modelSubmenu {
-            refreshModelSubmenu()
-        }
-
-        #if DEBUG
-        updatePermissionMenuItems()
-        updateOutputMenuItems()
-        #endif
-    }
-
-    /// モデルサブメニューを更新
-    ///
-    /// サブメニューが開かれるたびにダウンロード済みモデルを取得し、メニュー項目を更新する。
-    /// defaultModel がダウンロード済みモデルに存在しない場合、最初のモデルを自動選択する。
-    private func refreshModelSubmenu() {
-        // キャッシュがあれば即座に表示
-        if !cachedDownloadedModels.isEmpty {
-            updateModelSubmenuItems(cachedDownloadedModels)
-        }
-
-        // バックグラウンドで最新を取得
-        Task { @MainActor in
-            do {
-                let models = try await modelClient.fetchDownloadedModelsAsWhisperModels()
-                if models != cachedDownloadedModels {
-                    cachedDownloadedModels = models
-                    updateModelSubmenuItems(models)
-                }
-
-                // defaultModel の整合性チェック（validateDefaultModel を使用）
-                let modelIds = models.map(\.id)
-                let validationResult = modelClient.validateDefaultModel(modelIds)
-                switch validationResult {
-                case let .success(validModel):
-                    // 有効なモデルが確認された、または自動選択された場合
-                    let currentDefault = loadDefaultModelSync()
-                    if currentDefault != validModel {
-                        // 自動選択されたモデルを適用
-                        store.send(.selectModel(validModel))
-                        updateModelSubmenuItems(models)
-                    }
-                case let .failure(error):
-                    // モデルが0件の場合はエラーダイアログを表示
-                    showModelErrorAlert(error)
-                }
-            } catch {
-                // モデル取得失敗時はエラーダイアログを表示
-                showModelErrorAlert(.fetchDownloadedModelsFailed(error.localizedDescription))
-            }
-        }
-    }
-
-    /// モデル関連エラーのアラートを表示
-    ///
-    /// - Parameter error: 表示するエラー
-    private func showModelErrorAlert(_ error: ModelClientError) {
-        let languageCode = resolveLanguageCode()
-        let iconSettings = store.settings.settings.general.menuBarIconSettings
-        showLocalizedAlert(
-            style: .critical,
-            titleKey: "error.dialog.model.title",
-            message: error.localizedDescription ?? "",
-            languageCode: languageCode,
-            iconSettings: iconSettings
-        )
-    }
-
-    /// 現在のロケール設定から言語コードを解決
-    ///
-    /// - Returns: 言語コード（"en" または "ja"）
-    private func resolveLanguageCode() -> String {
-        if let identifier = store.settings.settings.general.preferredLocale.identifier {
-            return identifier
-        }
-        let systemLanguage = Locale.preferredLanguages.first ?? "en"
-        return Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
-    }
-
-    /// モデルサブメニューの項目を更新
-    ///
-    /// - Parameter models: ダウンロード済みモデルの配列
-    private func updateModelSubmenuItems(_ models: [WhisperModel]) {
-        guard let submenu = modelSubmenu else { return }
-
-        submenu.removeAllItems()
-
-        // モデルがない場合
-        guard !models.isEmpty else {
-            let noModelsItem = NSMenuItem(
-                title: localizedAppString(forKey: "menu.model.no_models"),
-                action: nil,
-                keyEquivalent: ""
-            )
-            noModelsItem.isEnabled = false
-            submenu.addItem(noModelsItem)
-            return
-        }
-
-        let currentDefault = loadDefaultModelSync()
-
-        // defaultModel がダウンロード済みモデルに存在するか確認
-        // 存在しない場合はチェックマークを表示しない（refreshModelSubmenu で修正される）
-        let validDefault: String? = if let defaultModel = currentDefault,
-                                       models.contains(where: { $0.id == defaultModel }) {
-            defaultModel
-        } else {
-            nil
-        }
-
-        for model in models {
-            let modelMenuItem = NSMenuItem(
-                title: model.displayName,
-                action: #selector(modelMenuItemTapped(_:)),
-                keyEquivalent: ""
-            )
-            modelMenuItem.target = self
-            // representedObject にはモデルIDを保持（内部ロジックで使用）
-            modelMenuItem.representedObject = model.id
-
-            // 有効な defaultModel にのみチェックマーク
-            if model.id == validDefault {
-                modelMenuItem.state = .on
-            }
-
-            submenu.addItem(modelMenuItem)
-        }
     }
 }
