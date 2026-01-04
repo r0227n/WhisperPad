@@ -1186,6 +1186,42 @@
         }
       }
     },
+    "recording.input_device.default_marker": {
+      "comment": "(Default)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(Default)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(デフォルト)"
+          }
+        }
+      }
+    },
+    "recording.input_device.accessibility": {
+      "comment": "Audio input settings",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio input settings"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音声入力設定"
+          }
+        }
+      }
+    },
     "recording.output.copy_to_clipboard": {
       "comment": "Copy to Clipboard",
       "extractionState": "manual",
@@ -1524,6 +1560,348 @@
           "stringUnit": {
             "state": "translated",
             "value": "無音判定しきい値: %lld デシベル"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.threshold": {
+      "comment": "Threshold",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Threshold"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "しきい値"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.threshold_accessibility": {
+      "comment": "Silence threshold",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silence threshold"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無音判定しきい値"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.threshold_value": {
+      "comment": "%lld decibels",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld decibels"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld デシベル"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.threshold_min": {
+      "comment": "Quieter",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quieter"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小さく"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.threshold_max": {
+      "comment": "Louder",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Louder"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大きく"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.title": {
+      "comment": "Auto-stop on silence",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto-stop on silence"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無音時に自動停止"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.accessibility": {
+      "comment": "Silence detection settings",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silence detection settings"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無音検出設定"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.accessibility_hint": {
+      "comment": "Toggle hint",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toggle to enable or disable automatic stopping on silence"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無音時の自動停止を有効または無効にします"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.duration": {
+      "comment": "Duration",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duration"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "継続時間"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.duration_accessibility": {
+      "comment": "Silence duration",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silence duration"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無音継続時間"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.duration_hint": {
+      "comment": "Duration in seconds",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter duration in seconds"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "秒単位で継続時間を入力"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.help": {
+      "comment": "Auto-stop help",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable to automatically stop recording when silence is detected"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無音を検出したときに録音を自動停止します"
+          }
+        }
+      }
+    },
+    "recording.silence_detection.seconds": {
+      "comment": "seconds",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "seconds"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "秒"
+          }
+        }
+      }
+    },
+    "recording.monitor.title": {
+      "comment": "Input Monitor",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Input Monitor"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力モニター"
+          }
+        }
+      }
+    },
+    "recording.monitor.level": {
+      "comment": "Audio Level",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Level"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音声レベル"
+          }
+        }
+      }
+    },
+    "recording.monitor.level.accessibility": {
+      "comment": "Audio level",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio level"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音声レベル"
+          }
+        }
+      }
+    },
+    "recording.monitor.level.accessibility.value": {
+      "comment": "%lld decibels",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld decibels"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld デシベル"
+          }
+        }
+      }
+    },
+    "recording.monitor.start": {
+      "comment": "Test Microphone",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test Microphone"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マイクをテスト"
+          }
+        }
+      }
+    },
+    "recording.monitor.stop": {
+      "comment": "Stop Test",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop Test"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "テストを停止"
           }
         }
       }

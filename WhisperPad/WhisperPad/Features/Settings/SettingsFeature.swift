@@ -7,6 +7,7 @@
 import AppKit
 import ComposableArchitecture
 import Foundation
+import OSLog
 
 // MARK: - Settings Feature
 
@@ -89,6 +90,12 @@ struct SettingsFeature {
 
         /// 利用可能な文字起こし言語一覧
         var availableLanguages: [TranscriptionLanguage] = []
+
+        /// 現在の音声レベル（dB）
+        var currentAudioLevel: Float = -60.0
+
+        /// 音声レベル監視中かどうか
+        var isMonitoringAudio: Bool = false
     }
 
     // MARK: - Action
@@ -197,6 +204,17 @@ struct SettingsFeature {
         /// 入力デバイス一覧取得完了
         case inputDevicesResponse([AudioInputDevice])
 
+        // MARK: - Audio Level Monitoring
+
+        /// 音声レベル監視をトグル
+        case toggleAudioMonitoring
+        /// 音声レベル監視を開始
+        case startAudioLevelObservation
+        /// 音声レベル監視を停止
+        case stopAudioLevelObservation
+        /// 音声レベルが更新された
+        case audioLevelUpdated(Float)
+
         // MARK: - Hotkey Conflict
 
         /// ホットキー競合をチェック
@@ -263,6 +281,12 @@ struct SettingsFeature {
                 )
 
             case .onDisappear:
+                // 音声レベル監視が有効な場合は停止
+                if state.isMonitoringAudio {
+                    state.isMonitoringAudio = false
+                    state.currentAudioLevel = -60.0
+                    return .cancel(id: "audioLevelObservation")
+                }
                 return .none
 
             case let .selectTab(tab):
@@ -621,6 +645,46 @@ struct SettingsFeature {
 
             case let .inputDevicesResponse(devices):
                 state.availableInputDevices = devices
+                return .none
+
+            case .toggleAudioMonitoring:
+                if state.isMonitoringAudio {
+                    return .send(.stopAudioLevelObservation)
+                } else {
+                    return .send(.startAudioLevelObservation)
+                }
+
+            case .startAudioLevelObservation:
+                state.isMonitoringAudio = true
+                return .run { [audioRecorder] send in
+                    do {
+                        // モニタリングを開始
+                        try await audioRecorder.startMonitoring()
+                    } catch {
+                        // モニタリング開始失敗時はログに記録
+                        // observeAudioLevel()はデフォルト値(-60.0)を返す
+                        Logger(subsystem: "com.whisperpad", category: "SettingsFeature")
+                            .warning("Failed to start audio monitoring: \(error.localizedDescription)")
+                    }
+
+                    // モニタリングの成否に関わらず、レベル監視は継続
+                    for await level in await audioRecorder.observeAudioLevel() {
+                        await send(.audioLevelUpdated(level))
+                    }
+                }
+                .cancellable(id: "audioLevelObservation")
+
+            case .stopAudioLevelObservation:
+                state.isMonitoringAudio = false
+                state.currentAudioLevel = -60.0
+                return .run { [audioRecorder] _ in
+                    // モニタリングを停止
+                    await audioRecorder.stopMonitoring()
+                }
+                .concatenate(with: .cancel(id: "audioLevelObservation"))
+
+            case let .audioLevelUpdated(level):
+                state.currentAudioLevel = level
                 return .none
 
             case .checkHotkeyConflict:

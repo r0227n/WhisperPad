@@ -46,7 +46,7 @@ struct FileOutputDetailsPopover: View {
                                     .fill(Color(nsColor: .textBackgroundColor))
                             )
 
-                        Button(String(localized: "common.change", comment: "Change...")) {
+                        Button("common.change") {
                             selectOutputDirectory()
                         }
                         .accessibilityLabel(
@@ -86,7 +86,7 @@ struct FileOutputDetailsPopover: View {
 
                 // メタデータ
                 Toggle(
-                    String(localized: "file_output.include_metadata", comment: "Include Metadata"),
+                    "file_output.include_metadata",
                     isOn: Binding(
                         get: { store.settings.output.includeMetadata },
                         set: { newValue in

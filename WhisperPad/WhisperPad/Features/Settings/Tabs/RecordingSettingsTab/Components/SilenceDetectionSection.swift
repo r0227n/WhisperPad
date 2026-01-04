@@ -66,7 +66,7 @@ struct SilenceDetectionSection: View {
                             Spacer()
 
                             TextField(
-                                String(localized: "recording.silence_detection.seconds", comment: "seconds"),
+                                "recording.silence_detection.seconds",
                                 value: Binding(
                                     get: { store.settings.recording.silenceDuration },
                                     set: { newValue in
@@ -93,6 +93,59 @@ struct SilenceDetectionSection: View {
                             )
 
                             Text("recording.silence_detection.seconds", comment: "seconds")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // 無音判定閾値
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("recording.silence_detection.threshold", comment: "Threshold")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+
+                            Spacer()
+
+                            Text("\(Int(store.settings.recording.silenceThreshold)) dB")
+                                .font(.system(size: 13, design: .monospaced))
+                                .foregroundColor(.secondary)
+                                .frame(width: 60, alignment: .trailing)
+                        }
+
+                        Slider(
+                            value: Binding(
+                                get: { store.settings.recording.silenceThreshold },
+                                set: { newValue in
+                                    var recording = store.settings.recording
+                                    recording.silenceThreshold = newValue
+                                    store.send(.updateRecordingSettings(recording))
+                                }
+                            ),
+                            in: -80 ... -30,
+                            step: 1
+                        )
+                        .accessibilityLabel(
+                            String(
+                                localized: "recording.silence_detection.threshold_accessibility",
+                                comment: "Silence threshold"
+                            )
+                        )
+                        .accessibilityValue(
+                            String(
+                                format: String(localized: "recording.silence_detection.threshold_value"),
+                                Int(store.settings.recording.silenceThreshold)
+                            )
+                        )
+
+                        HStack {
+                            Text("recording.silence_detection.threshold_min", comment: "Quieter")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+
+                            Spacer()
+
+                            Text("recording.silence_detection.threshold_max", comment: "Louder")
+                                .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
                     }
