@@ -126,8 +126,11 @@ struct AppReducer {
                         languageCode = Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
                     }
 
+                    // 現在の設定を保存（後で更新するため）
+                    var currentGeneral = state.settings.settings.general
+
                     return .run { send in
-                        let shouldCancel = await MainActor.run { () -> Bool in
+                        let (shouldCancel, dontShowAgain) = await MainActor.run { () -> (Bool, Bool) in
                             let alert = NSAlert()
                             alert.alertStyle = .warning
                             alert.messageText = Bundle.main.localizedString(
@@ -138,6 +141,16 @@ struct AppReducer {
                                 forKey: "recording.cancel_confirmation.alert.message",
                                 preferredLanguage: languageCode
                             )
+
+                            // チェックボックスを作成
+                            let checkboxText = Bundle.main.localizedString(
+                                forKey: "recording.cancel_confirmation.alert.dont_show_again",
+                                preferredLanguage: languageCode
+                            )
+                            let checkbox = NSButton(checkboxWithTitle: checkboxText, target: nil, action: nil)
+                            checkbox.state = .off
+                            alert.accessoryView = checkbox
+
                             // 第1ボタン: 録音を続ける（安全な選択、デフォルト）
                             alert.addButton(
                                 withTitle: Bundle.main.localizedString(
@@ -152,9 +165,18 @@ struct AppReducer {
                                     preferredLanguage: languageCode
                                 )
                             )
+
                             let response = alert.runModal()
-                            // "破棄する" ボタンが押された場合は true を返す
-                            return response == .alertSecondButtonReturn
+                            let shouldCancel = response == .alertSecondButtonReturn
+                            let dontShowAgain = checkbox.state == .on
+
+                            return (shouldCancel, dontShowAgain)
+                        }
+
+                        // チェックボックスがONの場合、設定を更新
+                        if dontShowAgain {
+                            currentGeneral.showCancelConfirmation = false
+                            await send(.settings(.updateGeneralSettings(currentGeneral)))
                         }
 
                         if shouldCancel {

@@ -1492,6 +1492,24 @@
         }
       }
     },
+    "recording.cancel_confirmation.alert.dont_show_again": {
+      "comment": "Don't show again checkbox in cancel confirmation dialog",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't show this again"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今後表示しない"
+          }
+        }
+      }
+    },
     "recording.output.section": {
       "comment": "Output section header",
       "extractionState": "manual",
