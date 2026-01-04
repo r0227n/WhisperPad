@@ -46,7 +46,7 @@ struct FileOutputDetailsPopover: View {
                                     .fill(Color(nsColor: .textBackgroundColor))
                             )
 
-                        Button("common.change") {
+                        Button(String(localized: "common.change", comment: "Change button label for output directory")) {
                             selectOutputDirectory()
                         }
                         .accessibilityLabel(
