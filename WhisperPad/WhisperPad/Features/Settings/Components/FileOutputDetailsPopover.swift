@@ -16,12 +16,11 @@ struct FileOutputDetailsPopover: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // ヘッダー
-            HStack {
-                Image(systemName: "doc.text")
-                    .foregroundStyle(.blue)
-                Text("file_output.title", comment: "File Output Settings")
-                    .font(.headline)
-            }
+            PopoverHeaderView(
+                icon: "doc.text",
+                iconColor: .blue,
+                title: LocalizedStringKey("file_output.title")
+            )
 
             Divider()
 
