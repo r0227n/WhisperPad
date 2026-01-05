@@ -57,14 +57,6 @@ struct ModelListRow: View {
         HStack(spacing: 6) {
             Text(model.displayName)
                 .font(.system(size: 13, weight: .medium))
-
-            if model.isRecommended {
-                BadgeView(text: "model.active.recommended", color: .accentColor)
-            }
-
-            if isEnglishOnly {
-                BadgeView("EN", color: .blue)
-            }
         }
     }
 
