@@ -14,9 +14,6 @@ import UserNotifications
 extension Notification.Name {
     /// ホットキー設定が変更された通知
     static let hotKeySettingsChanged = Notification.Name("hotKeySettingsChanged")
-
-    /// モデル選択が変更された通知
-    static let modelChanged = Notification.Name("modelChanged")
 }
 
 /// メニューバーアプリケーションを管理する AppDelegate
@@ -52,12 +49,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// 現在のロケール（変更検出用）
     private var currentLocale: AppLocale?
-
-    /// モデル選択サブメニュー
-    var modelSubmenu: NSMenu?
-
-    /// ダウンロード済みモデルのキャッシュ
-    private var cachedDownloadedModels: [WhisperModel] = []
 
     /// ロガー
     let logger = Logger(
@@ -97,10 +88,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func getHotKeyRegistrationTask() -> Task<Void, Never>? { hotKeyRegistrationTask }
     func setHotKeyRegistrationTask(_ task: Task<Void, Never>?) { hotKeyRegistrationTask = task }
 
-    // Model cache accessor
-    func getCachedDownloadedModels() -> [WhisperModel] { cachedDownloadedModels }
-    func setCachedDownloadedModels(_ models: [WhisperModel]) { cachedDownloadedModels = models }
-
     /// アプリ設定のロケールに基づいてローカライズされた文字列を取得
     func localizedAppString(forKey key: String) -> String {
         let languageCode: String
@@ -131,7 +118,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case quit = 300
         case micPermissionStatus = 400
         case notificationPermissionStatus = 500
-        case modelSelection = 600
         case cancel = 700
     }
 
@@ -172,10 +158,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusItem()
         setupObservation()
         setupHotKeyObserver()
-        setupModelChangeObserver()
         requestNotificationPermission()
         setupHotKeys()
-        initializeModelCache()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -187,7 +171,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // NotificationCenter オブザーバーを解除
         NotificationCenter.default.removeObserver(self, name: .hotKeySettingsChanged, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .modelChanged, object: nil)
 
         // ホットキーを解除
         Task {
@@ -229,9 +212,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // アイコン設定の変更を監視（設定読み込み時に更新をトリガーするため）
             _ = self.store.settings.settings.general.menuBarIconSettings
 
-            // モデル状態の変更を監視（メニュー更新をトリガーするため）
-            _ = self.store.modelState
-
             // Detect locale changes and rebuild menu
             let newLocale = self.store.settings.settings.general.preferredLocale
             if self.currentLocale != newLocale {
@@ -240,7 +220,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             self.updateMenuForCurrentState()
-            self.updateModelMenuForCurrentState()
             self.updateIconForCurrentState()
             self.updateTooltip()
         }
