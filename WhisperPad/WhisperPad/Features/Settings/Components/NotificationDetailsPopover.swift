@@ -15,12 +15,11 @@ struct NotificationDetailsPopover: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // ヘッダー
-            HStack {
-                Image(systemName: "bell.badge")
-                    .foregroundStyle(.orange)
-                Text("notification.custom.title", comment: "Notification Message")
-                    .font(.headline)
-            }
+            PopoverHeaderView(
+                icon: "bell.badge",
+                iconColor: .orange,
+                title: LocalizedStringKey("notification.custom.title")
+            )
 
             Divider()
 
