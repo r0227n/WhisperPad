@@ -44,42 +44,6 @@ private final class HotKeyManager {
         }
     }
 
-    // MARK: - Recording Toggle (⌥⇧ Space)
-
-    /// 録音トグルホットキーを登録
-    /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
-    func registerRecordingToggle(handler: @escaping () -> Void) {
-        recordingToggleHotKey = nil
-        let hotKey = HotKey(key: .space, modifiers: [.option, .shift])
-        hotKey.keyDownHandler = handler
-        recordingToggleHotKey = hotKey
-        logger.info("Recording toggle hotkey registered: ⌥⇧␣")
-    }
-
-    /// 録音トグルホットキーを解除
-    func unregisterRecordingToggle() {
-        recordingToggleHotKey = nil
-        logger.info("Recording toggle hotkey unregistered")
-    }
-
-    // MARK: - Cancel (Escape)
-
-    /// 録音キャンセルホットキーを登録
-    /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
-    func registerCancel(handler: @escaping () -> Void) {
-        cancelHotKey = nil
-        let hotKey = HotKey(key: .escape, modifiers: [])
-        hotKey.keyDownHandler = handler
-        cancelHotKey = hotKey
-        logger.info("Cancel hotkey registered: Escape")
-    }
-
-    /// 録音キャンセルホットキーを解除
-    func unregisterCancel() {
-        cancelHotKey = nil
-        logger.info("Cancel hotkey unregistered")
-    }
-
     // MARK: - 動的キーコンボ対応
 
     /// 動的キーコンボで録音ホットキーを登録
@@ -179,26 +143,6 @@ extension HotKeyClient: DependencyKey {
                 let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
                 let trusted = AXIsProcessTrustedWithOptions(options as CFDictionary)
                 logger.info("Accessibility permission requested, current status: \(trusted)")
-            },
-            registerRecordingToggle: { handler in
-                await MainActor.run {
-                    HotKeyManager.shared.registerRecordingToggle(handler: handler)
-                }
-            },
-            unregisterRecordingToggle: {
-                await MainActor.run {
-                    HotKeyManager.shared.unregisterRecordingToggle()
-                }
-            },
-            registerCancel: { handler in
-                await MainActor.run {
-                    HotKeyManager.shared.registerCancel(handler: handler)
-                }
-            },
-            unregisterCancel: {
-                await MainActor.run {
-                    HotKeyManager.shared.unregisterCancel()
-                }
             },
             registerRecordingWithCombo: { combo, handler in
                 await MainActor.run {

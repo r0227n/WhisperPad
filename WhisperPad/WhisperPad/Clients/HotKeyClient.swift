@@ -24,20 +24,6 @@ struct HotKeyClient: Sendable {
     /// アクセシビリティ権限を要求（システム環境設定を開く）
     var requestAccessibilityPermission: @Sendable () async -> Void
 
-    /// 録音トグルホットキーを登録 (⌥ Space)
-    /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
-    var registerRecordingToggle: @Sendable (@escaping @Sendable () -> Void) async -> Void
-
-    /// 録音トグルホットキーを解除
-    var unregisterRecordingToggle: @Sendable () async -> Void
-
-    /// 録音キャンセルホットキーを登録 (Escape)
-    /// - Parameter handler: ホットキーが押されたときに呼ばれるハンドラー
-    var registerCancel: @Sendable (@escaping @Sendable () -> Void) async -> Void
-
-    /// 録音キャンセルホットキーを解除
-    var unregisterCancel: @Sendable () async -> Void
-
     // MARK: - 動的キーコンボ対応
 
     /// 動的キーコンボで録音ホットキーを登録
@@ -103,18 +89,6 @@ extension HotKeyClient: TestDependencyKey {
             requestAccessibilityPermission: {
                 clientLogger.debug("[PREVIEW] requestAccessibilityPermission called")
             },
-            registerRecordingToggle: { _ in
-                clientLogger.debug("[PREVIEW] registerRecordingToggle called")
-            },
-            unregisterRecordingToggle: {
-                clientLogger.debug("[PREVIEW] unregisterRecordingToggle called")
-            },
-            registerCancel: { _ in
-                clientLogger.debug("[PREVIEW] registerCancel called")
-            },
-            unregisterCancel: {
-                clientLogger.debug("[PREVIEW] unregisterCancel called")
-            },
             registerRecordingWithCombo: { _, _ in
                 clientLogger.debug("[PREVIEW] registerRecordingWithCombo called")
             },
@@ -138,18 +112,6 @@ extension HotKeyClient: TestDependencyKey {
             },
             requestAccessibilityPermission: {
                 clientLogger.debug("[TEST] requestAccessibilityPermission called")
-            },
-            registerRecordingToggle: { _ in
-                clientLogger.debug("[TEST] registerRecordingToggle called")
-            },
-            unregisterRecordingToggle: {
-                clientLogger.debug("[TEST] unregisterRecordingToggle called")
-            },
-            registerCancel: { _ in
-                clientLogger.debug("[TEST] registerCancel called")
-            },
-            unregisterCancel: {
-                clientLogger.debug("[TEST] unregisterCancel called")
             },
             registerRecordingWithCombo: { _, _ in
                 clientLogger.debug("[TEST] registerRecordingWithCombo called")
