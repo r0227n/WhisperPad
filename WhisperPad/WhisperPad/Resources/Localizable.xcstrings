@@ -2625,6 +2625,24 @@
         }
       }
     },
+    "menu.model.load_start" : {
+      "comment" : "Load model menu item",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Load Model"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデルを読み込み開始"
+          }
+        }
+      }
+    },
     "menu.model.loading" : {
       "comment" : "Model initializing state",
       "extractionState" : "manual",

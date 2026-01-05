@@ -134,6 +134,12 @@ struct AppReducer {
         case modelStateUpdated(TranscriptionModelState)
         /// 現在のモデル名を更新
         case currentModelNameUpdated(String?)
+        /// モデルを読み込み
+        case loadModel
+        /// モデル読み込み完了
+        case modelLoadCompleted
+        /// モデル読み込み失敗
+        case modelLoadFailed(Error)
     }
 
     // MARK: - Dependencies
@@ -251,10 +257,17 @@ struct AppReducer {
                 return .none
 
             // SettingsFeature のデリゲートアクションを処理
-            case .settings(.delegate(.modelChanged)):
-                // モデルが変更された場合、WhisperKitをアンロード（次回使用時に新モデルで初期化）
-                return .run { [whisperKitClient] _ in
+            case let .settings(.delegate(.modelChanged(newModel))):
+                // モデルが変更された場合、WhisperKitをアンロードして新モデルで再初期化
+                state.modelState = .loading
+                return .run { [whisperKitClient] send in
                     await whisperKitClient.unload()
+                    do {
+                        try await whisperKitClient.initialize(newModel)
+                        await send(.modelLoadCompleted)
+                    } catch {
+                        await send(.modelLoadFailed(error))
+                    }
                 }
 
             case .settings(.delegate(.settingsChanged)):
@@ -325,6 +338,26 @@ struct AppReducer {
 
             case let .currentModelNameUpdated(modelName):
                 state.currentModelName = modelName
+                return .none
+
+            case .loadModel:
+                state.modelState = .loading
+                return .run { [whisperKitClient, modelClient] send in
+                    let defaultModel = await modelClient.loadDefaultModel()
+                    do {
+                        try await whisperKitClient.initialize(defaultModel)
+                        await send(.modelLoadCompleted)
+                    } catch {
+                        await send(.modelLoadFailed(error))
+                    }
+                }
+
+            case .modelLoadCompleted:
+                state.modelState = .loaded
+                return .none
+
+            case let .modelLoadFailed(error):
+                state.modelState = .error(error.localizedDescription)
                 return .none
             }
         }

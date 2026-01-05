@@ -184,17 +184,39 @@ extension AppDelegate {
         _ hotKey: HotKeySettings
     ) {
         let toggleKey = hotKey.recordingHotKey
-        // モデルがダウンロードされていない場合は録音を無効化
-        let hasModels = !getCachedDownloadedModels().isEmpty
-        configureMenuItem(
-            recordingItem,
-            title: localizedAppString(forKey: "menu.recording.start"),
-            action: hasModels ? #selector(startRecording) : nil,
-            symbol: "mic.fill",
-            isEnabled: hasModels,
-            keyEquivalent: toggleKey.keyEquivalentCharacter,
-            keyEquivalentModifierMask: toggleKey.keyEquivalentModifierMask
-        )
+
+        switch store.modelState {
+        case .unloaded, .error:
+            configureMenuItem(
+                recordingItem,
+                title: localizedAppString(forKey: "menu.model.load_start"),
+                action: #selector(loadModel),
+                symbol: "arrow.down.circle.fill",
+                isEnabled: true,
+                keyEquivalent: toggleKey.keyEquivalentCharacter,
+                keyEquivalentModifierMask: toggleKey.keyEquivalentModifierMask
+            )
+        case .loading, .downloading:
+            configureMenuItem(
+                recordingItem,
+                title: localizedAppString(forKey: "menu.model.loading"),
+                action: nil,
+                symbol: "arrow.triangle.2.circlepath",
+                isEnabled: false,
+                keyEquivalent: "",
+                keyEquivalentModifierMask: []
+            )
+        case .loaded:
+            configureMenuItem(
+                recordingItem,
+                title: localizedAppString(forKey: "menu.recording.start"),
+                action: #selector(startRecording),
+                symbol: "mic.fill",
+                isEnabled: true,
+                keyEquivalent: toggleKey.keyEquivalentCharacter,
+                keyEquivalentModifierMask: toggleKey.keyEquivalentModifierMask
+            )
+        }
         pauseResumeItem.isHidden = true
         cancelItem.isHidden = true
     }
@@ -292,12 +314,11 @@ extension AppDelegate {
     /// モデルメニューの状態を更新
     ///
     /// UserDefaults からデフォルトモデルを読み込み、メニュー項目のタイトルを更新する。
-    /// ダウンロード済みモデルがない場合は、録音メニューを無効化する。
     /// サブメニューの更新は `menuWillOpen` で行うため、ここでは行わない。
+    /// 録音メニューの有効/無効は `configureMenuForIdleState` で一元管理する。
     func updateModelMenuForCurrentState() {
         guard let menu = statusMenu,
-              let modelItem = menu.item(withTag: MenuItemTag.modelSelection.rawValue),
-              let recordingItem = menu.item(withTag: MenuItemTag.recording.rawValue)
+              let modelItem = menu.item(withTag: MenuItemTag.modelSelection.rawValue)
         else { return }
 
         let cachedModels = getCachedDownloadedModels()
@@ -306,7 +327,6 @@ extension AppDelegate {
         if cachedModels.isEmpty {
             modelItem.title = localizedAppString(forKey: "menu.model.download_to_start")
             modelItem.isEnabled = false // サブメニューを開けないようにする
-            recordingItem.isEnabled = false
             return
         }
 
@@ -339,6 +359,5 @@ extension AppDelegate {
             return false
         }()
         modelItem.isEnabled = isAppIdle
-        recordingItem.isEnabled = true
     }
 }
