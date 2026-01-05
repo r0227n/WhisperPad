@@ -223,6 +223,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         observe { [weak self] in
             guard let self else { return }
 
+            // appStatus の変更を明示的に監視（状態変更時にメニュー更新をトリガーするため）
+            _ = self.store.appStatus
+
             // アイコン設定の変更を監視（設定読み込み時に更新をトリガーするため）
             _ = self.store.settings.settings.general.menuBarIconSettings
 

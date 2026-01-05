@@ -292,12 +292,11 @@ extension AppDelegate {
     /// モデルメニューの状態を更新
     ///
     /// UserDefaults からデフォルトモデルを読み込み、メニュー項目のタイトルを更新する。
-    /// ダウンロード済みモデルがない場合は、録音メニューを無効化する。
     /// サブメニューの更新は `menuWillOpen` で行うため、ここでは行わない。
+    /// 録音メニューの有効/無効は `configureMenuForIdleState` で一元管理する。
     func updateModelMenuForCurrentState() {
         guard let menu = statusMenu,
-              let modelItem = menu.item(withTag: MenuItemTag.modelSelection.rawValue),
-              let recordingItem = menu.item(withTag: MenuItemTag.recording.rawValue)
+              let modelItem = menu.item(withTag: MenuItemTag.modelSelection.rawValue)
         else { return }
 
         let cachedModels = getCachedDownloadedModels()
@@ -306,7 +305,6 @@ extension AppDelegate {
         if cachedModels.isEmpty {
             modelItem.title = localizedAppString(forKey: "menu.model.download_to_start")
             modelItem.isEnabled = false // サブメニューを開けないようにする
-            recordingItem.isEnabled = false
             return
         }
 
@@ -339,6 +337,5 @@ extension AppDelegate {
             return false
         }()
         modelItem.isEnabled = isAppIdle
-        recordingItem.isEnabled = true
     }
 }
