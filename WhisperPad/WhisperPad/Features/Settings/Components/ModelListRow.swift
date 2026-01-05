@@ -57,28 +57,6 @@ struct ModelListRow: View {
         HStack(spacing: 6) {
             Text(model.displayName)
                 .font(.system(size: 13, weight: .medium))
-
-            if model.isRecommended {
-                Text("model.active.recommended", comment: "Recommended")
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 2)
-                    .background(Color.accentColor.opacity(0.2))
-                    .foregroundStyle(Color.accentColor)
-                    .clipShape(Capsule())
-            }
-
-            if isEnglishOnly {
-                Text("EN")
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 2)
-                    .background(Color.blue.opacity(0.2))
-                    .foregroundStyle(Color.blue)
-                    .clipShape(Capsule())
-            }
         }
     }
 
