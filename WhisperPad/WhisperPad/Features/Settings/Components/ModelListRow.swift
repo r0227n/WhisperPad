@@ -59,25 +59,11 @@ struct ModelListRow: View {
                 .font(.system(size: 13, weight: .medium))
 
             if model.isRecommended {
-                Text("model.active.recommended", comment: "Recommended")
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 2)
-                    .background(Color.accentColor.opacity(0.2))
-                    .foregroundStyle(Color.accentColor)
-                    .clipShape(Capsule())
+                BadgeView(text: "model.active.recommended", color: .accentColor)
             }
 
             if isEnglishOnly {
-                Text("EN")
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 2)
-                    .background(Color.blue.opacity(0.2))
-                    .foregroundStyle(Color.blue)
-                    .clipShape(Capsule())
+                BadgeView("EN", color: .blue)
             }
         }
     }
