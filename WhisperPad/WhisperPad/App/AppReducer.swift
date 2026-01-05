@@ -257,10 +257,17 @@ struct AppReducer {
                 return .none
 
             // SettingsFeature のデリゲートアクションを処理
-            case .settings(.delegate(.modelChanged)):
-                // モデルが変更された場合、WhisperKitをアンロード（次回使用時に新モデルで初期化）
-                return .run { [whisperKitClient] _ in
+            case let .settings(.delegate(.modelChanged(newModel))):
+                // モデルが変更された場合、WhisperKitをアンロードして新モデルで再初期化
+                state.modelState = .loading
+                return .run { [whisperKitClient] send in
                     await whisperKitClient.unload()
+                    do {
+                        try await whisperKitClient.initialize(newModel)
+                        await send(.modelLoadCompleted)
+                    } catch {
+                        await send(.modelLoadFailed(error))
+                    }
                 }
 
             case .settings(.delegate(.settingsChanged)):
