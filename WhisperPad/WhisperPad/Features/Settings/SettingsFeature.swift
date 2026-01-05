@@ -502,10 +502,6 @@ struct SettingsFeature {
                     .run { [modelClient] _ in
                         // デフォルトモデルを UserDefaults に保存
                         await modelClient.saveDefaultModel(modelName)
-                        // AppDelegate にモデル変更を通知（メニューキャッシュを更新）
-                        await MainActor.run {
-                            NotificationCenter.default.post(name: .modelChanged, object: modelName)
-                        }
                     }
                 )
 
