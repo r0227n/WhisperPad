@@ -184,17 +184,39 @@ extension AppDelegate {
         _ hotKey: HotKeySettings
     ) {
         let toggleKey = hotKey.recordingHotKey
-        // モデルがダウンロードされていない場合は録音を無効化
-        let hasModels = !getCachedDownloadedModels().isEmpty
-        configureMenuItem(
-            recordingItem,
-            title: localizedAppString(forKey: "menu.recording.start"),
-            action: hasModels ? #selector(startRecording) : nil,
-            symbol: "mic.fill",
-            isEnabled: hasModels,
-            keyEquivalent: toggleKey.keyEquivalentCharacter,
-            keyEquivalentModifierMask: toggleKey.keyEquivalentModifierMask
-        )
+
+        switch store.modelState {
+        case .unloaded, .error:
+            configureMenuItem(
+                recordingItem,
+                title: localizedAppString(forKey: "menu.model.load_start"),
+                action: #selector(loadModel),
+                symbol: "arrow.down.circle.fill",
+                isEnabled: true,
+                keyEquivalent: toggleKey.keyEquivalentCharacter,
+                keyEquivalentModifierMask: toggleKey.keyEquivalentModifierMask
+            )
+        case .loading, .downloading:
+            configureMenuItem(
+                recordingItem,
+                title: localizedAppString(forKey: "menu.model.loading"),
+                action: nil,
+                symbol: "arrow.triangle.2.circlepath",
+                isEnabled: false,
+                keyEquivalent: "",
+                keyEquivalentModifierMask: []
+            )
+        case .loaded:
+            configureMenuItem(
+                recordingItem,
+                title: localizedAppString(forKey: "menu.recording.start"),
+                action: #selector(startRecording),
+                symbol: "mic.fill",
+                isEnabled: true,
+                keyEquivalent: toggleKey.keyEquivalentCharacter,
+                keyEquivalentModifierMask: toggleKey.keyEquivalentModifierMask
+            )
+        }
         pauseResumeItem.isHidden = true
         cancelItem.isHidden = true
     }

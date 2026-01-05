@@ -229,6 +229,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // アイコン設定の変更を監視（設定読み込み時に更新をトリガーするため）
             _ = self.store.settings.settings.general.menuBarIconSettings
 
+            // モデル状態の変更を監視（メニュー更新をトリガーするため）
+            _ = self.store.modelState
+
             // Detect locale changes and rebuild menu
             let newLocale = self.store.settings.settings.general.preferredLocale
             if self.currentLocale != newLocale {
@@ -366,6 +369,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func startRecording() {
         logger.info("Start recording requested")
         store.send(.startRecording)
+    }
+
+    /// モデルを読み込み
+    @objc func loadModel() {
+        logger.info("Load model requested")
+        store.send(.loadModel)
     }
 
     /// 録音を終了
