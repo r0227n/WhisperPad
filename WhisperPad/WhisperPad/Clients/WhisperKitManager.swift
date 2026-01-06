@@ -11,6 +11,7 @@ import WhisperKit
 ///
 /// アプリ全体で WhisperKit インスタンスを共有し、メモリ効率を向上させます。
 /// アプリ起動時に初期化を行い、各機能（通常の文字起こし、ストリーミング）で共有します。
+/// モデル管理と文字起こし機能を統合し、単一のインスタンスで全ての操作を行います。
 actor WhisperKitManager {
     // MARK: - Singleton
 
@@ -18,7 +19,8 @@ actor WhisperKitManager {
 
     // MARK: - Constants
 
-    private static let defaultModelRepo = "argmaxinc/whisperkit-coreml"
+    /// デフォルトのモデルリポジトリ
+    static let defaultModelRepo = "argmaxinc/whisperkit-coreml"
 
     /// デフォルトのモデル保存先ディレクトリ
     private static var defaultModelsDirectory: URL {
@@ -35,6 +37,7 @@ actor WhisperKitManager {
     private var currentModelName: String?
     private var customStorageURL: URL?
     private(set) var state: WhisperKitState = .unloaded
+    private var modelState: TranscriptionModelState = .unloaded
 
     // MARK: - Idle Timeout State
 
@@ -80,6 +83,29 @@ actor WhisperKitManager {
         customStorageURL ?? Self.defaultModelsDirectory
     }
 
+    /// WhisperKit がモデルを保存する実際のディレクトリ
+    /// WhisperKit は downloadBase の中に "models/argmaxinc/whisperkit-coreml/" を作成する
+    private var whisperKitModelsDirectory: URL {
+        modelsDirectory
+            .appendingPathComponent("models", isDirectory: true)
+            .appendingPathComponent("argmaxinc", isDirectory: true)
+            .appendingPathComponent("whisperkit-coreml", isDirectory: true)
+    }
+
+    /// TranscriptionModelState として現在の状態を返す
+    var transcriptionModelState: TranscriptionModelState {
+        switch state {
+        case .unloaded:
+            .unloaded
+        case .initializing:
+            .loading
+        case .ready:
+            .loaded
+        case let .error(message):
+            .error(message)
+        }
+    }
+
     // MARK: - Initialization
 
     private init() {}
@@ -90,6 +116,157 @@ actor WhisperKitManager {
     func setStorageLocation(_ url: URL?) {
         customStorageURL = url
         logger.info("Storage location set to: \(url?.path ?? "default")")
+    }
+
+    /// ストレージ使用量を取得
+    func getStorageUsage() -> Int64 {
+        let fileManager = FileManager.default
+        let directory = modelsDirectory
+
+        guard fileManager.fileExists(atPath: directory.path) else {
+            return 0
+        }
+
+        var totalSize: Int64 = 0
+
+        if let enumerator = fileManager.enumerator(
+            at: directory,
+            includingPropertiesForKeys: [.fileSizeKey],
+            options: [.skipsHiddenFiles]
+        ) {
+            for case let fileURL as URL in enumerator {
+                if let fileSize = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                    totalSize += Int64(fileSize)
+                }
+            }
+        }
+
+        logger.info("Storage usage: \(totalSize) bytes")
+        return totalSize
+    }
+
+    // MARK: - Model Management
+
+    /// 利用可能なモデル一覧を取得
+    func fetchAvailableModels() async throws -> [String] {
+        logger.info("Fetching available models...")
+
+        do {
+            let models = try await WhisperKit.fetchAvailableModels(
+                from: Self.defaultModelRepo
+            )
+            logger.info("Found \(models.count) available models")
+            return models
+        } catch {
+            logger.error("Failed to fetch models: \(error.localizedDescription)")
+            throw TranscriptionError.modelNotFound("モデル一覧の取得に失敗: \(error.localizedDescription)")
+        }
+    }
+
+    /// 推奨モデルを取得
+    func recommendedModel() async -> String {
+        let modelSupport = await WhisperKit.recommendedModels()
+        logger.info("Recommended model: \(modelSupport.default)")
+        return modelSupport.default
+    }
+
+    /// モデルがダウンロード済みかどうかを確認
+    func isModelDownloaded(modelName: String) -> Bool {
+        let modelPath = whisperKitModelsDirectory.appendingPathComponent(modelName)
+        let exists = FileManager.default.fileExists(atPath: modelPath.path)
+        return exists
+    }
+
+    /// ローカルにダウンロード済みのモデル一覧を取得
+    func fetchDownloadedModels() -> [String] {
+        let directory = whisperKitModelsDirectory
+        guard FileManager.default.fileExists(atPath: directory.path) else {
+            logger.info("Models directory does not exist: \(directory.path)")
+            return []
+        }
+
+        do {
+            let contents = try FileManager.default.contentsOfDirectory(
+                at: directory,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            )
+            let models = contents
+                .filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
+                .map(\.lastPathComponent)
+            logger.info("Found \(models.count) downloaded models in \(directory.path)")
+            return models
+        } catch {
+            logger.error("Failed to scan models directory: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    /// モデルをダウンロード
+    func downloadModel(
+        modelName: String,
+        progressHandler: (@Sendable (Double) -> Void)?
+    ) async throws -> URL {
+        logger.info("Downloading model: \(modelName)")
+        modelState = .downloading(progress: 0)
+
+        let targetDirectory = modelsDirectory
+
+        do {
+            // ダウンロード先ディレクトリを作成
+            try FileManager.default.createDirectory(
+                at: targetDirectory,
+                withIntermediateDirectories: true
+            )
+
+            let modelFolder = try await WhisperKit.download(
+                variant: modelName,
+                downloadBase: targetDirectory,
+                from: Self.defaultModelRepo,
+                progressCallback: { progress in
+                    let progressValue = progress.fractionCompleted
+                    Task { @MainActor in
+                        progressHandler?(progressValue)
+                    }
+                    // Update internal state
+                    Task {
+                        await self.updateDownloadProgress(progressValue)
+                    }
+                }
+            )
+
+            modelState = .unloaded
+            logger.info("Model downloaded to: \(modelFolder.path)")
+            return modelFolder
+        } catch {
+            modelState = .error(error.localizedDescription)
+            logger.error("Model download failed: \(error.localizedDescription)")
+            throw TranscriptionError.modelDownloadFailed(error.localizedDescription)
+        }
+    }
+
+    /// ダウンロード進捗を更新
+    private func updateDownloadProgress(_ progress: Double) {
+        modelState = .downloading(progress: progress)
+    }
+
+    /// モデルを削除
+    func deleteModel(_ modelName: String) throws {
+        let modelPath = whisperKitModelsDirectory.appendingPathComponent(modelName)
+        let fileManager = FileManager.default
+
+        guard fileManager.fileExists(atPath: modelPath.path) else {
+            logger.warning("Model not found for deletion: \(modelName)")
+            throw TranscriptionError.modelNotFound(modelName)
+        }
+
+        do {
+            try fileManager.removeItem(at: modelPath)
+            logger.info("Model deleted: \(modelName)")
+        } catch {
+            logger.error("Failed to delete model: \(error.localizedDescription)")
+            throw TranscriptionError.modelDownloadFailed("削除に失敗: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - WhisperKit Management
@@ -253,6 +430,86 @@ actor WhisperKitManager {
         idleTimeoutTask?.cancel()
         idleTimeoutTask = nil
         logger.debug("Idle timeout timer cancelled")
+    }
+
+    // MARK: - Transcription
+
+    /// 音声ファイルを文字起こし
+    func transcribe(audioURL: URL, language: String?) async throws -> String {
+        guard let whisperKit else {
+            logger.error("Transcription attempted without initialized WhisperKit")
+            throw TranscriptionError.modelNotLoaded
+        }
+
+        logger.info("Starting transcription for: \(audioURL.lastPathComponent)")
+
+        do {
+            // DecodingOptions を設定
+            var options = DecodingOptions()
+            options.language = language
+            options.task = .transcribe
+            options.verbose = false
+
+            // 文字起こしを実行
+            let results = try await whisperKit.transcribe(
+                audioPath: audioURL.path,
+                decodeOptions: options
+            )
+
+            // Phase 1: Combine segments with silence gap detection
+            let transcribedText = combineSegmentsWithSilenceBreaks(results: results)
+
+            // Phase 2: Remove Whisper special tokens
+            let cleanedText = transcribedText.removingWhisperTokens()
+
+            // Phase 3: Apply Japanese sentence breaks
+            let textWithLineBreaks = cleanedText.addingJapaneseSentenceBreaks()
+
+            let trimmedText = textWithLineBreaks.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            logger.info("Transcription completed: \(trimmedText.prefix(50))...")
+            return trimmedText
+        } catch {
+            logger.error("Transcription failed: \(error.localizedDescription)")
+            throw TranscriptionError.transcriptionFailed(error.localizedDescription)
+        }
+    }
+
+    /// Combine transcription segments with line breaks at silence gaps
+    ///
+    /// Detects silence gaps (>=1.0 second) between segments and inserts line breaks.
+    /// - Parameter results: Transcription results from WhisperKit
+    /// - Returns: Combined text with silence-based line breaks
+    private func combineSegmentsWithSilenceBreaks(results: [TranscriptionResult]) -> String {
+        let silenceThreshold: Float = 1.0 // 1 second
+
+        guard !results.isEmpty else { return "" }
+
+        // Extract all segments from all results
+        let allSegments = results.flatMap(\.segments)
+
+        guard !allSegments.isEmpty else { return "" }
+
+        var combinedText = ""
+
+        for (index, segment) in allSegments.enumerated() {
+            // Add segment text
+            combinedText += segment.text
+
+            // Check for silence gap after this segment
+            if index < allSegments.count - 1 {
+                let nextSegment = allSegments[index + 1]
+                let gap = nextSegment.start - segment.end
+
+                if gap >= silenceThreshold {
+                    // Silence gap detected - add line break
+                    logger.debug("Silence gap detected: \(gap)s at segment \(index)")
+                    combinedText += "\n"
+                }
+            }
+        }
+
+        return combinedText
     }
 }
 
