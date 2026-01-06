@@ -82,6 +82,11 @@ struct ModelSettingsFeature {
     // MARK: - Action
 
     enum Action: Sendable {
+        // MARK: - Lifecycle
+
+        /// 画面表示時
+        case onAppear
+
         // MARK: - Model Management
 
         /// モデル一覧を取得
@@ -158,6 +163,26 @@ struct ModelSettingsFeature {
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
+            // MARK: - Lifecycle
+
+            case .onAppear:
+                // 言語一覧を初期化
+                let allLanguages = TranscriptionLanguage.allSupported
+                if state.transcription.modelName.hasSuffix(".en") {
+                    state.availableLanguages = allLanguages.filter {
+                        $0.code == "auto" || $0.code == "en"
+                    }
+                } else {
+                    state.availableLanguages = allLanguages
+                }
+
+                return .merge(
+                    .send(.fetchModels),
+                    .send(.fetchDownloadedModels),
+                    .send(.calculateStorageUsage),
+                    .send(.fetchModelStorageURL)
+                )
+
             // MARK: - Model Management
 
             case .fetchModels:

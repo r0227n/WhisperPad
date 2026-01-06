@@ -28,27 +28,6 @@ struct SettingsFeature {
         /// アプリケーション設定
         var settings: AppSettings = .default
 
-        /// 利用可能なモデル一覧
-        var availableModels: [WhisperModel] = []
-
-        /// ダウンロード済みモデル一覧（ローカルディレクトリスキャンで取得）
-        var downloadedModels: [WhisperModel] = []
-
-        /// モデル一覧を読み込み中かどうか
-        var isLoadingModels: Bool = false
-
-        /// モデルのダウンロード進捗（モデル名: 進捗 0.0-1.0）
-        var downloadProgress: [String: Double] = [:]
-
-        /// 現在ダウンロード中のモデル名
-        var downloadingModelName: String?
-
-        /// ストレージ使用量（バイト）
-        var storageUsage: Int64 = 0
-
-        /// 現在のモデル保存先 URL
-        var modelStorageURL: URL?
-
         /// エラーメッセージ
         var errorMessage: String?
 
@@ -79,14 +58,8 @@ struct SettingsFeature {
         /// システム予約済みショートカットアラートの表示フラグ
         var showSystemReservedAlert = false
 
-        /// 削除確認対象のモデル名
-        var modelToDelete: String?
-
         /// 選択中のショートカット（ホットキー設定タブ用）
         var selectedShortcut: HotkeyType?
-
-        /// 利用可能な文字起こし言語一覧
-        var availableLanguages: [TranscriptionLanguage] = []
 
         /// 録音設定子Feature用のState
         var recordingSettings: RecordingSettingsFeature.State = .init()
@@ -163,52 +136,6 @@ struct SettingsFeature {
         case saveSettings
         /// 設定保存完了
         case settingsSaved(Result<Void, Error>)
-
-        // MARK: - Model Management
-
-        /// モデル一覧を取得
-        case fetchModels
-        /// モデル一覧取得完了
-        case modelsResponse(Result<[WhisperModel], Error>)
-        /// ダウンロード済みモデル一覧を取得（ローカルスキャン）
-        case fetchDownloadedModels
-        /// ダウンロード済みモデル一覧取得完了
-        case downloadedModelsResponse([WhisperModel])
-        /// モデルを選択
-        case selectModel(String)
-        /// モデルをダウンロード
-        case downloadModel(String)
-        /// ダウンロード進捗更新
-        case downloadProgress(String, Double)
-        /// ダウンロード完了
-        case downloadCompleted(String, Result<URL, Error>)
-        /// モデルを削除
-        case deleteModel(String)
-        /// モデル削除ボタンがタップされた（確認ダイアログを表示）
-        case deleteModelButtonTapped(String)
-        /// モデル削除を確認
-        case confirmDeleteModel
-        /// モデル削除をキャンセル
-        case cancelDeleteModel
-        /// モデル削除完了
-        case deleteModelResponse(String, Result<Void, Error>)
-
-        // MARK: - Storage Management
-
-        /// ストレージ使用量を計算
-        case calculateStorageUsage
-        /// ストレージ使用量取得完了
-        case storageUsageResponse(Int64)
-        /// モデル保存先URLを取得
-        case fetchModelStorageURL
-        /// モデル保存先URL取得完了
-        case modelStorageURLResponse(URL)
-        /// ストレージ場所を選択
-        case selectStorageLocation
-        /// ストレージ場所選択完了
-        case storageLocationSelected(Result<URL, Error>)
-        /// ストレージ場所をデフォルトにリセット
-        case resetStorageLocation
 
         // MARK: - Error Handling
 
@@ -317,25 +244,10 @@ struct SettingsFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                // 利用可能な言語を読み込み
-                let allLanguages = TranscriptionLanguage.allSupported
-
-                // 現在選択されているモデルが English-only の場合は言語を制限
-                if state.settings.transcription.modelName.hasSuffix(".en") {
-                    state.availableLanguages = allLanguages.filter {
-                        $0.code == "auto" || $0.code == "en"
-                    }
-                } else {
-                    state.availableLanguages = allLanguages
-                }
-
                 return .merge(
                     .send(.loadSettings),
-                    .send(.fetchModels),
-                    .send(.calculateStorageUsage),
                     .send(.recordingSettings(.fetchInputDevices)),
-                    .send(.checkHotkeyConflict),
-                    .send(.fetchModelStorageURL)
+                    .send(.checkHotkeyConflict)
                 )
 
             case .onDisappear:
@@ -403,26 +315,20 @@ struct SettingsFeature {
             case let .settingsLoaded(settings):
                 state.settings = settings
 
+                // ModelSettingsFeature の State を初期化
+                state.modelSettings.transcription = settings.transcription
+                state.modelSettings.preferredLocale = settings.general.preferredLocale
+
                 var effects: [Effect<Action>] = []
 
-                // カスタムストレージのブックマーク解決と後続処理を順次実行
-                effects.append(.run { [modelClient, userDefaultsClient] send in
-                    // 1. カスタムストレージ場所を設定
-                    if let bookmarkData = settings.transcription.storageBookmarkData {
+                // カスタムストレージのブックマーク解決
+                if let bookmarkData = settings.transcription.storageBookmarkData {
+                    effects.append(.run { [modelClient, userDefaultsClient] _ in
                         if let url = await userDefaultsClient.resolveBookmark(bookmarkData) {
                             await modelClient.setStorageLocation(url)
                         }
-                    }
-
-                    // 2. ストレージ設定完了後にダウンロード済みモデルを取得
-                    await send(.fetchDownloadedModels)
-
-                    // 3. ストレージ使用量とURL取得
-                    let usage = await modelClient.getStorageUsage()
-                    await send(.storageUsageResponse(usage))
-                    let storageURL = await modelClient.getModelStorageURL()
-                    await send(.modelStorageURLResponse(storageURL))
-                })
+                    })
+                }
 
                 // 出力ディレクトリのブックマークを解決（独立して実行可能）
                 if let outputBookmark = settings.output.outputBookmarkData {
@@ -468,238 +374,6 @@ struct SettingsFeature {
                 case let .failure(error):
                     state.errorMessage = error.localizedDescription
                     return .none
-                }
-
-            case .fetchModels:
-                state.isLoadingModels = true
-                return .run { [modelClient] send in
-                    do {
-                        let modelNames = try await modelClient.fetchAvailableModels()
-                        let recommendedModel = await modelClient.recommendedModel()
-                        var models: [WhisperModel] = []
-                        for name in modelNames {
-                            let isDownloaded = await modelClient.isModelDownloaded(name)
-                            models.append(WhisperModel.from(
-                                id: name,
-                                isDownloaded: isDownloaded,
-                                isRecommended: name == recommendedModel
-                            ))
-                        }
-                        models.sort { $0.id < $1.id }
-                        await send(.modelsResponse(.success(models)))
-                    } catch {
-                        await send(.modelsResponse(.failure(error)))
-                    }
-                }
-
-            case let .modelsResponse(result):
-                state.isLoadingModels = false
-                switch result {
-                case let .success(models):
-                    state.availableModels = models
-                case let .failure(error):
-                    state.errorMessage = error.localizedDescription
-                }
-                return .none
-
-            case .fetchDownloadedModels:
-                return .run { [modelClient] send in
-                    do {
-                        let models = try await modelClient.fetchDownloadedModelsAsWhisperModels()
-                        await send(.downloadedModelsResponse(models))
-                    } catch {
-                        // エラー時は空のリストを返す（既存の動作を維持）
-                        await send(.downloadedModelsResponse([]))
-                    }
-                }
-
-            case let .downloadedModelsResponse(models):
-                state.downloadedModels = models
-                // 現在のモデルがダウンロード済みリストに含まれていない場合、最初のモデルを選択
-                let currentModel = state.settings.transcription.modelName
-                if !models.isEmpty, !models.contains(where: { $0.id == currentModel }) {
-                    let newModel = models.first!.id
-                    state.settings.transcription.modelName = newModel
-                    return .merge(
-                        .send(.saveSettings),
-                        .send(.delegate(.modelChanged(newModel))),
-                        .run { [modelClient] _ in
-                            // 自動選択されたモデルを UserDefaults に保存
-                            await modelClient.saveDefaultModel(newModel)
-                        }
-                    )
-                }
-                return .none
-
-            case let .selectModel(modelName):
-                state.settings.transcription.modelName = modelName
-
-                // English-only モデルの場合は言語リストを英語と自動検出のみに制限
-                if modelName.hasSuffix(".en") {
-                    state.availableLanguages = TranscriptionLanguage.allSupported.filter {
-                        $0.code == "auto" || $0.code == "en"
-                    }
-                    // 現在選択されている言語が英語でも自動検出でもない場合、自動検出にリセット
-                    if state.settings.transcription.language.code != "auto",
-                       state.settings.transcription.language.code != "en" {
-                        state.settings.transcription.language = .auto
-                    }
-                } else {
-                    // 多言語モデルの場合はすべての言語を表示
-                    state.availableLanguages = TranscriptionLanguage.allSupported
-                }
-
-                return .merge(
-                    .send(.saveSettings),
-                    .send(.delegate(.modelChanged(modelName))),
-                    .run { [modelClient] _ in
-                        // デフォルトモデルを UserDefaults に保存
-                        await modelClient.saveDefaultModel(modelName)
-                    }
-                )
-
-            case let .downloadModel(modelName):
-                state.downloadingModelName = modelName
-                state.downloadProgress[modelName] = 0
-                return .run { [modelClient] send in
-                    do {
-                        let downloadedURL = try await modelClient.downloadModel(modelName) { progress in
-                            Task { await send(.downloadProgress(modelName, progress)) }
-                        }
-                        await send(.downloadCompleted(modelName, .success(downloadedURL)))
-                    } catch {
-                        await send(.downloadCompleted(modelName, .failure(error)))
-                    }
-                }
-                .cancellable(id: "download-\(modelName)")
-
-            case let .downloadProgress(modelName, progress):
-                state.downloadProgress[modelName] = progress
-                return .none
-
-            case let .downloadCompleted(modelName, result):
-                state.downloadingModelName = nil
-                state.downloadProgress.removeValue(forKey: modelName)
-                switch result {
-                case .success:
-                    if let index = state.availableModels.firstIndex(where: { $0.id == modelName }) {
-                        state.availableModels[index].isDownloaded = true
-                    }
-                    return .merge(
-                        .send(.calculateStorageUsage),
-                        .send(.fetchDownloadedModels)
-                    )
-                case let .failure(error):
-                    state.errorMessage = "ダウンロードに失敗しました: \(error.localizedDescription)"
-                    return .none
-                }
-
-            case let .deleteModel(modelName):
-                return .run { [modelClient] send in
-                    do {
-                        try await modelClient.deleteModel(modelName)
-                        await send(.deleteModelResponse(modelName, .success(())))
-                    } catch {
-                        await send(.deleteModelResponse(modelName, .failure(error)))
-                    }
-                }
-
-            case let .deleteModelButtonTapped(modelName):
-                state.modelToDelete = modelName
-                return .none
-
-            case .confirmDeleteModel:
-                guard let modelName = state.modelToDelete else { return .none }
-                state.modelToDelete = nil
-                return .send(.deleteModel(modelName))
-
-            case .cancelDeleteModel:
-                state.modelToDelete = nil
-                return .none
-
-            case let .deleteModelResponse(modelName, result):
-                switch result {
-                case .success:
-                    if let index = state.availableModels.firstIndex(where: { $0.id == modelName }) {
-                        state.availableModels[index].isDownloaded = false
-                    }
-                    return .merge(
-                        .send(.calculateStorageUsage),
-                        .send(.fetchDownloadedModels)
-                    )
-                case let .failure(error):
-                    state.errorMessage = "削除に失敗しました: \(error.localizedDescription)"
-                    return .none
-                }
-
-            case .calculateStorageUsage:
-                return .run { [modelClient] send in
-                    let usage = await modelClient.getStorageUsage()
-                    await send(.storageUsageResponse(usage))
-                }
-
-            case let .storageUsageResponse(usage):
-                state.storageUsage = usage
-                return .none
-
-            case .fetchModelStorageURL:
-                return .run { [modelClient] send in
-                    let url = await modelClient.getModelStorageURL()
-                    await send(.modelStorageURLResponse(url))
-                }
-
-            case let .modelStorageURLResponse(url):
-                state.modelStorageURL = url
-                return .none
-
-            case .selectStorageLocation:
-                return .run { send in
-                    await MainActor.run {
-                        let panel = NSOpenPanel()
-                        panel.canChooseFiles = false
-                        panel.canChooseDirectories = true
-                        panel.allowsMultipleSelection = false
-                        panel.message = "モデルの保存先フォルダを選択してください"
-                        panel.prompt = "選択"
-                        if panel.runModal() == .OK, let url = panel.url {
-                            Task { await send(.storageLocationSelected(.success(url))) }
-                        }
-                    }
-                }
-
-            case let .storageLocationSelected(result):
-                switch result {
-                case let .success(url):
-                    return .run { [settings = state.settings, modelClient, userDefaultsClient] send in
-                        do {
-                            let bookmarkData = try await userDefaultsClient.createBookmark(url)
-                            var newSettings = settings
-                            newSettings.transcription.customStorageURL = url
-                            newSettings.transcription.storageBookmarkData = bookmarkData
-                            await userDefaultsClient.saveStorageBookmark(bookmarkData)
-                            await modelClient.setStorageLocation(url)
-                            try await userDefaultsClient.saveSettings(newSettings)
-                            await send(.settingsLoaded(newSettings))
-                            await send(.calculateStorageUsage)
-                            await send(.fetchModelStorageURL)
-                        } catch {
-                            await send(.storageLocationSelected(.failure(error)))
-                        }
-                    }
-                case let .failure(error):
-                    state.errorMessage = "ストレージ場所の設定に失敗しました: \(error.localizedDescription)"
-                    return .none
-                }
-
-            case .resetStorageLocation:
-                state.settings.transcription.customStorageURL = nil
-                state.settings.transcription.storageBookmarkData = nil
-                return .run { [modelClient] send in
-                    await modelClient.setStorageLocation(nil)
-                    await send(.saveSettings)
-                    await send(.fetchDownloadedModels)
-                    await send(.calculateStorageUsage)
-                    await send(.fetchModelStorageURL)
                 }
 
             case .clearError:

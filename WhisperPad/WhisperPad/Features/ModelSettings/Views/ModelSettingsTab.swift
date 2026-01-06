@@ -86,6 +86,9 @@ struct ModelSettingsTab: View {
             }
         }
         .environment(\.locale, store.preferredLocale.locale)
+        .onAppear {
+            store.send(.onAppear)
+        }
     }
 
     // MARK: - Search & Filter Section

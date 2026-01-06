@@ -328,8 +328,8 @@ struct AppReducer {
                 return .none
 
             case let .selectModel(modelName):
-                // 設定機能に委譲
-                return .send(.settings(.selectModel(modelName)))
+                // 設定機能のモデル設定に委譲
+                return .send(.settings(.modelSettings(.selectModel(modelName))))
 
             case let .modelStateUpdated(modelState):
                 state.modelState = modelState
