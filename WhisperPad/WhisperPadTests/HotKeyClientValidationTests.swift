@@ -1,8 +1,8 @@
 //
-//  HotKeyValidatorTests.swift
+//  HotKeyClientValidationTests.swift
 //  WhisperPadTests
 //
-//  Comprehensive test suite for HotKeyValidator
+//  Comprehensive test suite for HotKeyClient validation
 //  Tests all three validation tiers: system reserved blocklist, Carbon API validation, and duplicate detection
 //
 
@@ -12,7 +12,7 @@ import XCTest
 
 @testable import WhisperPad
 
-/// Comprehensive test suite for HotKeyValidator
+/// Comprehensive test suite for HotKeyClient validation
 ///
 /// Tests three-tier validation system:
 /// 1. System reserved shortcut blocklist (51+ macOS shortcuts)
@@ -20,7 +20,7 @@ import XCTest
 /// 3. Application-level duplicate detection across 7 hotkey types
 @MainActor
 // swiftlint:disable:next type_body_length
-final class HotKeyValidatorTests: XCTestCase {
+final class HotKeyClientValidationTests: XCTestCase {
     // MARK: - Test Data Structures
 
     /// Represents a key combination for testing
@@ -211,7 +211,7 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests all system reserved shortcuts return true from isSystemReservedShortcut()
     func test_isSystemReservedShortcut_allBlocklistEntries_returnTrue() {
         for combo in SystemReservedGroups.all {
-            let result = HotKeyValidator.isSystemReservedShortcut(
+            let result = HotKeyClient.isSystemReservedShortcut(
                 carbonKeyCode: combo.keyCode,
                 carbonModifiers: combo.modifiers
             )
@@ -225,32 +225,32 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests Command-based clipboard and text shortcuts
     func test_isSystemReservedShortcut_clipboardShortcuts_returnTrue() {
         // Cmd+C (Copy)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 8, carbonModifiers: 256
         ))
 
         // Cmd+V (Paste)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 9, carbonModifiers: 256
         ))
 
         // Cmd+X (Cut)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 7, carbonModifiers: 256
         ))
 
         // Cmd+A (Select All)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 0, carbonModifiers: 256
         ))
 
         // Cmd+Z (Undo)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 6, carbonModifiers: 256
         ))
 
         // Cmd+Shift+Z (Redo)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 6, carbonModifiers: 768
         ))
     }
@@ -258,22 +258,22 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests file operation shortcuts
     func test_isSystemReservedShortcut_fileOperationShortcuts_returnTrue() {
         // Cmd+S (Save)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 1, carbonModifiers: 256
         ))
 
         // Cmd+O (Open)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 31, carbonModifiers: 256
         ))
 
         // Cmd+P (Print)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 35, carbonModifiers: 256
         ))
 
         // Cmd+N (New Window)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 45, carbonModifiers: 256
         ))
     }
@@ -281,32 +281,32 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests window and app management shortcuts
     func test_isSystemReservedShortcut_windowManagementShortcuts_returnTrue() {
         // Cmd+Q (Quit)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 12, carbonModifiers: 256
         ))
 
         // Cmd+W (Close Window)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 13, carbonModifiers: 256
         ))
 
         // Cmd+Tab (App Switcher)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 48, carbonModifiers: 256
         ))
 
         // Cmd+H (Hide)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 4, carbonModifiers: 256
         ))
 
         // Cmd+M (Minimize)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 46, carbonModifiers: 256
         ))
 
         // Cmd+Option+H (Hide Others)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 4, carbonModifiers: 2304
         ))
     }
@@ -314,12 +314,12 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests Spotlight and system shortcuts
     func test_isSystemReservedShortcut_spotlightShortcuts_returnTrue() {
         // Cmd+Space (Spotlight)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 49, carbonModifiers: 256
         ))
 
         // Cmd+Option+Space (Character Viewer)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 49, carbonModifiers: 2304
         ))
     }
@@ -327,17 +327,17 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests screenshot shortcuts (Cmd+Shift+3, Cmd+Shift+4, Cmd+Shift+5)
     func test_isSystemReservedShortcut_screenshotShortcuts_returnTrue() {
         // Cmd+Shift+3 (Screenshot)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 3, carbonModifiers: 768
         ))
 
         // Cmd+Shift+4 (Selection Screenshot)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 4, carbonModifiers: 768
         ))
 
         // Cmd+Shift+5 (Screenshot App)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 5, carbonModifiers: 768
         ))
     }
@@ -345,12 +345,12 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests Mission Control shortcuts (Control+Up, Control+Down)
     func test_isSystemReservedShortcut_missionControlShortcuts_returnTrue() {
         // Control+Up (Mission Control)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 126, carbonModifiers: 4096
         ))
 
         // Control+Down (App Windows)
-        XCTAssertTrue(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertTrue(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 125, carbonModifiers: 4096
         ))
     }
@@ -358,22 +358,22 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests valid non-reserved shortcuts return false
     func test_isSystemReservedShortcut_validShortcuts_returnFalse() {
         // Option+Space (default recording hotkey)
-        XCTAssertFalse(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertFalse(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 49, carbonModifiers: 2048
         ))
 
         // Option+Shift+P (default pause hotkey)
-        XCTAssertFalse(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertFalse(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 35, carbonModifiers: 2560
         ))
 
         // Escape alone (default cancel)
-        XCTAssertFalse(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertFalse(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 53, carbonModifiers: 0
         ))
 
         // Cmd+Shift+C (default popup copy and close)
-        XCTAssertFalse(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertFalse(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: 8, carbonModifiers: 768
         ))
     }
@@ -389,7 +389,7 @@ final class HotKeyValidatorTests: XCTestCase {
         ]
 
         for keyCode in testKeys {
-            let result = HotKeyValidator.isSystemReservedShortcut(
+            let result = HotKeyClient.isSystemReservedShortcut(
                 carbonKeyCode: keyCode,
                 carbonModifiers: TestModifiers.none
             )
@@ -400,13 +400,13 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests edge case: all modifiers combined
     func test_isSystemReservedShortcut_allModifiers_returnFalse() {
         // Cmd+Shift+Option+Control+A
-        XCTAssertFalse(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertFalse(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: TestKeyCodes.keyA,
             carbonModifiers: TestModifiers.all
         ))
 
         // Cmd+Shift+Option+Control+F10
-        XCTAssertFalse(HotKeyValidator.isSystemReservedShortcut(
+        XCTAssertFalse(HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: TestKeyCodes.keyF10,
             carbonModifiers: TestModifiers.all
         ))
@@ -426,7 +426,7 @@ final class HotKeyValidatorTests: XCTestCase {
         ]
 
         for (keyCode, modifiers, description) in reservedSamples {
-            let result = HotKeyValidator.canRegister(
+            let result = HotKeyClient.canRegister(
                 carbonKeyCode: keyCode,
                 carbonModifiers: modifiers
             )
@@ -455,7 +455,7 @@ final class HotKeyValidatorTests: XCTestCase {
         ]
 
         for (keyCode, modifiers, description) in validCombos {
-            let result = HotKeyValidator.canRegister(
+            let result = HotKeyClient.canRegister(
                 carbonKeyCode: keyCode,
                 carbonModifiers: modifiers
             )
@@ -471,7 +471,7 @@ final class HotKeyValidatorTests: XCTestCase {
     func test_canRegister_unusualKeyCode_succeeds() {
         // Test with unusual key code (out of typical range)
         // Since we no longer use Carbon API, any key code not in blocklist succeeds
-        let result = HotKeyValidator.canRegister(
+        let result = HotKeyClient.canRegister(
             carbonKeyCode: 999,
             carbonModifiers: TestModifiers.cmd
         )
@@ -488,7 +488,7 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests baseline behavior for letter keys without modifiers
     func test_canRegister_letterKeysWithoutModifiers_behavior() {
         // Note: This tests actual Carbon API behavior
-        let result = HotKeyValidator.canRegister(
+        let result = HotKeyClient.canRegister(
             carbonKeyCode: TestKeyCodes.keyA,
             carbonModifiers: TestModifiers.none
         )
@@ -513,7 +513,7 @@ final class HotKeyValidatorTests: XCTestCase {
         )
 
         // Try to set cancel to same as recording
-        let result = HotKeyValidator.findDuplicate(
+        let result = HotKeyClient.findDuplicate(
             carbonKeyCode: 49,
             carbonModifiers: 2048,
             currentType: .cancel,
@@ -528,7 +528,7 @@ final class HotKeyValidatorTests: XCTestCase {
         let settings = makeTestSettings()
 
         // Try a unique combination
-        let result = HotKeyValidator.findDuplicate(
+        let result = HotKeyClient.findDuplicate(
             carbonKeyCode: TestKeyCodes.keyF10,
             carbonModifiers: TestModifiers.cmdOption,
             currentType: .recording,
@@ -545,7 +545,7 @@ final class HotKeyValidatorTests: XCTestCase {
         )
 
         // Try to set recording to its current value
-        let result = HotKeyValidator.findDuplicate(
+        let result = HotKeyClient.findDuplicate(
             carbonKeyCode: 49,
             carbonModifiers: 2048,
             currentType: .recording,
@@ -580,7 +580,7 @@ final class HotKeyValidatorTests: XCTestCase {
             }
 
             for checkType in hotkeyTypes where checkType != existingType {
-                let result = HotKeyValidator.findDuplicate(
+                let result = HotKeyClient.findDuplicate(
                     carbonKeyCode: testCombo.0,
                     carbonModifiers: testCombo.1,
                     currentType: checkType,
@@ -611,7 +611,7 @@ final class HotKeyValidatorTests: XCTestCase {
 
         for (keyCode, letter) in alphabetSamples {
             // Test with Cmd+Option (generally safe combination)
-            let isReserved = HotKeyValidator.isSystemReservedShortcut(
+            let isReserved = HotKeyClient.isSystemReservedShortcut(
                 carbonKeyCode: keyCode,
                 carbonModifiers: TestModifiers.cmdOption
             )
@@ -637,7 +637,7 @@ final class HotKeyValidatorTests: XCTestCase {
 
         for (keyCode, number) in numberSamples {
             // Cmd+Option+Number should generally be available
-            let isReserved = HotKeyValidator.isSystemReservedShortcut(
+            let isReserved = HotKeyClient.isSystemReservedShortcut(
                 carbonKeyCode: keyCode,
                 carbonModifiers: TestModifiers.cmdOption
             )
@@ -661,7 +661,7 @@ final class HotKeyValidatorTests: XCTestCase {
 
         for (keyCode, name) in specialKeys {
             // Test with Option modifier (commonly available)
-            let optionResult = HotKeyValidator.isSystemReservedShortcut(
+            let optionResult = HotKeyClient.isSystemReservedShortcut(
                 carbonKeyCode: keyCode,
                 carbonModifiers: TestModifiers.option
             )
@@ -688,7 +688,7 @@ final class HotKeyValidatorTests: XCTestCase {
 
         for (keyCode, direction) in arrows {
             // Control+Arrow is reserved for Mission Control
-            let controlResult = HotKeyValidator.isSystemReservedShortcut(
+            let controlResult = HotKeyClient.isSystemReservedShortcut(
                 carbonKeyCode: keyCode,
                 carbonModifiers: TestModifiers.control
             )
@@ -702,7 +702,7 @@ final class HotKeyValidatorTests: XCTestCase {
             }
 
             // But Option+Arrow should be available
-            let optionResult = HotKeyValidator.isSystemReservedShortcut(
+            let optionResult = HotKeyClient.isSystemReservedShortcut(
                 carbonKeyCode: keyCode,
                 carbonModifiers: TestModifiers.option
             )
@@ -724,7 +724,7 @@ final class HotKeyValidatorTests: XCTestCase {
 
         for (keyCode, name) in functionKeys {
             // Function keys with Shift should generally be available
-            let result = HotKeyValidator.canRegister(
+            let result = HotKeyClient.canRegister(
                 carbonKeyCode: keyCode,
                 carbonModifiers: TestModifiers.shift
             )
@@ -750,7 +750,7 @@ final class HotKeyValidatorTests: XCTestCase {
         ]
 
         for (modifier, name) in singleModifiers {
-            let result = HotKeyValidator.canRegister(
+            let result = HotKeyClient.canRegister(
                 carbonKeyCode: testKey,
                 carbonModifiers: modifier
             )
@@ -776,7 +776,7 @@ final class HotKeyValidatorTests: XCTestCase {
         ]
 
         for (modifiers, name) in twoModifierCombos {
-            let result = HotKeyValidator.canRegister(
+            let result = HotKeyClient.canRegister(
                 carbonKeyCode: testKey,
                 carbonModifiers: modifiers
             )
@@ -799,7 +799,7 @@ final class HotKeyValidatorTests: XCTestCase {
         ]
 
         for (modifiers, name) in threeModifierCombos {
-            let result = HotKeyValidator.canRegister(
+            let result = HotKeyClient.canRegister(
                 carbonKeyCode: testKey,
                 carbonModifiers: modifiers
             )
@@ -814,7 +814,7 @@ final class HotKeyValidatorTests: XCTestCase {
     func test_modifierCombinations_fourModifiers_allCombined() {
         let testKey = TestKeyCodes.keyF15
 
-        let result = HotKeyValidator.canRegister(
+        let result = HotKeyClient.canRegister(
             carbonKeyCode: testKey,
             carbonModifiers: TestModifiers.all
         )
@@ -833,7 +833,7 @@ final class HotKeyValidatorTests: XCTestCase {
         ]
 
         for (keyCode, name) in keys {
-            let isReserved = HotKeyValidator.isSystemReservedShortcut(
+            let isReserved = HotKeyClient.isSystemReservedShortcut(
                 carbonKeyCode: keyCode,
                 carbonModifiers: TestModifiers.none
             )
@@ -852,13 +852,13 @@ final class HotKeyValidatorTests: XCTestCase {
         ]
 
         for (keyCode, modifiers, description) in defaults {
-            let isReserved = HotKeyValidator.isSystemReservedShortcut(
+            let isReserved = HotKeyClient.isSystemReservedShortcut(
                 carbonKeyCode: keyCode,
                 carbonModifiers: modifiers
             )
             XCTAssertFalse(isReserved, "\(description) should not be reserved")
 
-            let canRegister = HotKeyValidator.canRegister(
+            let canRegister = HotKeyClient.canRegister(
                 carbonKeyCode: keyCode,
                 carbonModifiers: modifiers
             )
@@ -873,14 +873,14 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests validation with boundary key codes
     func test_edgeCases_boundaryKeyCodes_behavior() {
         // Test key code 0 (should work, it's 'A')
-        let zeroResult = HotKeyValidator.canRegister(
+        let zeroResult = HotKeyClient.canRegister(
             carbonKeyCode: 0,
             carbonModifiers: TestModifiers.cmdOption
         )
         // Should work since Cmd+Option+A is not reserved
         if case .failure = zeroResult {
             // OK if system conflicts, but shouldn't be in blocklist
-            let isReserved = HotKeyValidator.isSystemReservedShortcut(
+            let isReserved = HotKeyClient.isSystemReservedShortcut(
                 carbonKeyCode: 0,
                 carbonModifiers: TestModifiers.cmdOption
             )
@@ -888,7 +888,7 @@ final class HotKeyValidatorTests: XCTestCase {
         }
 
         // Test very high key code
-        let highResult = HotKeyValidator.canRegister(
+        let highResult = HotKeyClient.canRegister(
             carbonKeyCode: 200,
             carbonModifiers: TestModifiers.cmd
         )
@@ -906,7 +906,7 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests validation with unusual modifier values
     func test_edgeCases_invalidModifiers_behavior() {
         // Test with 0 modifiers
-        let noModResult = HotKeyValidator.canRegister(
+        let noModResult = HotKeyClient.canRegister(
             carbonKeyCode: TestKeyCodes.keyF10,
             carbonModifiers: 0
         )
@@ -916,7 +916,7 @@ final class HotKeyValidatorTests: XCTestCase {
         }
 
         // Test with unusual modifier value
-        let unusualResult = HotKeyValidator.canRegister(
+        let unusualResult = HotKeyClient.canRegister(
             carbonKeyCode: TestKeyCodes.keyF10,
             carbonModifiers: 9999
         )
@@ -936,14 +936,14 @@ final class HotKeyValidatorTests: XCTestCase {
         let modifiers: UInt32 = 256
 
         // Step 1: Should be in blocklist
-        let isReserved = HotKeyValidator.isSystemReservedShortcut(
+        let isReserved = HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers
         )
         XCTAssertTrue(isReserved, "Step 1: Cmd+C should be system reserved")
 
         // Step 2: Should fail canRegister
-        let canRegister = HotKeyValidator.canRegister(
+        let canRegister = HotKeyClient.canRegister(
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers
         )
@@ -955,7 +955,7 @@ final class HotKeyValidatorTests: XCTestCase {
 
         // Step 3: findDuplicate should be irrelevant (already failed)
         // But we can still test it for completeness
-        let duplicate = HotKeyValidator.findDuplicate(
+        let duplicate = HotKeyClient.findDuplicate(
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers,
             currentType: .recording,
@@ -974,14 +974,14 @@ final class HotKeyValidatorTests: XCTestCase {
         let modifiers: UInt32 = TestModifiers.cmdOption
 
         // Step 1: Should not be reserved
-        let isReserved = HotKeyValidator.isSystemReservedShortcut(
+        let isReserved = HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers
         )
         XCTAssertFalse(isReserved, "Step 1: Cmd+Option+F10 should not be reserved")
 
         // Step 2: Should pass canRegister
-        let canRegister = HotKeyValidator.canRegister(
+        let canRegister = HotKeyClient.canRegister(
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers
         )
@@ -990,7 +990,7 @@ final class HotKeyValidatorTests: XCTestCase {
         }
 
         // Step 3: Should have no duplicates
-        let duplicate = HotKeyValidator.findDuplicate(
+        let duplicate = HotKeyClient.findDuplicate(
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers,
             currentType: .recording,
@@ -1010,14 +1010,14 @@ final class HotKeyValidatorTests: XCTestCase {
         let modifiers: UInt32 = 2048
 
         // Step 1: Should not be reserved
-        let isReserved = HotKeyValidator.isSystemReservedShortcut(
+        let isReserved = HotKeyClient.isSystemReservedShortcut(
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers
         )
         XCTAssertFalse(isReserved, "Step 1: Option+Space should not be reserved")
 
         // Step 2: Should pass canRegister
-        let canRegister = HotKeyValidator.canRegister(
+        let canRegister = HotKeyClient.canRegister(
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers
         )
@@ -1026,7 +1026,7 @@ final class HotKeyValidatorTests: XCTestCase {
         }
 
         // Step 3: Should find duplicate
-        let duplicate = HotKeyValidator.findDuplicate(
+        let duplicate = HotKeyClient.findDuplicate(
             carbonKeyCode: keyCode,
             carbonModifiers: modifiers,
             currentType: .cancel,
@@ -1045,7 +1045,7 @@ final class HotKeyValidatorTests: XCTestCase {
     /// This is the key test for the simplified validation approach
     func test_canRegister_cmdOptionComma_succeeds() {
         // cmd+option+, (keyCode: 43, modifiers: 2304)
-        let result = HotKeyValidator.canRegister(
+        let result = HotKeyClient.canRegister(
             carbonKeyCode: 43,
             carbonModifiers: 2304 // cmdKey(256) + optionKey(2048)
         )
@@ -1062,7 +1062,7 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests that Option+Control+[ succeeds (potential @ key on JIS keyboard)
     func test_canRegister_optionControlBracket_succeeds() {
         // option+control+[ (keyCode: 33, modifiers: 6144)
-        let result = HotKeyValidator.canRegister(
+        let result = HotKeyClient.canRegister(
             carbonKeyCode: 33, // [ key (@ on some keyboard layouts)
             carbonModifiers: 6144 // optionKey(2048) + controlKey(4096)
         )
@@ -1079,7 +1079,7 @@ final class HotKeyValidatorTests: XCTestCase {
     /// Tests that Cmd+Shift+Option+F12 succeeds (unusual combo)
     func test_canRegister_cmdShiftOptionF12_succeeds() {
         // cmd+shift+option+F12 (keyCode: 111, modifiers: 2816)
-        let result = HotKeyValidator.canRegister(
+        let result = HotKeyClient.canRegister(
             carbonKeyCode: 111, // F12
             carbonModifiers: 2816 // cmdKey(256) + shiftKey(512) + optionKey(2048)
         )
