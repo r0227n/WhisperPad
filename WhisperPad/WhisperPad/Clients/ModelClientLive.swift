@@ -11,32 +11,28 @@ private let logger = Logger(subsystem: "com.whisperpad", category: "ModelClientL
 // MARK: - DependencyKey
 
 extension ModelClient: DependencyKey {
-    /// TranscriptionService のシングルトンインスタンス
-    /// liveValue が複数回呼ばれても同じインスタンスを使用
-    private static let transcriptionService = TranscriptionService()
-
     static var liveValue: Self {
         Self(
             fetchAvailableModels: {
                 logger.debug("liveValue.fetchAvailableModels called")
-                return try await transcriptionService.fetchAvailableModels()
+                return try await WhisperKitManager.shared.fetchAvailableModels()
             },
             fetchDownloadedModels: {
                 logger.debug("liveValue.fetchDownloadedModels called")
-                return await transcriptionService.fetchDownloadedModels()
+                return await WhisperKitManager.shared.fetchDownloadedModels()
             },
             recommendedModel: {
                 logger.debug("liveValue.recommendedModel called")
-                return await transcriptionService.recommendedModel()
+                return await WhisperKitManager.shared.recommendedModel()
             },
             isModelDownloaded: { modelName in
                 logger.debug("liveValue.isModelDownloaded called for \(modelName)")
-                return await transcriptionService.isModelDownloaded(modelName: modelName)
+                return await WhisperKitManager.shared.isModelDownloaded(modelName: modelName)
             },
             fetchDownloadedModelsAsWhisperModels: {
                 logger.debug("liveValue.fetchDownloadedModelsAsWhisperModels called")
-                let modelNames = await transcriptionService.fetchDownloadedModels()
-                let recommendedModel = await transcriptionService.recommendedModel()
+                let modelNames = await WhisperKitManager.shared.fetchDownloadedModels()
+                let recommendedModel = await WhisperKitManager.shared.recommendedModel()
                 var models: [WhisperModel] = modelNames.map { name in
                     WhisperModel.from(
                         id: name,
@@ -49,14 +45,14 @@ extension ModelClient: DependencyKey {
             },
             downloadModel: { modelName, progressHandler in
                 logger.debug("liveValue.downloadModel called for \(modelName)")
-                return try await transcriptionService.downloadModel(
+                return try await WhisperKitManager.shared.downloadModel(
                     modelName: modelName,
                     progressHandler: progressHandler
                 )
             },
             deleteModel: { modelName in
                 logger.debug("liveValue.deleteModel called for \(modelName)")
-                try await transcriptionService.deleteModel(modelName)
+                try await WhisperKitManager.shared.deleteModel(modelName)
             },
             loadDefaultModel: {
                 logger.debug("liveValue.loadDefaultModel called")
@@ -96,15 +92,15 @@ extension ModelClient: DependencyKey {
             },
             getStorageUsage: {
                 logger.debug("liveValue.getStorageUsage called")
-                return await transcriptionService.getStorageUsage()
+                return await WhisperKitManager.shared.getStorageUsage()
             },
             getModelStorageURL: {
                 logger.debug("liveValue.getModelStorageURL called")
-                return await transcriptionService.modelsDirectory
+                return await WhisperKitManager.shared.modelsDirectory
             },
             setStorageLocation: { url in
                 logger.debug("liveValue.setStorageLocation called: \(url?.path ?? "default")")
-                await transcriptionService.setStorageLocation(url)
+                await WhisperKitManager.shared.setStorageLocation(url)
             }
         )
     }

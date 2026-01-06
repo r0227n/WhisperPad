@@ -11,34 +11,30 @@ private let logger = Logger(subsystem: "com.whisperpad", category: "Transcriptio
 // MARK: - DependencyKey
 
 extension TranscriptionClient: DependencyKey {
-    /// TranscriptionService のシングルトンインスタンス
-    /// liveValue が複数回呼ばれても同じインスタンスを使用
-    private static let transcriptionService = TranscriptionService()
-
     static var liveValue: Self {
         Self(
             initialize: { modelName in
                 logger.debug("liveValue.initialize called with \(modelName ?? "nil")")
-                try await transcriptionService.initialize(modelName: modelName)
+                try await WhisperKitManager.shared.initialize(modelName: modelName)
             },
             modelState: {
                 logger.debug("liveValue.modelState called")
-                return await transcriptionService.state
+                return await WhisperKitManager.shared.transcriptionModelState
             },
             currentModelName: {
                 logger.debug("liveValue.currentModelName called")
-                return await transcriptionService.loadedModelName
+                return await WhisperKitManager.shared.loadedModelName
             },
             transcribe: { audioURL, language in
                 logger.debug("liveValue.transcribe called for \(audioURL.lastPathComponent)")
-                return try await transcriptionService.transcribe(
+                return try await WhisperKitManager.shared.transcribe(
                     audioURL: audioURL,
                     language: language
                 )
             },
             unload: {
                 logger.debug("liveValue.unload called")
-                await transcriptionService.unload()
+                await WhisperKitManager.shared.unload()
             }
         )
     }
