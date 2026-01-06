@@ -15,9 +15,9 @@ struct DetailHeaderSection: View {
     /// アイコンの色
     let symbolColor: Color
     /// タイトルテキスト
-    let title: LocalizedStringKey
+    let title: String
     /// オプショナルなカテゴリテキスト
-    let category: LocalizedStringKey?
+    let category: String?
     /// リセットボタンのアクション
     let onReset: () -> Void
     /// リセットボタンのヘルプテキスト
@@ -26,8 +26,8 @@ struct DetailHeaderSection: View {
     init(
         symbolName: String,
         symbolColor: Color,
-        title: LocalizedStringKey,
-        category: LocalizedStringKey? = nil,
+        title: String,
+        category: String? = nil,
         onReset: @escaping () -> Void,
         resetHelpText: String
     ) {

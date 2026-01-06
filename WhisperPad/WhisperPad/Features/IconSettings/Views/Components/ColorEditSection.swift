@@ -17,6 +17,7 @@ struct ColorEditSection: View {
     @Binding var nsColor: NSColor
     /// プリセット色の配列
     let presetColors: [NSColor]
+    let appLocale: AppLocale
 
     /// デフォルトのプリセット色
     static let defaultPresetColors: [NSColor] = [
@@ -32,17 +33,19 @@ struct ColorEditSection: View {
     init(
         selectedColor: Binding<Color>,
         nsColor: Binding<NSColor>,
-        presetColors: [NSColor] = ColorEditSection.defaultPresetColors
+        presetColors: [NSColor] = ColorEditSection.defaultPresetColors,
+        appLocale: AppLocale
     ) {
         self._selectedColor = selectedColor
         self._nsColor = nsColor
         self.presetColors = presetColors
+        self.appLocale = appLocale
     }
 
     var body: some View {
         DetailEditCard(
             labelIcon: "paintpalette",
-            labelText: "icon.color"
+            labelText: appLocale.localized("icon.color")
         ) {
             HStack(spacing: 8) {
                 // ColorPicker
@@ -145,7 +148,8 @@ private extension NSColor {
 
     ColorEditSection(
         selectedColor: $selectedColor,
-        nsColor: $nsColor
+        nsColor: $nsColor,
+        appLocale: .system
     )
     .padding()
     .frame(width: 400)
@@ -158,7 +162,8 @@ private extension NSColor {
     ColorEditSection(
         selectedColor: $selectedColor,
         nsColor: $nsColor,
-        presetColors: [.systemRed, .systemBlue, .systemGreen]
+        presetColors: [.systemRed, .systemBlue, .systemGreen],
+        appLocale: .system
     )
     .padding()
     .frame(width: 400)

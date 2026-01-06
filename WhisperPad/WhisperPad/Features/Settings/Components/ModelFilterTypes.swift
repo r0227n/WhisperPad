@@ -32,4 +32,13 @@ enum ModelDownloadFilter: String, CaseIterable, Sendable {
         case .notDownloaded: "model.row.not_downloaded"
         }
     }
+
+    /// ローカライズキー（String）
+    var localizationKey: String {
+        switch self {
+        case .all: "model.filter.all"
+        case .downloaded: "model.row.downloaded"
+        case .notDownloaded: "model.row.not_downloaded"
+        }
+    }
 }

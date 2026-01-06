@@ -19,7 +19,13 @@ struct SettingsView: View {
             )
             .tabItem {
                 Label {
-                    Text("settings.tab.general")
+                    Text(
+                        String(
+                            localized: "settings.tab.general",
+                            bundle: store.settings.general.preferredLocale.bundle,
+                            locale: store.settings.general.preferredLocale.locale
+                        )
+                    )
                 } icon: {
                     Image(systemName: SettingsTab.general.iconName)
                 }
@@ -31,7 +37,13 @@ struct SettingsView: View {
             )
             .tabItem {
                 Label {
-                    Text("settings.tab.icon")
+                    Text(
+                        String(
+                            localized: "settings.tab.icon",
+                            bundle: store.settings.general.preferredLocale.bundle,
+                            locale: store.settings.general.preferredLocale.locale
+                        )
+                    )
                 } icon: {
                     Image(systemName: SettingsTab.icon.iconName)
                 }
@@ -43,7 +55,13 @@ struct SettingsView: View {
             )
             .tabItem {
                 Label {
-                    Text("settings.tab.hotkey")
+                    Text(
+                        String(
+                            localized: "settings.tab.hotkey",
+                            bundle: store.settings.general.preferredLocale.bundle,
+                            locale: store.settings.general.preferredLocale.locale
+                        )
+                    )
                 } icon: {
                     Image(systemName: SettingsTab.hotkey.iconName)
                 }
@@ -56,7 +74,13 @@ struct SettingsView: View {
             )
             .tabItem {
                 Label {
-                    Text("settings.tab.recording")
+                    Text(
+                        String(
+                            localized: "settings.tab.recording",
+                            bundle: store.settings.general.preferredLocale.bundle,
+                            locale: store.settings.general.preferredLocale.locale
+                        )
+                    )
                 } icon: {
                     Image(systemName: SettingsTab.recording.iconName)
                 }
@@ -68,7 +92,13 @@ struct SettingsView: View {
             )
             .tabItem {
                 Label {
-                    Text("settings.tab.model")
+                    Text(
+                        String(
+                            localized: "settings.tab.model",
+                            bundle: store.settings.general.preferredLocale.bundle,
+                            locale: store.settings.general.preferredLocale.locale
+                        )
+                    )
                 } icon: {
                     Image(systemName: SettingsTab.model.iconName)
                 }
@@ -77,6 +107,7 @@ struct SettingsView: View {
         }
         .frame(width: 650, height: 550)
         .environment(\.locale, store.settings.general.preferredLocale.locale)
+        .environment(\.appLocale, store.settings.general.preferredLocale)
         .onAppear {
             store.send(.onAppear)
         }

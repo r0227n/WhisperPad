@@ -19,27 +19,29 @@ struct ActiveModelSection: View {
     let availableLanguages: [TranscriptionLanguage]
     /// 優先ロケール
     let preferredLocale: Locale
+    /// ローカライズ設定
+    let appLocale: AppLocale
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("model.active.section", systemImage: "cpu")
+            Label(appLocale.localized("model.active.section"), systemImage: "cpu")
                 .font(.headline)
 
             HStack(spacing: 20) {
                 // Model selection
                 HStack {
-                    Text("model.active.label")
+                    Text(appLocale.localized("model.active.label"))
                         .foregroundStyle(.secondary)
                     Picker("", selection: $selectedModel) {
                         if downloadedModels.isEmpty {
-                            Text("model.active.empty")
+                            Text(appLocale.localized("model.active.empty"))
                                 .tag("")
                         }
                         ForEach(downloadedModels, id: \.id) { model in
                             HStack {
                                 Text(model.displayName)
                                 if model.isRecommended {
-                                    Text("model.active.recommended")
+                                    Text(appLocale.localized("model.active.recommended"))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -54,7 +56,7 @@ struct ActiveModelSection: View {
 
                 // Language selection
                 HStack {
-                    Text("model.active.language")
+                    Text(appLocale.localized("model.active.language"))
                         .foregroundStyle(.secondary)
                     Picker("", selection: $selectedLanguage) {
                         ForEach(availableLanguages) { language in
@@ -70,7 +72,7 @@ struct ActiveModelSection: View {
             }
 
             if downloadedModels.isEmpty {
-                Text("model.active.download_prompt")
+                Text(appLocale.localized("model.active.download_prompt"))
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
@@ -108,7 +110,8 @@ struct ActiveModelSection: View {
         selectedModel: $selectedModel,
         selectedLanguage: $selectedLanguage,
         availableLanguages: TranscriptionLanguage.allSupported,
-        preferredLocale: .current
+        preferredLocale: .current,
+        appLocale: .system
     )
     .padding()
 }
@@ -122,7 +125,8 @@ struct ActiveModelSection: View {
         selectedModel: $selectedModel,
         selectedLanguage: $selectedLanguage,
         availableLanguages: TranscriptionLanguage.allSupported,
-        preferredLocale: .current
+        preferredLocale: .current,
+        appLocale: .system
     )
     .padding()
 }

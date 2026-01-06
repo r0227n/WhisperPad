@@ -26,6 +26,8 @@ struct ShortcutEditSection: View {
     let onStopRecording: () -> Void
     /// デフォルトにリセットするアクション
     let onResetToDefault: () -> Void
+    /// ローカライズ設定
+    let appLocale: AppLocale
 
     init(
         keyCombo: Binding<HotKeySettings.KeyComboSettings>,
@@ -35,7 +37,8 @@ struct ShortcutEditSection: View {
         hotkeyConflict: String?,
         onStartRecording: @escaping () -> Void,
         onStopRecording: @escaping () -> Void,
-        onResetToDefault: @escaping () -> Void
+        onResetToDefault: @escaping () -> Void,
+        appLocale: AppLocale
     ) {
         self._keyCombo = keyCombo
         self.defaultKeyCombo = defaultKeyCombo
@@ -45,12 +48,13 @@ struct ShortcutEditSection: View {
         self.onStartRecording = onStartRecording
         self.onStopRecording = onStopRecording
         self.onResetToDefault = onResetToDefault
+        self.appLocale = appLocale
     }
 
     var body: some View {
         DetailEditCard(
             labelIcon: "keyboard",
-            labelText: "hotkey.shortcut_key",
+            labelText: appLocale.localized("hotkey.shortcut_key"),
             horizontalPadding: 16,
             verticalPadding: 24
         ) {
@@ -63,7 +67,8 @@ struct ShortcutEditSection: View {
                     isRecording: isRecording,
                     onStartRecording: onStartRecording,
                     onStopRecording: onStopRecording,
-                    onResetToDefault: onResetToDefault
+                    onResetToDefault: onResetToDefault,
+                    appLocale: appLocale
                 )
 
                 // 競合警告
@@ -72,16 +77,12 @@ struct ShortcutEditSection: View {
                         .foregroundColor(.red)
                         .font(.footnote)
                         .accessibilityLabel(
-                            String(
-                                localized: "hotkey.accessibility.conflict_warning",
-                                defaultValue: "Shortcut conflict warning: ",
-                                comment: "Shortcut conflict warning: "
-                            ) + conflict
+                            appLocale.localized("hotkey.accessibility.conflict_warning") + conflict
                         )
                 }
 
                 // 注意メッセージ
-                Text("hotkey.conflict.help")
+                Text(appLocale.localized("hotkey.conflict.help"))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -106,7 +107,8 @@ struct ShortcutEditSection: View {
         hotkeyConflict: nil,
         onStartRecording: {},
         onStopRecording: {},
-        onResetToDefault: {}
+        onResetToDefault: {},
+        appLocale: .system
     )
     .padding()
     .frame(width: 400)
@@ -129,7 +131,8 @@ struct ShortcutEditSection: View {
         hotkeyConflict: "This shortcut is already used by another application",
         onStartRecording: {},
         onStopRecording: {},
-        onResetToDefault: {}
+        onResetToDefault: {},
+        appLocale: .system
     )
     .padding()
     .frame(width: 400)
@@ -152,7 +155,8 @@ struct ShortcutEditSection: View {
         hotkeyConflict: nil,
         onStartRecording: {},
         onStopRecording: {},
-        onResetToDefault: {}
+        onResetToDefault: {},
+        appLocale: .system
     )
     .padding()
     .frame(width: 400)

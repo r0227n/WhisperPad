@@ -9,12 +9,15 @@ import SwiftUI
 ///
 /// Displays a loading indicator while models are being fetched.
 struct ModelLoadingView: View {
+    /// ローカライズ設定
+    let appLocale: AppLocale
+
     var body: some View {
         HStack {
             Spacer()
             ProgressView()
                 .scaleEffect(0.8)
-            Text("model.list.loading")
+            Text(appLocale.localized("model.list.loading"))
                 .foregroundStyle(.secondary)
             Spacer()
         }
@@ -25,6 +28,6 @@ struct ModelLoadingView: View {
 // MARK: - Preview
 
 #Preview {
-    ModelLoadingView()
+    ModelLoadingView(appLocale: .system)
         .padding()
 }

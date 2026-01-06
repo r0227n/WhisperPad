@@ -11,15 +11,17 @@ import SwiftUI
 struct ModelEmptyStateView: View {
     /// Action to reset the filters
     var onResetFilters: () -> Void
+    /// ローカライズ設定
+    let appLocale: AppLocale
 
     var body: some View {
         VStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
-            Text("model.list.no_results")
+            Text(appLocale.localized("model.list.no_results"))
                 .foregroundStyle(.secondary)
-            Button("model.filter.reset") {
+            Button(appLocale.localized("model.filter.reset")) {
                 onResetFilters()
             }
             .buttonStyle(.bordered)
@@ -32,6 +34,6 @@ struct ModelEmptyStateView: View {
 // MARK: - Preview
 
 #Preview {
-    ModelEmptyStateView(onResetFilters: {})
+    ModelEmptyStateView(onResetFilters: {}, appLocale: .system)
         .padding()
 }

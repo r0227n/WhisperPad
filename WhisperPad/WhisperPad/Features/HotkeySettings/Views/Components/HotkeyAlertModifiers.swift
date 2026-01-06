@@ -15,96 +15,110 @@ extension View {
     ///
     /// - Parameter store: HotkeySettingsFeatureのStore
     /// - Returns: アラートが適用されたView
-    // swiftlint:disable:next function_body_length
     func hotkeyConflictAlertsForHotkeySettings(
         store: StoreOf<HotkeySettingsFeature>
     ) -> some View {
-        self
-            .alert(
-                Text("hotkey.conflict_alert.title"),
-                isPresented: Binding(
-                    get: { store.showHotkeyConflictAlert },
-                    set: { if !$0 { store.send(.dismissConflictAlert) } }
-                )
-            ) {
-                Button("common.ok", role: .cancel) {
-                    store.send(.dismissConflictAlert)
-                }
-            } message: {
-                if let type = store.conflictingHotkeyType {
-                    let userLocale = store.preferredLocale.locale
-                    let languageCode = userLocale.language.languageCode?.identifier ?? "en"
-                    let format = Bundle.main.localizedString(
-                        forKey: "hotkey.conflict_alert.message",
-                        preferredLanguage: languageCode
-                    )
-                    let typeName = Bundle.main.localizedString(
-                        forKey: type.localizedKeyString,
-                        preferredLanguage: languageCode
-                    )
-                    Text(verbatim: String(format: format, typeName))
-                } else {
-                    Text("hotkey.conflict_alert.message_generic")
-                }
+        let appLocale = store.preferredLocale
+        let conflictAlertView = hotkeyConflictAlert(store: store, appLocale: appLocale)
+        let duplicateAlertView = conflictAlertView.hotkeyDuplicateAlert(store: store, appLocale: appLocale)
+        return duplicateAlertView.hotkeySystemReservedAlert(store: store, appLocale: appLocale)
+    }
+
+    /// システム競合アラート
+    private func hotkeyConflictAlert(
+        store: StoreOf<HotkeySettingsFeature>,
+        appLocale: AppLocale
+    ) -> some View {
+        self.alert(
+            appLocale.localized("hotkey.conflict_alert.title"),
+            isPresented: Binding(
+                get: { store.showHotkeyConflictAlert },
+                set: { if !$0 { store.send(.dismissConflictAlert) } }
+            )
+        ) {
+            Button(appLocale.localized("common.ok"), role: .cancel) {
+                store.send(.dismissConflictAlert)
             }
-            .alert(
-                Text("hotkey.duplicate_alert.title"),
-                isPresented: Binding(
-                    get: { store.showDuplicateHotkeyAlert },
-                    set: { if !$0 { store.send(.dismissDuplicateAlert) } }
-                )
-            ) {
-                Button("common.ok", role: .cancel) {
-                    store.send(.dismissDuplicateAlert)
-                }
-            } message: {
-                if let targetType = store.conflictingHotkeyType,
-                   let duplicateType = store.duplicateWithHotkeyType {
-                    let userLocale = store.preferredLocale.locale
-                    let languageCode = userLocale.language.languageCode?.identifier ?? "en"
-                    let format = Bundle.main.localizedString(
-                        forKey: "hotkey.duplicate_alert.message",
-                        preferredLanguage: languageCode
-                    )
-                    let targetName = Bundle.main.localizedString(
-                        forKey: targetType.localizedKeyString,
-                        preferredLanguage: languageCode
-                    )
-                    let duplicateName = Bundle.main.localizedString(
-                        forKey: duplicateType.localizedKeyString,
-                        preferredLanguage: languageCode
-                    )
-                    Text(verbatim: String(format: format, targetName, duplicateName))
-                } else {
-                    Text("hotkey.duplicate_alert.message_generic")
-                }
+        } message: {
+            Text(conflictAlertMessage(store: store, appLocale: appLocale))
+        }
+    }
+
+    private func conflictAlertMessage(
+        store: StoreOf<HotkeySettingsFeature>,
+        appLocale: AppLocale
+    ) -> String {
+        guard let type = store.conflictingHotkeyType else {
+            return appLocale.localized("hotkey.conflict_alert.message_generic")
+        }
+        let format = appLocale.localized("hotkey.conflict_alert.message")
+        let typeName = appLocale.localized(String.LocalizationValue(type.localizationKey))
+        return String(format: format, typeName)
+    }
+
+    /// アプリ内重複アラート
+    private func hotkeyDuplicateAlert(
+        store: StoreOf<HotkeySettingsFeature>,
+        appLocale: AppLocale
+    ) -> some View {
+        self.alert(
+            appLocale.localized("hotkey.duplicate_alert.title"),
+            isPresented: Binding(
+                get: { store.showDuplicateHotkeyAlert },
+                set: { if !$0 { store.send(.dismissDuplicateAlert) } }
+            )
+        ) {
+            Button(appLocale.localized("common.ok"), role: .cancel) {
+                store.send(.dismissDuplicateAlert)
             }
-            .alert(
-                Text("hotkey.system_reserved_alert.title"),
-                isPresented: Binding(
-                    get: { store.showSystemReservedAlert },
-                    set: { if !$0 { store.send(.dismissSystemReservedAlert) } }
-                )
-            ) {
-                Button("common.ok", role: .cancel) {
-                    store.send(.dismissSystemReservedAlert)
-                }
-            } message: {
-                if let type = store.conflictingHotkeyType {
-                    let userLocale = store.preferredLocale.locale
-                    let languageCode = userLocale.language.languageCode?.identifier ?? "en"
-                    let format = Bundle.main.localizedString(
-                        forKey: "hotkey.system_reserved_alert.message",
-                        preferredLanguage: languageCode
-                    )
-                    let typeName = Bundle.main.localizedString(
-                        forKey: type.localizedKeyString,
-                        preferredLanguage: languageCode
-                    )
-                    Text(verbatim: String(format: format, typeName))
-                } else {
-                    Text("hotkey.system_reserved_alert.message_generic")
-                }
+        } message: {
+            Text(duplicateAlertMessage(store: store, appLocale: appLocale))
+        }
+    }
+
+    private func duplicateAlertMessage(
+        store: StoreOf<HotkeySettingsFeature>,
+        appLocale: AppLocale
+    ) -> String {
+        guard let targetType = store.conflictingHotkeyType,
+              let duplicateType = store.duplicateWithHotkeyType else {
+            return appLocale.localized("hotkey.duplicate_alert.message_generic")
+        }
+        let format = appLocale.localized("hotkey.duplicate_alert.message")
+        let targetName = appLocale.localized(String.LocalizationValue(targetType.localizationKey))
+        let duplicateName = appLocale.localized(String.LocalizationValue(duplicateType.localizationKey))
+        return String(format: format, targetName, duplicateName)
+    }
+
+    /// システム予約済みアラート
+    private func hotkeySystemReservedAlert(
+        store: StoreOf<HotkeySettingsFeature>,
+        appLocale: AppLocale
+    ) -> some View {
+        self.alert(
+            appLocale.localized("hotkey.system_reserved_alert.title"),
+            isPresented: Binding(
+                get: { store.showSystemReservedAlert },
+                set: { if !$0 { store.send(.dismissSystemReservedAlert) } }
+            )
+        ) {
+            Button(appLocale.localized("common.ok"), role: .cancel) {
+                store.send(.dismissSystemReservedAlert)
             }
+        } message: {
+            Text(systemReservedAlertMessage(store: store, appLocale: appLocale))
+        }
+    }
+
+    private func systemReservedAlertMessage(
+        store: StoreOf<HotkeySettingsFeature>,
+        appLocale: AppLocale
+    ) -> String {
+        guard let type = store.conflictingHotkeyType else {
+            return appLocale.localized("hotkey.system_reserved_alert.message_generic")
+        }
+        let format = appLocale.localized("hotkey.system_reserved_alert.message")
+        let typeName = appLocale.localized(String.LocalizationValue(type.localizationKey))
+        return String(format: format, typeName)
     }
 }

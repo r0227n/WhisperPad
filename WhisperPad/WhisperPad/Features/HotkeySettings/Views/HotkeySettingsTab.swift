@@ -14,6 +14,7 @@ import SwiftUI
 struct HotkeySettingsTab: View {
     @Bindable var store: StoreOf<HotkeySettingsFeature>
     @Environment(\.locale) private var locale
+    @Environment(\.appLocale) private var appLocale
 
     var body: some View {
         MasterDetailLayout(
@@ -43,12 +44,13 @@ struct HotkeySettingsTab: View {
                     ForEach(category.hotkeyTypes) { hotkeyType in
                         ShortcutListRow(
                             hotkeyType: hotkeyType,
-                            keyCombo: keyCombo(for: hotkeyType)
+                            keyCombo: keyCombo(for: hotkeyType),
+                            appLocale: appLocale
                         )
                         .tag(hotkeyType)
                     }
                 } header: {
-                    Text(category.localizedKey)
+                    Text(appLocale.localized(String.LocalizationValue(category.localizationKey)))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -71,7 +73,8 @@ struct HotkeySettingsTab: View {
                 onStartRecording: { store.send(.startRecordingHotkey(selected)) },
                 onStopRecording: { store.send(.stopRecordingHotkey) },
                 onResetToDefault: { resetToDefault(selected) },
-                hotkeyConflict: store.hotkeyConflict
+                hotkeyConflict: store.hotkeyConflict,
+                appLocale: appLocale
             )
         } else {
             placeholderView
@@ -82,7 +85,7 @@ struct HotkeySettingsTab: View {
     private var placeholderView: some View {
         VStack {
             Spacer()
-            Text("hotkey.select_prompt")
+            Text(appLocale.localized("hotkey.select_prompt"))
                 .foregroundColor(.secondary)
             Spacer()
         }
@@ -134,10 +137,11 @@ struct HotkeySettingsTab: View {
 private struct ShortcutListRow: View {
     let hotkeyType: HotkeyType
     let keyCombo: HotKeySettings.KeyComboSettings
+    let appLocale: AppLocale
 
     var body: some View {
         HStack {
-            Text(hotkeyType.localizedKey)
+            Text(appLocale.localized(String.LocalizationValue(hotkeyType.localizationKey)))
                 .lineLimit(1)
 
             Spacer()
@@ -154,8 +158,8 @@ private struct ShortcutListRow: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .accessibilityLabel(
-            hotkeyType.displayName + ", " +
-                String(localized: "hotkey.accessibility.shortcut_label", comment: "Shortcut: ") +
+            appLocale.localized(String.LocalizationValue(hotkeyType.localizationKey)) + ", " +
+                appLocale.localized("hotkey.accessibility.shortcut_label") +
                 keyCombo.displayString
         )
     }
@@ -173,6 +177,7 @@ private struct ShortcutDetailPanel: View {
     let onStopRecording: () -> Void
     let onResetToDefault: () -> Void
     let hotkeyConflict: String?
+    let appLocale: AppLocale
 
     /// アイコン設定
     private var iconConfig: StatusIconConfig {
@@ -185,17 +190,18 @@ private struct ShortcutDetailPanel: View {
             DetailHeaderSection(
                 symbolName: iconConfig.symbolName,
                 symbolColor: Color(iconConfig.color),
-                title: hotkeyType.localizedKey,
-                category: hotkeyType.category.localizedKey,
+                title: appLocale.localized(String.LocalizationValue(hotkeyType.localizationKey)),
+                category: appLocale.localized(String.LocalizationValue(hotkeyType.category.localizationKey)),
                 onReset: onResetToDefault,
-                resetHelpText: String(localized: "hotkey.reset.help", comment: "Reset this state")
+                resetHelpText: appLocale.localized("hotkey.reset.help")
             )
 
             Divider()
 
             // 説明セクション
             DetailDescriptionSection(
-                descriptionText: hotkeyType.descriptionKey
+                descriptionText: appLocale.localized(String.LocalizationValue(hotkeyType.descriptionLocalizationKey)),
+                labelText: appLocale.localized("common.description")
             )
 
             // ショートカット入力セクション
@@ -207,7 +213,8 @@ private struct ShortcutDetailPanel: View {
                 hotkeyConflict: hotkeyConflict,
                 onStartRecording: onStartRecording,
                 onStopRecording: onStopRecording,
-                onResetToDefault: onResetToDefault
+                onResetToDefault: onResetToDefault,
+                appLocale: appLocale
             )
         }
     }

@@ -14,6 +14,7 @@ import SwiftUI
 /// 右パネル：選択した状態の詳細と編集
 struct IconSettingsTab: View {
     @Bindable var store: StoreOf<IconSettingsFeature>
+    @Environment(\.appLocale) private var appLocale
 
     var body: some View {
         MasterDetailLayout(
@@ -40,12 +41,13 @@ struct IconSettingsTab: View {
                 ForEach(IconConfigStatus.allCases) { status in
                     IconListRow(
                         status: status,
-                        config: store.iconSettings.config(for: status)
+                        config: store.iconSettings.config(for: status),
+                        appLocale: appLocale
                     )
                     .tag(status)
                 }
             } header: {
-                Text("icon.status")
+                Text(appLocale.localized("icon.status"))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -60,7 +62,8 @@ struct IconSettingsTab: View {
         IconDetailPanel(
             status: store.selectedStatus,
             config: store.bindingForIconConfig(status: store.selectedStatus),
-            onReset: { store.send(.resetIconSetting(store.selectedStatus)) }
+            onReset: { store.send(.resetIconSetting(store.selectedStatus)) },
+            appLocale: appLocale
         )
     }
 }
@@ -71,6 +74,7 @@ struct IconSettingsTab: View {
 private struct IconListRow: View {
     let status: IconConfigStatus
     let config: StatusIconConfig
+    let appLocale: AppLocale
 
     var body: some View {
         HStack(spacing: 12) {
@@ -82,7 +86,7 @@ private struct IconListRow: View {
                 .frame(width: 24, height: 24)
 
             // 状態名
-            Text(LocalizedStringKey(status.localizedKey))
+            Text(appLocale.localized(String.LocalizationValue(status.localizedKey)))
                 .lineLimit(1)
 
             Spacer()
@@ -90,11 +94,7 @@ private struct IconListRow: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .accessibilityLabel(
-            String(
-                localized: "icon.accessibility.label",
-                defaultValue: "\(status.displayName) icon",
-                comment: "Icon status accessibility label"
-            )
+            appLocale.localized("icon.accessibility.label.\(status.rawValue)")
         )
     }
 }
@@ -106,6 +106,7 @@ private struct IconDetailPanel: View {
     let status: IconConfigStatus
     @Binding var config: StatusIconConfig
     let onReset: () -> Void
+    let appLocale: AppLocale
 
     /// SwiftUI Color として管理（NSColor との同期用）
     @State private var selectedColor: Color
@@ -113,11 +114,13 @@ private struct IconDetailPanel: View {
     init(
         status: IconConfigStatus,
         config: Binding<StatusIconConfig>,
-        onReset: @escaping () -> Void
+        onReset: @escaping () -> Void,
+        appLocale: AppLocale
     ) {
         self.status = status
         self._config = config
         self.onReset = onReset
+        self.appLocale = appLocale
         self._selectedColor = State(initialValue: Color(nsColor: config.wrappedValue.color))
     }
 
@@ -127,25 +130,27 @@ private struct IconDetailPanel: View {
             DetailHeaderSection(
                 symbolName: config.symbolName,
                 symbolColor: Color(nsColor: config.color),
-                title: LocalizedStringKey(status.localizedKey),
+                title: appLocale.localized(String.LocalizationValue(status.localizedKey)),
                 onReset: onReset,
-                resetHelpText: String(localized: "icon.reset", comment: "Reset this status")
+                resetHelpText: appLocale.localized("icon.reset")
             )
 
             Divider()
 
             // 説明セクション
             DetailDescriptionSection(
-                descriptionText: LocalizedStringKey(status.descriptionKey)
+                descriptionText: appLocale.localized(String.LocalizationValue(status.descriptionKey)),
+                labelText: appLocale.localized("common.description")
             )
 
             // アイコン編集セクション
-            IconEditSection(symbolName: $config.symbolName)
+            IconEditSection(symbolName: $config.symbolName, appLocale: appLocale)
 
             // 色編集セクション
             ColorEditSection(
                 selectedColor: $selectedColor,
-                nsColor: $config.color
+                nsColor: $config.color,
+                appLocale: appLocale
             )
         }
     }

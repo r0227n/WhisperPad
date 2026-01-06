@@ -15,16 +15,18 @@ struct StorageSection: View {
     let storageURL: URL?
     /// 場所変更アクション
     let onChangeLocation: () -> Void
+    /// ローカライズ設定
+    let appLocale: AppLocale
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("model.storage.section", systemImage: "internaldrive")
+            Label(appLocale.localized("model.storage.section"), systemImage: "internaldrive")
                 .font(.headline)
 
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("model.storage.usage")
+                        Text(appLocale.localized("model.storage.usage"))
                             .foregroundStyle(.secondary)
                         Text(ByteCountFormatter.string(
                             fromByteCount: storageUsage,
@@ -34,7 +36,7 @@ struct StorageSection: View {
                     }
 
                     HStack {
-                        Text("model.storage.location")
+                        Text(appLocale.localized("model.storage.location"))
                             .foregroundStyle(.secondary)
                         if let url = storageURL {
                             Text(url.path)
@@ -50,7 +52,7 @@ struct StorageSection: View {
 
                 Spacer()
 
-                Button("common.change") {
+                Button(appLocale.localized("common.change")) {
                     onChangeLocation()
                 }
                 .buttonStyle(.bordered)
@@ -69,7 +71,8 @@ struct StorageSection: View {
     StorageSection(
         storageUsage: 500_000_000,
         storageURL: URL(fileURLWithPath: "/Users/example/Library/Caches/WhisperPad/Models"),
-        onChangeLocation: {}
+        onChangeLocation: {},
+        appLocale: .system
     )
     .padding()
 }
@@ -78,7 +81,8 @@ struct StorageSection: View {
     StorageSection(
         storageUsage: 0,
         storageURL: nil,
-        onChangeLocation: {}
+        onChangeLocation: {},
+        appLocale: .system
     )
     .padding()
 }

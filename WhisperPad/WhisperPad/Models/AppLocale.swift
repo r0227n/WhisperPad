@@ -60,6 +60,25 @@ enum AppLocale: String, Codable, Equatable, Sendable, CaseIterable {
         }
     }
 
+    /// 言語固有のローカライズバンドル
+    ///
+    /// 指定された言語の.lprojバンドルを取得します。
+    /// String(localized:bundle:locale:)で使用することで、
+    /// アプリ内言語切り替えを実現します。
+    var bundle: Bundle {
+        switch self {
+        case .system:
+            return Bundle.main
+        case .en, .ja:
+            guard let path = Bundle.main.path(forResource: rawValue, ofType: "lproj"),
+                  let bundle = Bundle(path: path)
+            else {
+                return Bundle.main
+            }
+            return bundle
+        }
+    }
+
     /// ローカライズキー
     var localizedKey: LocalizedStringKey {
         switch self {
@@ -67,5 +86,30 @@ enum AppLocale: String, Codable, Equatable, Sendable, CaseIterable {
         case .en: "locale.english"
         case .ja: "locale.japanese"
         }
+    }
+
+    /// ローカライズ文字列を取得
+    ///
+    /// 指定されたキーに対応するローカライズ文字列を、
+    /// このAppLocaleの言語設定に基づいて取得します。
+    ///
+    /// - Parameter key: ローカライズキー
+    /// - Returns: ローカライズされた文字列
+    func localized(_ key: String.LocalizationValue) -> String {
+        String(localized: key, bundle: bundle, locale: locale)
+    }
+}
+
+// MARK: - Environment Key
+
+private struct AppLocaleKey: EnvironmentKey {
+    static let defaultValue: AppLocale = .system
+}
+
+extension EnvironmentValues {
+    /// アプリのローカライズ設定
+    var appLocale: AppLocale {
+        get { self[AppLocaleKey.self] }
+        set { self[AppLocaleKey.self] = newValue }
     }
 }

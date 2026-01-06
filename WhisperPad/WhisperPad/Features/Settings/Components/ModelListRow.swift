@@ -14,6 +14,7 @@ struct ModelListRow: View {
     let downloadProgress: Double
     let onDownload: () -> Void
     let onDelete: () -> Void
+    let appLocale: AppLocale
 
     var body: some View {
         HStack(spacing: 12) {
@@ -40,11 +41,11 @@ struct ModelListRow: View {
             if model.isDownloaded {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
-                    .help(Text("model.row.downloaded"))
+                    .help(appLocale.localized("model.row.downloaded"))
             } else {
                 Image(systemName: "circle")
                     .foregroundStyle(.secondary)
-                    .help(Text("model.row.not_downloaded"))
+                    .help(appLocale.localized("model.row.not_downloaded"))
             }
         }
         .font(.system(size: 14))
@@ -78,8 +79,18 @@ struct ModelListRow: View {
             ProgressView(value: downloadProgress)
                 .progressViewStyle(.linear)
                 .frame(width: 80)
-                .accessibilityLabel(Text("model.row.download_progress \(model.displayName)"))
-                .accessibilityValue(Text("model.row.percentage.label \(Int(downloadProgress * 100))"))
+                .accessibilityLabel(
+                    String(
+                        format: appLocale.localized("model.row.download_progress"),
+                        model.displayName
+                    )
+                )
+                .accessibilityValue(
+                    String(
+                        format: appLocale.localized("model.row.percentage.label"),
+                        Int(downloadProgress * 100)
+                    )
+                )
 
             Text("\(Int(downloadProgress * 100))%")
                 .font(.caption)
@@ -94,7 +105,7 @@ struct ModelListRow: View {
             onDelete()
         } label: {
             Label {
-                Text("common.delete")
+                Text(appLocale.localized("common.delete"))
             } icon: {
                 Image(systemName: "trash")
             }
@@ -102,9 +113,14 @@ struct ModelListRow: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .help(Text("model.row.delete.help"))
-        .accessibilityLabel(Text("model.row.delete.label \(model.displayName)"))
-        .accessibilityHint(Text("model.row.delete.hint"))
+        .help(appLocale.localized("model.row.delete.help"))
+        .accessibilityLabel(
+            String(
+                format: appLocale.localized("model.row.delete.label"),
+                model.displayName
+            )
+        )
+        .accessibilityHint(appLocale.localized("model.row.delete.hint"))
     }
 
     private var notDownloadedView: some View {
@@ -112,7 +128,7 @@ struct ModelListRow: View {
             onDownload()
         } label: {
             Label {
-                Text("model.row.download.button")
+                Text(appLocale.localized("model.row.download.button"))
             } icon: {
                 Image(systemName: "arrow.down.circle")
             }
@@ -120,9 +136,14 @@ struct ModelListRow: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.small)
-        .help(Text("model.row.download.help"))
-        .accessibilityLabel(Text("model.row.download.label \(model.displayName)"))
-        .accessibilityHint(Text("model.row.download.hint"))
+        .help(appLocale.localized("model.row.download.help"))
+        .accessibilityLabel(
+            String(
+                format: appLocale.localized("model.row.download.label"),
+                model.displayName
+            )
+        )
+        .accessibilityHint(appLocale.localized("model.row.download.hint"))
     }
 
     // MARK: - Helpers
@@ -141,7 +162,8 @@ struct ModelListRow: View {
             isDownloading: false,
             downloadProgress: 0,
             onDownload: {},
-            onDelete: {}
+            onDelete: {},
+            appLocale: .system
         )
         Divider()
         ModelListRow(
@@ -149,7 +171,8 @@ struct ModelListRow: View {
             isDownloading: false,
             downloadProgress: 0,
             onDownload: {},
-            onDelete: {}
+            onDelete: {},
+            appLocale: .system
         )
     }
     .padding()
@@ -163,7 +186,8 @@ struct ModelListRow: View {
             isDownloading: false,
             downloadProgress: 0,
             onDownload: {},
-            onDelete: {}
+            onDelete: {},
+            appLocale: .system
         )
         Divider()
         ModelListRow(
@@ -171,7 +195,8 @@ struct ModelListRow: View {
             isDownloading: false,
             downloadProgress: 0,
             onDownload: {},
-            onDelete: {}
+            onDelete: {},
+            appLocale: .system
         )
     }
     .padding()
@@ -184,7 +209,8 @@ struct ModelListRow: View {
         isDownloading: true,
         downloadProgress: 0.65,
         onDownload: {},
-        onDelete: {}
+        onDelete: {},
+        appLocale: .system
     )
     .padding()
     .frame(width: 480)
@@ -197,7 +223,8 @@ struct ModelListRow: View {
             isDownloading: false,
             downloadProgress: 0,
             onDownload: {},
-            onDelete: {}
+            onDelete: {},
+            appLocale: .system
         )
         Divider()
         ModelListRow(
@@ -205,7 +232,8 @@ struct ModelListRow: View {
             isDownloading: false,
             downloadProgress: 0,
             onDownload: {},
-            onDelete: {}
+            onDelete: {},
+            appLocale: .system
         )
         Divider()
         ModelListRow(
@@ -213,7 +241,8 @@ struct ModelListRow: View {
             isDownloading: false,
             downloadProgress: 0,
             onDownload: {},
-            onDelete: {}
+            onDelete: {},
+            appLocale: .system
         )
         Divider()
         ModelListRow(
@@ -221,7 +250,8 @@ struct ModelListRow: View {
             isDownloading: true,
             downloadProgress: 0.45,
             onDownload: {},
-            onDelete: {}
+            onDelete: {},
+            appLocale: .system
         )
     }
     .padding()

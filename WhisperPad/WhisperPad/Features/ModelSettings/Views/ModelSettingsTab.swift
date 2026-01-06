@@ -12,6 +12,7 @@ import SwiftUI
 /// 検索・フィルタリング機能付きのリスト型UIを提供します。
 struct ModelSettingsTab: View {
     @Bindable var store: StoreOf<ModelSettingsFeature>
+    @Environment(\.appLocale) private var appLocale
 
     // MARK: - Local State for Filtering
 
@@ -37,7 +38,8 @@ struct ModelSettingsTab: View {
                         }
                     ),
                     availableLanguages: store.availableLanguages,
-                    preferredLocale: store.preferredLocale.locale
+                    preferredLocale: store.preferredLocale.locale,
+                    appLocale: appLocale
                 )
 
                 Divider()
@@ -57,32 +59,30 @@ struct ModelSettingsTab: View {
                 StorageSection(
                     storageUsage: store.storageUsage,
                     storageURL: store.modelStorageURL,
-                    onChangeLocation: { store.send(.selectStorageLocation) }
+                    onChangeLocation: { store.send(.selectStorageLocation) },
+                    appLocale: appLocale
                 )
             }
             .padding()
         }
         .confirmationDialog(
-            Text("model.delete.confirm.title"),
+            appLocale.localized("model.delete.confirm.title"),
             isPresented: Binding(
                 get: { store.modelToDelete != nil },
                 set: { if !$0 { store.send(.cancelDeleteModel) } }
             ),
             titleVisibility: .visible
         ) {
-            Button(role: .destructive) {
+            Button(appLocale.localized("common.delete"), role: .destructive) {
                 store.send(.confirmDeleteModel)
-            } label: {
-                Text("common.delete")
             }
-            Button(role: .cancel) {
+            Button(appLocale.localized("common.cancel"), role: .cancel) {
                 store.send(.cancelDeleteModel)
-            } label: {
-                Text("common.cancel")
             }
         } message: {
             if let modelName = store.modelToDelete {
-                Text("model.delete.confirm.message \(modelName)")
+                let format = appLocale.localized("model.delete.confirm.message")
+                Text(String(format: format, modelName))
             }
         }
         .environment(\.locale, store.preferredLocale.locale)
@@ -92,12 +92,13 @@ struct ModelSettingsTab: View {
 
     private var searchFilterSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("model.list.section", systemImage: "square.stack.3d.up")
+            Label(appLocale.localized("model.list.section"), systemImage: "square.stack.3d.up")
                 .font(.headline)
 
             ModelSearchFilterBar(
                 searchText: $searchText,
-                downloadFilter: $downloadFilter
+                downloadFilter: $downloadFilter,
+                appLocale: appLocale
             )
         }
     }
@@ -107,13 +108,14 @@ struct ModelSettingsTab: View {
     private var modelListSection: some View {
         Group {
             if store.isLoadingModels {
-                ModelLoadingView()
+                ModelLoadingView(appLocale: appLocale)
             } else if filteredModels.isEmpty {
                 ModelEmptyStateView(
                     onResetFilters: {
                         searchText = ""
                         downloadFilter = .all
-                    }
+                    },
+                    appLocale: appLocale
                 )
             } else {
                 modelList
@@ -129,7 +131,8 @@ struct ModelSettingsTab: View {
                     isDownloading: store.downloadingModelName == model.id,
                     downloadProgress: store.downloadProgress[model.id] ?? 0,
                     onDownload: { store.send(.downloadModel(model.id)) },
-                    onDelete: { store.send(.deleteModelButtonTapped(model.id)) }
+                    onDelete: { store.send(.deleteModelButtonTapped(model.id)) },
+                    appLocale: appLocale
                 )
                 if model.id != filteredModels.last?.id {
                     Divider()

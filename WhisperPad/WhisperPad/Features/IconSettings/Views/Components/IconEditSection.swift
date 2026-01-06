@@ -12,17 +12,19 @@ import SwiftUI
 struct IconEditSection: View {
     /// 選択中のシンボル名
     @Binding var symbolName: String
+    let appLocale: AppLocale
 
-    init(symbolName: Binding<String>) {
+    init(symbolName: Binding<String>, appLocale: AppLocale) {
         self._symbolName = symbolName
+        self.appLocale = appLocale
     }
 
     var body: some View {
         DetailEditCard(
             labelIcon: "star",
-            labelText: "icon.icon"
+            labelText: appLocale.localized("icon.icon")
         ) {
-            InlineSymbolPicker(selection: $symbolName)
+            InlineSymbolPicker(selection: $symbolName, appLocale: appLocale)
         }
     }
 }
@@ -30,7 +32,7 @@ struct IconEditSection: View {
 #Preview("Default Icon") {
     @Previewable @State var symbolName = "mic"
 
-    IconEditSection(symbolName: $symbolName)
+    IconEditSection(symbolName: $symbolName, appLocale: .system)
         .padding()
         .frame(width: 400)
 }
@@ -38,7 +40,7 @@ struct IconEditSection: View {
 #Preview("Recording Icon") {
     @Previewable @State var symbolName = "mic.fill"
 
-    IconEditSection(symbolName: $symbolName)
+    IconEditSection(symbolName: $symbolName, appLocale: .system)
         .padding()
         .frame(width: 400)
 }
