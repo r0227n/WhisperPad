@@ -146,7 +146,6 @@ struct AppReducer {
 
     @Dependency(\.continuousClock) var clock
     @Dependency(\.outputClient) var outputClient
-    @Dependency(\.whisperKitClient) var whisperKitClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
     @Dependency(\.transcriptionClient) var transcriptionClient
     @Dependency(\.modelClient) var modelClient
@@ -260,10 +259,10 @@ struct AppReducer {
             case let .settings(.delegate(.modelChanged(newModel))):
                 // モデルが変更された場合、WhisperKitをアンロードして新モデルで再初期化
                 state.modelState = .loading
-                return .run { [whisperKitClient] send in
-                    await whisperKitClient.unload()
+                return .run { [transcriptionClient] send in
+                    await transcriptionClient.unload()
                     do {
-                        try await whisperKitClient.initialize(newModel)
+                        try await transcriptionClient.initialize(newModel)
                         await send(.modelLoadCompleted)
                     } catch {
                         await send(.modelLoadFailed(error))
@@ -273,8 +272,8 @@ struct AppReducer {
             case .settings(.delegate(.settingsChanged)):
                 // アイドルタイムアウト設定をWhisperKitManagerに反映
                 let generalSettings = state.settings.settings.general
-                return .run { [whisperKitClient] _ in
-                    await whisperKitClient.configureIdleTimeout(
+                return .run { [transcriptionClient] _ in
+                    await transcriptionClient.configureIdleTimeout(
                         generalSettings.whisperKitIdleTimeoutEnabled,
                         generalSettings.whisperKitIdleTimeoutMinutes
                     )
@@ -342,10 +341,10 @@ struct AppReducer {
 
             case .loadModel:
                 state.modelState = .loading
-                return .run { [whisperKitClient, modelClient] send in
+                return .run { [transcriptionClient, modelClient] send in
                     let defaultModel = await modelClient.loadDefaultModel()
                     do {
-                        try await whisperKitClient.initialize(defaultModel)
+                        try await transcriptionClient.initialize(defaultModel)
                         await send(.modelLoadCompleted)
                     } catch {
                         await send(.modelLoadFailed(error))

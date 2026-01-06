@@ -21,6 +21,9 @@ struct TranscriptionClient: Sendable {
     /// - Parameter modelName: 使用するモデル名（nil の場合は推奨モデルを使用）
     var initialize: @Sendable (_ modelName: String?) async throws -> Void
 
+    /// WhisperKit が使用可能かどうか
+    var isReady: @Sendable () async -> Bool
+
     /// 現在のモデル状態を取得
     var modelState: @Sendable () async -> TranscriptionModelState
 
@@ -39,6 +42,14 @@ struct TranscriptionClient: Sendable {
         _ language: String?
     ) async throws -> String
 
+    // MARK: - Configuration
+
+    /// アイドルタイムアウト設定を更新
+    /// - Parameters:
+    ///   - enabled: タイムアウトを有効にするか
+    ///   - minutes: タイムアウト時間（分）
+    var configureIdleTimeout: @Sendable (_ enabled: Bool, _ minutes: Int) async -> Void
+
     // MARK: - Cleanup
 
     /// リソースを解放
@@ -53,6 +64,9 @@ extension TranscriptionClient: TestDependencyKey {
             initialize: { modelName in
                 clientLogger.debug("[PREVIEW] initialize called with \(modelName ?? "nil")")
             },
+            isReady: {
+                true
+            },
             modelState: {
                 .loaded
             },
@@ -62,6 +76,9 @@ extension TranscriptionClient: TestDependencyKey {
             transcribe: { audioURL, _ in
                 clientLogger.debug("[PREVIEW] transcribe called for \(audioURL.lastPathComponent)")
                 return "（プレビュー用のサンプルテキスト）"
+            },
+            configureIdleTimeout: { enabled, minutes in
+                clientLogger.debug("[PREVIEW] configureIdleTimeout called: enabled=\(enabled), minutes=\(minutes)")
             },
             unload: {
                 clientLogger.debug("[PREVIEW] unload called")
@@ -74,6 +91,9 @@ extension TranscriptionClient: TestDependencyKey {
             initialize: { modelName in
                 clientLogger.debug("[TEST] initialize called with \(modelName ?? "nil")")
             },
+            isReady: {
+                true
+            },
             modelState: {
                 .loaded
             },
@@ -83,6 +103,9 @@ extension TranscriptionClient: TestDependencyKey {
             transcribe: { audioURL, _ in
                 clientLogger.debug("[TEST] transcribe called for \(audioURL.lastPathComponent)")
                 return "テスト用の文字起こし結果"
+            },
+            configureIdleTimeout: { enabled, minutes in
+                clientLogger.debug("[TEST] configureIdleTimeout called: enabled=\(enabled), minutes=\(minutes)")
             },
             unload: {
                 clientLogger.debug("[TEST] unload called")
