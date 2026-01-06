@@ -52,7 +52,6 @@ struct TranscriptionFeature {
 
     @Dependency(\.transcriptionClient) var transcriptionClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
-    @Dependency(\.whisperKitClient) var whisperKitClient
 
     // MARK: - Reducer Body
 

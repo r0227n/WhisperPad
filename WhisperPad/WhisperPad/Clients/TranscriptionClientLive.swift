@@ -17,6 +17,10 @@ extension TranscriptionClient: DependencyKey {
                 logger.debug("liveValue.initialize called with \(modelName ?? "nil")")
                 try await WhisperKitManager.shared.initialize(modelName: modelName)
             },
+            isReady: {
+                logger.debug("liveValue.isReady called")
+                return await WhisperKitManager.shared.isReady
+            },
             modelState: {
                 logger.debug("liveValue.modelState called")
                 return await WhisperKitManager.shared.transcriptionModelState
@@ -31,6 +35,10 @@ extension TranscriptionClient: DependencyKey {
                     audioURL: audioURL,
                     language: language
                 )
+            },
+            configureIdleTimeout: { enabled, minutes in
+                logger.debug("liveValue.configureIdleTimeout called: enabled=\(enabled), minutes=\(minutes)")
+                await WhisperKitManager.shared.configureIdleTimeout(enabled: enabled, minutes: minutes)
             },
             unload: {
                 logger.debug("liveValue.unload called")
