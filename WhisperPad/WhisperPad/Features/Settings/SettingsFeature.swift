@@ -777,7 +777,7 @@ struct SettingsFeature {
                 state.previousHotKeySettings = state.settings.hotKey
 
                 // アプリ内重複チェック（デフォルト設定との重複は許可）
-                if let duplicateType = HotKeyValidator.findDuplicate(
+                if let duplicateType = HotKeyClient.findDuplicate(
                     carbonKeyCode: newCombo.carbonKeyCode,
                     carbonModifiers: newCombo.carbonModifiers,
                     currentType: type,
@@ -792,7 +792,7 @@ struct SettingsFeature {
 
                 // Carbon APIでシステム競合を検証
                 return .run { [settings = state.settings.hotKey] send in
-                    let validation = HotKeyValidator.canRegister(
+                    let validation = HotKeyClient.canRegister(
                         carbonKeyCode: newCombo.carbonKeyCode,
                         carbonModifiers: newCombo.carbonModifiers
                     )
