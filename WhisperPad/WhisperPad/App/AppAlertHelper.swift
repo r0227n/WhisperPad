@@ -10,17 +10,45 @@ import os.log
 // MARK: - Alert Helpers
 
 enum AppAlertHelper {
-    @MainActor
-    static func showCancelConfirmationDialog(languageCode: String) -> (shouldCancel: Bool, dontShowAgain: Bool) {
+    /// Builds a basic alert dialog with localized title and message.
+    ///
+    /// - Parameters:
+    ///   - style: The alert style (.critical, .warning, .informational)
+    ///   - titleKey: Localization key for the alert title
+    ///   - messageKey: Localization key for the alert message
+    ///   - languageCode: Language code for localization (e.g., "en", "ja")
+    ///   - messageArgs: Optional format arguments for the message
+    /// - Returns: A configured NSAlert instance
+    private static func buildAlert(
+        style: NSAlert.Style,
+        titleKey: String,
+        messageKey: String,
+        languageCode: String,
+        messageArgs: [CVarArg] = []
+    ) -> NSAlert {
         let alert = NSAlert()
-        alert.alertStyle = .warning
+        alert.alertStyle = style
         alert.messageText = Bundle.main.localizedString(
-            forKey: "recording.cancel_confirmation.alert.title",
+            forKey: titleKey,
             preferredLanguage: languageCode
         )
-        alert.informativeText = Bundle.main.localizedString(
-            forKey: "recording.cancel_confirmation.alert.message",
+        let messageFormat = Bundle.main.localizedString(
+            forKey: messageKey,
             preferredLanguage: languageCode
+        )
+        alert.informativeText = messageArgs.isEmpty
+            ? messageFormat
+            : String(format: messageFormat, arguments: messageArgs)
+        return alert
+    }
+
+    @MainActor
+    static func showCancelConfirmationDialog(languageCode: String) -> (shouldCancel: Bool, dontShowAgain: Bool) {
+        let alert = buildAlert(
+            style: .warning,
+            titleKey: "recording.cancel_confirmation.alert.title",
+            messageKey: "recording.cancel_confirmation.alert.message",
+            languageCode: languageCode
         )
 
         let checkboxText = Bundle.main.localizedString(
@@ -53,17 +81,13 @@ enum AppAlertHelper {
 
     @MainActor
     static func showPartialSuccessDialog(usedSegments: Int, totalSegments: Int, languageCode: String) {
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = Bundle.main.localizedString(
-            forKey: "recording.partial_success.alert.title",
-            preferredLanguage: languageCode
+        let alert = buildAlert(
+            style: .warning,
+            titleKey: "recording.partial_success.alert.title",
+            messageKey: "recording.partial_success.alert.message",
+            languageCode: languageCode,
+            messageArgs: [usedSegments, totalSegments]
         )
-        let messageFormat = Bundle.main.localizedString(
-            forKey: "recording.partial_success.alert.message",
-            preferredLanguage: languageCode
-        )
-        alert.informativeText = String(format: messageFormat, usedSegments, totalSegments)
         alert.addButton(
             withTitle: Bundle.main.localizedString(
                 forKey: "common.ok",
@@ -75,15 +99,11 @@ enum AppAlertHelper {
 
     @MainActor
     static func showWhisperKitInitializingDialog(languageCode: String) {
-        let alert = NSAlert()
-        alert.alertStyle = .informational
-        alert.messageText = Bundle.main.localizedString(
-            forKey: "recording.whisperkit_initializing.alert.title",
-            preferredLanguage: languageCode
-        )
-        alert.informativeText = Bundle.main.localizedString(
-            forKey: "recording.whisperkit_initializing.alert.message",
-            preferredLanguage: languageCode
+        let alert = buildAlert(
+            style: .informational,
+            titleKey: "recording.whisperkit_initializing.alert.title",
+            messageKey: "recording.whisperkit_initializing.alert.message",
+            languageCode: languageCode
         )
         alert.addButton(
             withTitle: Bundle.main.localizedString(
