@@ -58,9 +58,6 @@ struct SettingsFeature {
         /// ホットキー録音中のタイプ（nil = 録音なし）
         var recordingHotkeyType: HotkeyType?
 
-        /// 利用可能な入力デバイス一覧
-        var availableInputDevices: [AudioInputDevice] = []
-
         /// ホットキー競合警告メッセージ
         var hotkeyConflict: String?
 
@@ -91,11 +88,37 @@ struct SettingsFeature {
         /// 利用可能な文字起こし言語一覧
         var availableLanguages: [TranscriptionLanguage] = []
 
-        /// 現在の音声レベル（dB）
-        var currentAudioLevel: Float = -60.0
+        /// 録音設定子Feature用のState
+        var recordingSettings: RecordingSettingsFeature.State = .init()
 
-        /// 音声レベル監視中かどうか
-        var isMonitoringAudio: Bool = false
+        /// 一般設定子Feature用のState
+        var generalSettings: GeneralSettingsFeature.State = .init()
+
+        /// ホットキー設定子Feature用のState
+        var hotkeySettings: HotkeySettingsFeature.State = .init()
+
+        /// アイコン設定子Feature用のState
+        var iconSettings: IconSettingsFeature.State = .init()
+
+        /// モデル設定子Feature用のState
+        var modelSettings: ModelSettingsFeature.State = .init()
+
+        // MARK: - Computed Properties for backward compatibility
+
+        /// 利用可能な入力デバイス一覧（RecordingSettingsFeatureから取得）
+        var availableInputDevices: [AudioInputDevice] {
+            recordingSettings.availableInputDevices
+        }
+
+        /// 現在の音声レベル（dB）（RecordingSettingsFeatureから取得）
+        var currentAudioLevel: Float {
+            recordingSettings.currentAudioLevel
+        }
+
+        /// 音声レベル監視中かどうか（RecordingSettingsFeatureから取得）
+        var isMonitoringAudio: Bool {
+            recordingSettings.isMonitoringAudio
+        }
     }
 
     // MARK: - Action
@@ -245,6 +268,19 @@ struct SettingsFeature {
         /// 特定の状態のアイコン設定をデフォルトにリセット
         case resetIconSetting(IconConfigStatus)
 
+        // MARK: - Child Feature
+
+        /// 録音設定子Feature
+        case recordingSettings(RecordingSettingsFeature.Action)
+        /// 一般設定子Feature
+        case generalSettings(GeneralSettingsFeature.Action)
+        /// ホットキー設定子Feature
+        case hotkeySettings(HotkeySettingsFeature.Action)
+        /// アイコン設定子Feature
+        case iconSettings(IconSettingsFeature.Action)
+        /// モデル設定子Feature
+        case modelSettings(ModelSettingsFeature.Action)
+
         // MARK: - Delegate
 
         /// 親 Reducer へのデリゲートアクション
@@ -261,6 +297,23 @@ struct SettingsFeature {
     // MARK: - Reducer Body
 
     var body: some Reducer<State, Action> {
+        // 子Reducerをスコープ
+        Scope(state: \.recordingSettings, action: \.recordingSettings) {
+            RecordingSettingsFeature()
+        }
+        Scope(state: \.generalSettings, action: \.generalSettings) {
+            GeneralSettingsFeature()
+        }
+        Scope(state: \.hotkeySettings, action: \.hotkeySettings) {
+            HotkeySettingsFeature()
+        }
+        Scope(state: \.iconSettings, action: \.iconSettings) {
+            IconSettingsFeature()
+        }
+        Scope(state: \.modelSettings, action: \.modelSettings) {
+            ModelSettingsFeature()
+        }
+
         Reduce { state, action in
             switch action {
             case .onAppear:
@@ -280,7 +333,7 @@ struct SettingsFeature {
                     .send(.loadSettings),
                     .send(.fetchModels),
                     .send(.calculateStorageUsage),
-                    .send(.fetchInputDevices),
+                    .send(.recordingSettings(.fetchInputDevices)),
                     .send(.checkHotkeyConflict),
                     .send(.fetchModelStorageURL)
                 )
@@ -288,7 +341,7 @@ struct SettingsFeature {
             case .onDisappear:
                 // 音声レベル監視が有効な場合は停止
                 if state.isMonitoringAudio {
-                    return .send(.stopAudioLevelObservation)
+                    return .send(.recordingSettings(.stopAudioLevelObservation))
                 }
                 return .none
 
@@ -666,53 +719,27 @@ struct SettingsFeature {
                 return .none
 
             case .fetchInputDevices:
-                return .run { send in
-                    let devices = await audioRecorder.fetchInputDevices()
-                    await send(.inputDevicesResponse(devices))
-                }
+                // RecordingSettingsFeature経由で処理
+                return .send(.recordingSettings(.fetchInputDevices))
 
-            case let .inputDevicesResponse(devices):
-                state.availableInputDevices = devices
+            case .inputDevicesResponse:
+                // RecordingSettingsFeatureで処理済みなので何もしない
                 return .none
 
             case .toggleAudioMonitoring:
-                if state.isMonitoringAudio {
-                    return .send(.stopAudioLevelObservation)
-                } else {
-                    return .send(.startAudioLevelObservation)
-                }
+                // RecordingSettingsFeature経由で処理
+                return .send(.recordingSettings(.toggleAudioMonitoring))
 
             case .startAudioLevelObservation:
-                state.isMonitoringAudio = true
-                return .run { [audioRecorder] send in
-                    do {
-                        // モニタリングを開始
-                        try await audioRecorder.startMonitoring()
-                    } catch {
-                        // モニタリング開始失敗時はログに記録
-                        // observeAudioLevel()はデフォルト値(-60.0)を返す
-                        Logger(subsystem: "com.whisperpad", category: "SettingsFeature")
-                            .warning("Failed to start audio monitoring: \(error.localizedDescription)")
-                    }
-
-                    // モニタリングの成否に関わらず、レベル監視は継続
-                    for await level in await audioRecorder.observeAudioLevel() {
-                        await send(.audioLevelUpdated(level))
-                    }
-                }
-                .cancellable(id: "audioLevelObservation")
+                // RecordingSettingsFeature経由で処理
+                return .send(.recordingSettings(.startAudioLevelObservation))
 
             case .stopAudioLevelObservation:
-                state.isMonitoringAudio = false
-                state.currentAudioLevel = -60.0
-                return .run { [audioRecorder] _ in
-                    // モニタリングを停止
-                    await audioRecorder.stopMonitoring()
-                }
-                .concatenate(with: .cancel(id: "audioLevelObservation"))
+                // RecordingSettingsFeature経由で処理
+                return .send(.recordingSettings(.stopAudioLevelObservation))
 
-            case let .audioLevelUpdated(level):
-                state.currentAudioLevel = level
+            case .audioLevelUpdated:
+                // RecordingSettingsFeatureで処理済みなので何もしない
                 return .none
 
             case .checkHotkeyConflict:
@@ -850,6 +877,52 @@ struct SettingsFeature {
                 let defaultConfig = MenuBarIconSettings.default.config(for: status)
                 state.settings.general.menuBarIconSettings.setConfig(defaultConfig, for: status)
                 return .send(.saveSettings)
+
+            // MARK: - Child Feature Delegates
+
+            case .recordingSettings:
+                // RecordingSettingsFeatureは独自のDelegateを持たないため、何もしない
+                return .none
+
+            case let .generalSettings(.delegate(.generalSettingsChanged(general))):
+                state.settings.general = general
+                return .send(.saveSettings)
+
+            case .generalSettings:
+                return .none
+
+            case let .hotkeySettings(.delegate(.hotKeySettingsChanged(hotKey))):
+                state.settings.hotKey = hotKey
+                // ホットキー設定変更を通知（AppDelegateでホットキーを再登録）
+                NotificationCenter.default.post(
+                    name: .hotKeySettingsChanged,
+                    object: hotKey
+                )
+                return .send(.saveSettings)
+
+            case .hotkeySettings:
+                return .none
+
+            case let .iconSettings(.delegate(.iconSettingsChanged(iconSettings))):
+                state.settings.general.menuBarIconSettings = iconSettings
+                return .send(.saveSettings)
+
+            case .iconSettings:
+                return .none
+
+            case let .modelSettings(.delegate(.modelSelected(modelName))):
+                state.settings.transcription.modelName = modelName
+                return .merge(
+                    .send(.saveSettings),
+                    .send(.delegate(.modelChanged(modelName)))
+                )
+
+            case let .modelSettings(.delegate(.transcriptionSettingsChanged(transcription))):
+                state.settings.transcription = transcription
+                return .send(.saveSettings)
+
+            case .modelSettings:
+                return .none
 
             case .delegate:
                 return .none

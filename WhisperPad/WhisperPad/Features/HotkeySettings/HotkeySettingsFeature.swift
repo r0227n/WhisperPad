@@ -6,6 +6,7 @@
 import AppKit
 import ComposableArchitecture
 import Foundation
+import SwiftUI
 
 // MARK: - HotkeySettings Feature
 

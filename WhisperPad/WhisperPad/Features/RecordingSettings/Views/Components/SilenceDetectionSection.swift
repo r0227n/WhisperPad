@@ -10,7 +10,7 @@ import SwiftUI
 ///
 /// 無音検出設定を表示するコンポーネント。
 struct SilenceDetectionSection: View {
-    @Bindable var store: StoreOf<SettingsFeature>
+    @Bindable var store: StoreOf<RecordingSettingsFeature>
 
     var body: some View {
         SettingCard {
@@ -33,9 +33,9 @@ struct SilenceDetectionSection: View {
                     Toggle(
                         "",
                         isOn: Binding(
-                            get: { store.settings.recording.silenceDetectionEnabled },
+                            get: { store.recording.silenceDetectionEnabled },
                             set: { enabled in
-                                var recording = store.settings.recording
+                                var recording = store.recording
                                 recording.silenceDetectionEnabled = enabled
                                 store.send(.updateRecordingSettings(recording))
                             }
@@ -53,7 +53,7 @@ struct SilenceDetectionSection: View {
                     String(localized: "recording.silence_detection.accessibility_hint", comment: "Toggle hint")
                 )
 
-                if store.settings.recording.silenceDetectionEnabled {
+                if store.recording.silenceDetectionEnabled {
                     Divider()
 
                     // 無音判定時間
@@ -68,9 +68,9 @@ struct SilenceDetectionSection: View {
                             TextField(
                                 "recording.silence_detection.seconds",
                                 value: Binding(
-                                    get: { store.settings.recording.silenceDuration },
+                                    get: { store.recording.silenceDuration },
                                     set: { newValue in
-                                        var recording = store.settings.recording
+                                        var recording = store.recording
                                         recording.silenceDuration = newValue
                                         store.send(.updateRecordingSettings(recording))
                                     }
@@ -106,7 +106,7 @@ struct SilenceDetectionSection: View {
 
                             Spacer()
 
-                            Text("\(Int(store.settings.recording.silenceThreshold)) dB")
+                            Text("\(Int(store.recording.silenceThreshold)) dB")
                                 .font(.system(size: 13, design: .monospaced))
                                 .foregroundColor(.secondary)
                                 .frame(width: 60, alignment: .trailing)
@@ -114,9 +114,9 @@ struct SilenceDetectionSection: View {
 
                         Slider(
                             value: Binding(
-                                get: { store.settings.recording.silenceThreshold },
+                                get: { store.recording.silenceThreshold },
                                 set: { newValue in
-                                    var recording = store.settings.recording
+                                    var recording = store.recording
                                     recording.silenceThreshold = newValue
                                     store.send(.updateRecordingSettings(recording))
                                 }
@@ -133,7 +133,7 @@ struct SilenceDetectionSection: View {
                         .accessibilityValue(
                             String(
                                 format: String(localized: "recording.silence_detection.threshold_value"),
-                                Int(store.settings.recording.silenceThreshold)
+                                Int(store.recording.silenceThreshold)
                             )
                         )
 
@@ -164,16 +164,14 @@ struct SilenceDetectionSection: View {
 #Preview("Enabled") {
     SilenceDetectionSection(
         store: Store(
-            initialState: SettingsFeature.State(
-                settings: AppSettings(
-                    recording: RecordingSettings(
-                        silenceDetectionEnabled: true,
-                        silenceDuration: 3.0
-                    )
+            initialState: RecordingSettingsFeature.State(
+                recording: RecordingSettings(
+                    silenceDetectionEnabled: true,
+                    silenceDuration: 3.0
                 )
             )
         ) {
-            SettingsFeature()
+            RecordingSettingsFeature()
         }
     )
     .padding()
@@ -183,15 +181,13 @@ struct SilenceDetectionSection: View {
 #Preview("Disabled") {
     SilenceDetectionSection(
         store: Store(
-            initialState: SettingsFeature.State(
-                settings: AppSettings(
-                    recording: RecordingSettings(
-                        silenceDetectionEnabled: false
-                    )
+            initialState: RecordingSettingsFeature.State(
+                recording: RecordingSettings(
+                    silenceDetectionEnabled: false
                 )
             )
         ) {
-            SettingsFeature()
+            RecordingSettingsFeature()
         }
     )
     .padding()

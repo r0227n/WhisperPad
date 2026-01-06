@@ -6,6 +6,7 @@
 import AppKit
 import ComposableArchitecture
 import Foundation
+import SwiftUI
 
 // MARK: - IconSettings Feature
 
@@ -81,7 +82,7 @@ struct IconSettingsFeature {
                 return .send(.delegate(.iconSettingsChanged(state.iconSettings)))
 
             case let .resetIconSetting(status):
-                let defaultConfig = StatusIconConfig.default(for: status)
+                let defaultConfig = MenuBarIconSettings.default.config(for: status)
                 state.iconSettings.setConfig(defaultConfig, for: status)
                 return .send(.delegate(.iconSettingsChanged(state.iconSettings)))
 

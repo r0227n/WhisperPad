@@ -10,7 +10,7 @@ import SwiftUI
 ///
 /// リアルタイムの音声レベル表示とマイクテスト機能を提供します。
 struct AudioInputMonitorSection: View {
-    @Bindable var store: StoreOf<SettingsFeature>
+    @Bindable var store: StoreOf<RecordingSettingsFeature>
 
     var body: some View {
         SettingCard {
@@ -96,20 +96,20 @@ struct AudioInputMonitorSection: View {
     VStack(spacing: 16) {
         // Monitoring off
         AudioInputMonitorSection(
-            store: Store(initialState: SettingsFeature.State()) {
-                SettingsFeature()
+            store: Store(initialState: RecordingSettingsFeature.State()) {
+                RecordingSettingsFeature()
             }
         )
 
         // Monitoring on
         AudioInputMonitorSection(
             store: Store(
-                initialState: SettingsFeature.State(
+                initialState: RecordingSettingsFeature.State(
                     currentAudioLevel: -20.0,
                     isMonitoringAudio: true
                 )
             ) {
-                SettingsFeature()
+                RecordingSettingsFeature()
             }
         )
     }

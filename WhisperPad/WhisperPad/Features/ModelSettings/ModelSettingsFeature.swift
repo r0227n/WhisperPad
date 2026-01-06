@@ -3,8 +3,10 @@
 //  WhisperPad
 //
 
+import AppKit
 import ComposableArchitecture
 import Foundation
+import SwiftUI
 
 // MARK: - ModelSettings Feature
 
@@ -160,9 +162,20 @@ struct ModelSettingsFeature {
 
             case .fetchModels:
                 state.isLoadingModels = true
-                return .run { send in
+                return .run { [modelClient] send in
                     do {
-                        let models = try await modelClient.fetchAvailableModels()
+                        let modelNames = try await modelClient.fetchAvailableModels()
+                        let recommendedModel = await modelClient.recommendedModel()
+                        var models: [WhisperModel] = []
+                        for name in modelNames {
+                            let isDownloaded = await modelClient.isModelDownloaded(name)
+                            models.append(WhisperModel.from(
+                                id: name,
+                                isDownloaded: isDownloaded,
+                                isRecommended: name == recommendedModel
+                            ))
+                        }
+                        models.sort { $0.id < $1.id }
                         await send(.modelsResponse(.success(models)))
                     } catch {
                         await send(.modelsResponse(.failure(error)))
@@ -179,9 +192,13 @@ struct ModelSettingsFeature {
                 return .none
 
             case .fetchDownloadedModels:
-                return .run { send in
-                    let models = await modelClient.fetchDownloadedModels()
-                    await send(.downloadedModelsResponse(models))
+                return .run { [modelClient] send in
+                    do {
+                        let models = try await modelClient.fetchDownloadedModelsAsWhisperModels()
+                        await send(.downloadedModelsResponse(models))
+                    } catch {
+                        await send(.downloadedModelsResponse([]))
+                    }
                 }
 
             case let .downloadedModelsResponse(models):
@@ -215,24 +232,17 @@ struct ModelSettingsFeature {
             case let .downloadModel(modelName):
                 state.downloadingModelName = modelName
                 state.downloadProgress[modelName] = 0.0
-                return .run { send in
+                return .run { [modelClient] send in
                     do {
-                        for await progress in modelClient.downloadModel(modelName) {
-                            await send(.downloadProgress(modelName, progress))
+                        let downloadedURL = try await modelClient.downloadModel(modelName) { progress in
+                            Task { await send(.downloadProgress(modelName, progress)) }
                         }
-                        // ダウンロード完了後にダウンロード済みモデルを再取得
-                        await send(.fetchDownloadedModels)
-                        await send(.calculateStorageUsage)
-                        await send(
-                            .downloadCompleted(
-                                modelName,
-                                .success(URL(fileURLWithPath: "/"))
-                            )
-                        )
+                        await send(.downloadCompleted(modelName, .success(downloadedURL)))
                     } catch {
                         await send(.downloadCompleted(modelName, .failure(error)))
                     }
                 }
+                .cancellable(id: "download-\(modelName)")
 
             case let .downloadProgress(modelName, progress):
                 state.downloadProgress[modelName] = progress
@@ -241,7 +251,10 @@ struct ModelSettingsFeature {
             case let .downloadCompleted(modelName, .success):
                 state.downloadingModelName = nil
                 state.downloadProgress.removeValue(forKey: modelName)
-                return .none
+                return .merge(
+                    .send(.fetchDownloadedModels),
+                    .send(.calculateStorageUsage)
+                )
 
             case let .downloadCompleted(modelName, .failure):
                 state.downloadingModelName = nil
@@ -291,8 +304,8 @@ struct ModelSettingsFeature {
             // MARK: - Storage Management
 
             case .calculateStorageUsage:
-                return .run { send in
-                    let usage = await modelClient.calculateStorageUsage()
+                return .run { [modelClient] send in
+                    let usage = await modelClient.getStorageUsage()
                     await send(.storageUsageResponse(usage))
                 }
 
@@ -301,10 +314,9 @@ struct ModelSettingsFeature {
                 return .none
 
             case .fetchModelStorageURL:
-                return .run { send in
-                    if let url = await modelClient.getModelStorageURL() {
-                        await send(.modelStorageURLResponse(url))
-                    }
+                return .run { [modelClient] send in
+                    let url = await modelClient.getModelStorageURL()
+                    await send(.modelStorageURLResponse(url))
                 }
 
             case let .modelStorageURLResponse(url):
@@ -313,12 +325,16 @@ struct ModelSettingsFeature {
 
             case .selectStorageLocation:
                 return .run { send in
-                    do {
-                        if let url = try await modelClient.selectStorageLocation() {
-                            await send(.storageLocationSelected(.success(url)))
+                    await MainActor.run {
+                        let panel = NSOpenPanel()
+                        panel.canChooseFiles = false
+                        panel.canChooseDirectories = true
+                        panel.allowsMultipleSelection = false
+                        panel.message = "モデルの保存先フォルダを選択してください"
+                        panel.prompt = "選択"
+                        if panel.runModal() == .OK, let url = panel.url {
+                            Task { await send(.storageLocationSelected(.success(url))) }
                         }
-                    } catch {
-                        await send(.storageLocationSelected(.failure(error)))
                     }
                 }
 

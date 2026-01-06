@@ -11,7 +11,10 @@ import SwiftUI
 /// 音声録音の設定を行います。
 /// 入力デバイス、入力レベルモニター、出力設定、無音検出などを設定できます。
 struct RecordingSettingsTab: View {
-    @Bindable var store: StoreOf<SettingsFeature>
+    @Bindable var store: StoreOf<RecordingSettingsFeature>
+
+    /// 現在のロケール（親から渡される）
+    var locale: Locale = .current
 
     var body: some View {
         ScrollView {
@@ -30,7 +33,7 @@ struct RecordingSettingsTab: View {
             }
             .padding()
         }
-        .environment(\.locale, store.settings.general.preferredLocale.locale)
+        .environment(\.locale, locale)
     }
 }
 
@@ -38,8 +41,8 @@ struct RecordingSettingsTab: View {
 
 #Preview {
     RecordingSettingsTab(
-        store: Store(initialState: SettingsFeature.State()) {
-            SettingsFeature()
+        store: Store(initialState: RecordingSettingsFeature.State()) {
+            RecordingSettingsFeature()
         }
     )
     .frame(width: 650, height: 550)

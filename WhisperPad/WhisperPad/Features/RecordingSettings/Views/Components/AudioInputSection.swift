@@ -10,7 +10,7 @@ import SwiftUI
 ///
 /// 入力デバイス選択を提供するコンポーネント。
 struct AudioInputSection: View {
-    @Bindable var store: StoreOf<SettingsFeature>
+    @Bindable var store: StoreOf<RecordingSettingsFeature>
 
     var body: some View {
         SettingCard {
@@ -28,9 +28,9 @@ struct AudioInputSection: View {
                 Picker(
                     "",
                     selection: Binding(
-                        get: { store.settings.recording.inputDeviceID },
+                        get: { store.recording.inputDeviceID },
                         set: { newValue in
-                            var recording = store.settings.recording
+                            var recording = store.recording
                             recording.inputDeviceID = newValue
                             store.send(.updateRecordingSettings(recording))
                         }
@@ -65,8 +65,8 @@ struct AudioInputSection: View {
 
 #Preview("Default Device") {
     AudioInputSection(
-        store: Store(initialState: SettingsFeature.State()) {
-            SettingsFeature()
+        store: Store(initialState: RecordingSettingsFeature.State()) {
+            RecordingSettingsFeature()
         }
     )
     .padding()
@@ -75,8 +75,8 @@ struct AudioInputSection: View {
 
 #Preview("With Devices") {
     AudioInputSection(
-        store: Store(initialState: SettingsFeature.State()) {
-            SettingsFeature()
+        store: Store(initialState: RecordingSettingsFeature.State()) {
+            RecordingSettingsFeature()
         }
     )
     .padding()

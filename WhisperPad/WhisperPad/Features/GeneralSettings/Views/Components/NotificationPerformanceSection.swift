@@ -210,53 +210,26 @@ private struct NotificationDetailsPopoverForGeneralSettings: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             PopoverHeaderView(
-                title: "settings.general.notification.customize.title",
-                subtitle: "settings.general.notification.customize.subtitle"
+                icon: "bell.badge",
+                iconColor: .orange,
+                title: "settings.general.notification.customize.title"
             )
 
             Divider()
 
             // 通知タイトルのカスタマイズ
             FormFieldView(
-                icon: "textformat",
-                iconColor: .blue,
-                label: "settings.general.notification.title"
-            ) {
-                TextField(
-                    "",
-                    text: Binding(
-                        get: { store.general.notificationTitle },
-                        set: { newValue in
-                            var general = store.general
-                            general.notificationTitle = newValue
-                            store.send(.updateGeneralSettings(general))
-                        }
-                    )
+                label: "settings.general.notification.title",
+                placeholder: "",
+                text: Binding(
+                    get: { store.general.notificationTitle },
+                    set: { newValue in
+                        var general = store.general
+                        general.notificationTitle = newValue
+                        store.send(.updateGeneralSettings(general))
+                    }
                 )
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 200)
-            }
-
-            // 通知メッセージのカスタマイズ
-            FormFieldView(
-                icon: "text.alignleft",
-                iconColor: .green,
-                label: "settings.general.notification.message_body"
-            ) {
-                TextField(
-                    "",
-                    text: Binding(
-                        get: { store.general.notificationMessage },
-                        set: { newValue in
-                            var general = store.general
-                            general.notificationMessage = newValue
-                            store.send(.updateGeneralSettings(general))
-                        }
-                    )
-                )
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 200)
-            }
+            )
         }
         .padding()
         .frame(width: 350)
