@@ -12,6 +12,7 @@ import SwiftUI
 struct InlineSymbolPicker: View {
     /// 選択されたシンボル名
     @Binding var selection: String
+    let appLocale: AppLocale
 
     /// フルピッカー表示状態
     @State private var showFullPicker = false
@@ -45,7 +46,7 @@ struct InlineSymbolPicker: View {
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "ellipsis.circle")
-                    Text("symbol_picker.more_symbols", comment: "More Symbols...")
+                    Text(appLocale.localized("symbol_picker.more_symbols"))
                 }
                 .font(.caption)
                 .foregroundColor(.accentColor)
@@ -54,7 +55,8 @@ struct InlineSymbolPicker: View {
             .sheet(isPresented: $showFullPicker) {
                 SFSymbolPickerView(
                     selectedSymbol: $selection,
-                    isPresented: $showFullPicker
+                    isPresented: $showFullPicker,
+                    appLocale: appLocale
                 )
                 .environment(\.locale, locale)
             }
@@ -102,7 +104,7 @@ struct InlineSymbolPicker: View {
         Text("アイコン選択")
             .font(.headline)
 
-        InlineSymbolPicker(selection: $selection)
+        InlineSymbolPicker(selection: $selection, appLocale: .system)
 
         Text("選択中: \(selection)")
             .font(.caption)

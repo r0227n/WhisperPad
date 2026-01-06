@@ -1,0 +1,195 @@
+//
+//  SilenceDetectionSection.swift
+//  WhisperPad
+//
+
+import ComposableArchitecture
+import SwiftUI
+
+/// 無音検出セクション
+///
+/// 無音検出設定を表示するコンポーネント。
+struct SilenceDetectionSection: View {
+    @Bindable var store: StoreOf<RecordingSettingsFeature>
+
+    var body: some View {
+        SettingCard {
+            VStack(alignment: .leading, spacing: 16) {
+                // セクションヘッダーとトグル
+                HStack(spacing: 8) {
+                    // アイコン
+                    Image(systemName: "speaker.slash.fill")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.orange)
+                        .frame(width: 20)
+
+                    // タイトル
+                    Text("recording.silence_detection.title", comment: "Auto-stop on silence")
+                        .font(.system(size: 14, weight: .semibold))
+
+                    Spacer()
+
+                    // トグル
+                    Toggle(
+                        "",
+                        isOn: Binding(
+                            get: { store.recording.silenceDetectionEnabled },
+                            set: { enabled in
+                                var recording = store.recording
+                                recording.silenceDetectionEnabled = enabled
+                                store.send(.updateRecordingSettings(recording))
+                            }
+                        )
+                    )
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .help(String(localized: "recording.silence_detection.help", comment: "Auto-stop help"))
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(
+                    String(localized: "recording.silence_detection.title", comment: "Auto-stop on silence")
+                )
+                .accessibilityHint(
+                    String(localized: "recording.silence_detection.accessibility_hint", comment: "Toggle hint")
+                )
+
+                if store.recording.silenceDetectionEnabled {
+                    Divider()
+
+                    // 無音判定時間
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("recording.silence_detection.duration", comment: "Duration")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+
+                            Spacer()
+
+                            TextField(
+                                "recording.silence_detection.seconds",
+                                value: Binding(
+                                    get: { store.recording.silenceDuration },
+                                    set: { newValue in
+                                        var recording = store.recording
+                                        recording.silenceDuration = newValue
+                                        store.send(.updateRecordingSettings(recording))
+                                    }
+                                ),
+                                format: .number
+                            )
+                            .frame(width: 60)
+                            .textFieldStyle(.roundedBorder)
+                            .accessibilityLabel(
+                                String(
+                                    localized: "recording.silence_detection.duration_accessibility",
+                                    comment: "Silence duration"
+                                )
+                            )
+                            .accessibilityHint(
+                                String(
+                                    localized: "recording.silence_detection.duration_hint",
+                                    comment: "Duration in seconds"
+                                )
+                            )
+
+                            Text("recording.silence_detection.seconds", comment: "seconds")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // 無音判定閾値
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("recording.silence_detection.threshold", comment: "Threshold")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+
+                            Spacer()
+
+                            Text("\(Int(store.recording.silenceThreshold)) dB")
+                                .font(.system(size: 13, design: .monospaced))
+                                .foregroundColor(.secondary)
+                                .frame(width: 60, alignment: .trailing)
+                        }
+
+                        Slider(
+                            value: Binding(
+                                get: { store.recording.silenceThreshold },
+                                set: { newValue in
+                                    var recording = store.recording
+                                    recording.silenceThreshold = newValue
+                                    store.send(.updateRecordingSettings(recording))
+                                }
+                            ),
+                            in: -80 ... -30,
+                            step: 1
+                        )
+                        .accessibilityLabel(
+                            String(
+                                localized: "recording.silence_detection.threshold_accessibility",
+                                comment: "Silence threshold"
+                            )
+                        )
+                        .accessibilityValue(
+                            String(
+                                format: String(localized: "recording.silence_detection.threshold_value"),
+                                Int(store.recording.silenceThreshold)
+                            )
+                        )
+
+                        HStack {
+                            Text("recording.silence_detection.threshold_min", comment: "Quieter")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+
+                            Spacer()
+
+                            Text("recording.silence_detection.threshold_max", comment: "Louder")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            String(localized: "recording.silence_detection.accessibility", comment: "Silence detection settings")
+        )
+    }
+}
+
+// MARK: - Preview
+
+#Preview("Enabled") {
+    SilenceDetectionSection(
+        store: Store(
+            initialState: RecordingSettingsFeature.State(
+                recording: RecordingSettings(
+                    silenceDetectionEnabled: true,
+                    silenceDuration: 3.0
+                )
+            )
+        ) {
+            RecordingSettingsFeature()
+        }
+    )
+    .padding()
+    .frame(width: 500)
+}
+
+#Preview("Disabled") {
+    SilenceDetectionSection(
+        store: Store(
+            initialState: RecordingSettingsFeature.State(
+                recording: RecordingSettings(
+                    silenceDetectionEnabled: false
+                )
+            )
+        ) {
+            RecordingSettingsFeature()
+        }
+    )
+    .padding()
+    .frame(width: 500)
+}

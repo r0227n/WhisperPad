@@ -176,7 +176,7 @@ extension HotkeyType {
     }
 
     /// ローカライズキー（String）
-    var localizedKeyString: String {
+    var localizationKey: String {
         switch self {
         case .recording: "hotkey.type.recording"
         case .recordingPause: "hotkey.type.recording_pause"
@@ -192,11 +192,28 @@ extension HotkeyType {
         case .cancel: "hotkey.description.cancel"
         }
     }
+
+    /// 説明のローカライズキー（String）
+    var descriptionLocalizationKey: String {
+        switch self {
+        case .recording: "hotkey.description.recording"
+        case .recordingPause: "hotkey.description.recording_pause"
+        case .cancel: "hotkey.description.cancel"
+        }
+    }
 }
 
 extension HotkeyType.Category {
     /// ローカライズキー
     var localizedKey: LocalizedStringKey {
+        switch self {
+        case .recording: "hotkey.category.recording"
+        case .cancel: "hotkey.category.cancel"
+        }
+    }
+
+    /// ローカライズキー（String）
+    var localizationKey: String {
         switch self {
         case .recording: "hotkey.category.recording"
         case .cancel: "hotkey.category.cancel"

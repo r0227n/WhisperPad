@@ -40,6 +40,9 @@ struct ShortcutKeyButton: View {
     /// デフォルトにリセット時のコールバック
     let onResetToDefault: () -> Void
 
+    /// ローカライズ設定
+    let appLocale: AppLocale
+
     /// イベントモニター
     @State private var eventMonitor: Any?
 
@@ -70,7 +73,7 @@ struct ShortcutKeyButton: View {
     /// 録音中の表示
     private var recordingView: some View {
         HStack(spacing: 16) {
-            Text("hotkey.recording.placeholder", comment: "Press key...")
+            Text(appLocale.localized("hotkey.recording.placeholder"))
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
                 .foregroundColor(.white)
                 .padding(.horizontal, 20)
@@ -82,10 +85,8 @@ struct ShortcutKeyButton: View {
                         .stroke(Color.accentColor.opacity(0.8), lineWidth: 2)
                 )
 
-            Button {
+            Button(appLocale.localized("common.cancel")) {
                 onStopRecording()
-            } label: {
-                Text("common.cancel", comment: "Cancel button")
             }
             .buttonStyle(.borderless)
         }
@@ -113,18 +114,13 @@ struct ShortcutKeyButton: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button {
+            Button(appLocale.localized("hotkey.reset")) {
                 onResetToDefault()
-            } label: {
-                Text("hotkey.reset", comment: "Reset to default")
             }
         }
         .accessibilityLabel(
-            String(
-                localized: "hotkey.accessibility.change",
-                defaultValue: "Shortcut: \(keyCombo.displayString). Click to change, right-click for options",
-                comment: "Shortcut accessibility label"
-            )
+            appLocale.localized("hotkey.accessibility.change") +
+                ": \(keyCombo.displayString)"
         )
     }
 
@@ -184,7 +180,8 @@ struct ShortcutKeyButton: View {
             isRecording: false,
             onStartRecording: {},
             onStopRecording: {},
-            onResetToDefault: {}
+            onResetToDefault: {},
+            appLocale: .system
         )
     }
     .padding()
@@ -199,7 +196,8 @@ struct ShortcutKeyButton: View {
         isRecording: true,
         onStartRecording: {},
         onStopRecording: {},
-        onResetToDefault: {}
+        onResetToDefault: {},
+        appLocale: .system
     )
     .padding()
     .background(Color(NSColor.windowBackgroundColor))

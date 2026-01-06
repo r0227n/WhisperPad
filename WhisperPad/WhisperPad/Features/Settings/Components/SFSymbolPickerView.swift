@@ -15,6 +15,8 @@ struct SFSymbolPickerView: View {
     /// シートの表示状態
     @Binding var isPresented: Bool
 
+    let appLocale: AppLocale
+
     /// 検索テキスト
     @State private var searchText = ""
 
@@ -101,10 +103,10 @@ struct SFSymbolPickerView: View {
         VStack(spacing: 0) {
             // ヘッダー
             HStack {
-                Text("symbol_picker.title", comment: "Select Icon")
+                Text(appLocale.localized("symbol_picker.title"))
                     .font(.headline)
                 Spacer()
-                Button("common.close") {
+                Button(appLocale.localized("common.close")) {
                     isPresented = false
                 }
                 .keyboardShortcut(.cancelAction)
@@ -118,7 +120,7 @@ struct SFSymbolPickerView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
                 TextField(
-                    "symbol_picker.search_placeholder",
+                    appLocale.localized("symbol_picker.search_placeholder"),
                     text: $searchText
                 )
                 .textFieldStyle(.plain)
@@ -182,7 +184,7 @@ struct SFSymbolPickerView: View {
 
             // フッター（現在の選択）
             HStack {
-                Text("symbol_picker.selected", comment: "Selected:")
+                Text(appLocale.localized("symbol_picker.selected"))
                     .foregroundColor(.secondary)
                 Image(systemName: selectedSymbol)
                     .font(.system(size: 16))
@@ -214,6 +216,7 @@ struct SFSymbolPickerView: View {
 
     SFSymbolPickerView(
         selectedSymbol: $selectedSymbol,
-        isPresented: $isPresented
+        isPresented: $isPresented,
+        appLocale: .system
     )
 }

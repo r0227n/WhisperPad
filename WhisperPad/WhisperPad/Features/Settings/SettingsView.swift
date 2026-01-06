@@ -14,58 +14,100 @@ struct SettingsView: View {
 
     var body: some View {
         TabView(selection: $store.selectedTab.sending(\.selectTab)) {
-            GeneralSettingsTab(store: store)
-                .tabItem {
-                    Label {
-                        Text("settings.tab.general")
-                    } icon: {
-                        Image(systemName: SettingsTab.general.iconName)
-                    }
+            GeneralSettingsTab(
+                store: store.scope(state: \.generalSettings, action: \.generalSettings)
+            )
+            .tabItem {
+                Label {
+                    Text(
+                        String(
+                            localized: "settings.tab.general",
+                            bundle: store.settings.general.preferredLocale.bundle,
+                            locale: store.settings.general.preferredLocale.locale
+                        )
+                    )
+                } icon: {
+                    Image(systemName: SettingsTab.general.iconName)
                 }
-                .tag(SettingsTab.general)
+            }
+            .tag(SettingsTab.general)
 
-            IconSettingsTab(store: store)
-                .tabItem {
-                    Label {
-                        Text("settings.tab.icon")
-                    } icon: {
-                        Image(systemName: SettingsTab.icon.iconName)
-                    }
+            IconSettingsTab(
+                store: store.scope(state: \.iconSettings, action: \.iconSettings)
+            )
+            .tabItem {
+                Label {
+                    Text(
+                        String(
+                            localized: "settings.tab.icon",
+                            bundle: store.settings.general.preferredLocale.bundle,
+                            locale: store.settings.general.preferredLocale.locale
+                        )
+                    )
+                } icon: {
+                    Image(systemName: SettingsTab.icon.iconName)
                 }
-                .tag(SettingsTab.icon)
+            }
+            .tag(SettingsTab.icon)
 
-            HotkeySettingsTab(store: store)
-                .tabItem {
-                    Label {
-                        Text("settings.tab.hotkey")
-                    } icon: {
-                        Image(systemName: SettingsTab.hotkey.iconName)
-                    }
+            HotkeySettingsTab(
+                store: store.scope(state: \.hotkeySettings, action: \.hotkeySettings)
+            )
+            .tabItem {
+                Label {
+                    Text(
+                        String(
+                            localized: "settings.tab.hotkey",
+                            bundle: store.settings.general.preferredLocale.bundle,
+                            locale: store.settings.general.preferredLocale.locale
+                        )
+                    )
+                } icon: {
+                    Image(systemName: SettingsTab.hotkey.iconName)
                 }
-                .tag(SettingsTab.hotkey)
+            }
+            .tag(SettingsTab.hotkey)
 
-            RecordingSettingsTab(store: store)
-                .tabItem {
-                    Label {
-                        Text("settings.tab.recording")
-                    } icon: {
-                        Image(systemName: SettingsTab.recording.iconName)
-                    }
+            RecordingSettingsTab(
+                store: store.scope(state: \.recordingSettings, action: \.recordingSettings),
+                locale: store.settings.general.preferredLocale.locale
+            )
+            .tabItem {
+                Label {
+                    Text(
+                        String(
+                            localized: "settings.tab.recording",
+                            bundle: store.settings.general.preferredLocale.bundle,
+                            locale: store.settings.general.preferredLocale.locale
+                        )
+                    )
+                } icon: {
+                    Image(systemName: SettingsTab.recording.iconName)
                 }
-                .tag(SettingsTab.recording)
+            }
+            .tag(SettingsTab.recording)
 
-            ModelSettingsTab(store: store)
-                .tabItem {
-                    Label {
-                        Text("settings.tab.model")
-                    } icon: {
-                        Image(systemName: SettingsTab.model.iconName)
-                    }
+            ModelSettingsTab(
+                store: store.scope(state: \.modelSettings, action: \.modelSettings)
+            )
+            .tabItem {
+                Label {
+                    Text(
+                        String(
+                            localized: "settings.tab.model",
+                            bundle: store.settings.general.preferredLocale.bundle,
+                            locale: store.settings.general.preferredLocale.locale
+                        )
+                    )
+                } icon: {
+                    Image(systemName: SettingsTab.model.iconName)
                 }
-                .tag(SettingsTab.model)
+            }
+            .tag(SettingsTab.model)
         }
         .frame(width: 650, height: 550)
         .environment(\.locale, store.settings.general.preferredLocale.locale)
+        .environment(\.appLocale, store.settings.general.preferredLocale)
         .onAppear {
             store.send(.onAppear)
         }

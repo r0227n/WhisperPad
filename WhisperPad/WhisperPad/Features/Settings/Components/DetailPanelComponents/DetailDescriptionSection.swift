@@ -11,16 +11,19 @@ import SwiftUI
 /// IconSettingsTabとHotkeySettingsTabで共通利用されます。
 struct DetailDescriptionSection: View {
     /// 説明テキスト
-    let descriptionText: LocalizedStringKey
+    let descriptionText: String
+    /// ラベルテキスト
+    let labelText: String
 
-    init(descriptionText: LocalizedStringKey) {
+    init(descriptionText: String, labelText: String = "Description") {
         self.descriptionText = descriptionText
+        self.labelText = labelText
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label {
-                Text("Description")
+                Text(labelText)
                     .font(.headline)
                     .foregroundColor(.secondary)
             } icon: {

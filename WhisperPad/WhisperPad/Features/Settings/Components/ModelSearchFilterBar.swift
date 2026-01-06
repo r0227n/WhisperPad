@@ -11,6 +11,7 @@ import SwiftUI
 struct ModelSearchFilterBar: View {
     @Binding var searchText: String
     @Binding var downloadFilter: ModelDownloadFilter
+    let appLocale: AppLocale
 
     var body: some View {
         HStack(spacing: 12) {
@@ -30,7 +31,7 @@ struct ModelSearchFilterBar: View {
                 .foregroundStyle(.secondary)
                 .font(.system(size: 12))
 
-            TextField("model.search.placeholder", text: $searchText)
+            TextField(appLocale.localized("model.search.placeholder"), text: $searchText)
                 .textFieldStyle(.plain)
                 .font(.system(size: 13))
 
@@ -43,7 +44,7 @@ struct ModelSearchFilterBar: View {
                         .font(.system(size: 12))
                 }
                 .buttonStyle(.plain)
-                .help(Text("model.search.clear"))
+                .help(appLocale.localized("model.search.clear"))
             }
         }
         .padding(.horizontal, 8)
@@ -56,13 +57,14 @@ struct ModelSearchFilterBar: View {
 
     private var statusFilterPicker: some View {
         HStack(spacing: 4) {
-            Text("model.filter.status", comment: "Status")
+            Text(appLocale.localized("model.filter.status"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             Picker("", selection: $downloadFilter) {
                 ForEach(ModelDownloadFilter.allCases, id: \.self) { filter in
-                    Text(filter.localizedKey).tag(filter)
+                    Text(appLocale.localized(String.LocalizationValue(filter.localizationKey)))
+                        .tag(filter)
                 }
             }
             .pickerStyle(.menu)
@@ -82,7 +84,8 @@ struct ModelSearchFilterBar: View {
         var body: some View {
             ModelSearchFilterBar(
                 searchText: $searchText,
-                downloadFilter: $downloadFilter
+                downloadFilter: $downloadFilter,
+                appLocale: .system
             )
             .padding()
             .frame(width: 500)
@@ -100,7 +103,8 @@ struct ModelSearchFilterBar: View {
         var body: some View {
             ModelSearchFilterBar(
                 searchText: $searchText,
-                downloadFilter: $downloadFilter
+                downloadFilter: $downloadFilter,
+                appLocale: .system
             )
             .padding()
             .frame(width: 500)

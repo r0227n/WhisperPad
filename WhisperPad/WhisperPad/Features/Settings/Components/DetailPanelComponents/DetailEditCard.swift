@@ -13,8 +13,8 @@ import SwiftUI
 struct DetailEditCard<Content: View>: View {
     /// ラベルのSF Symbol
     let labelIcon: String
-    /// ラベルテキスト
-    let labelText: LocalizedStringKey
+    /// ラベルテキスト（表示用）
+    let labelText: String
     /// 内部パディング
     let padding: EdgeInsets
     /// 角の丸み
@@ -26,7 +26,7 @@ struct DetailEditCard<Content: View>: View {
 
     init(
         labelIcon: String,
-        labelText: LocalizedStringKey,
+        labelText: String,
         padding: EdgeInsets = EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16),
         cornerRadius: CGFloat = 12,
         backgroundColor: Color = Color(nsColor: .controlBackgroundColor),
@@ -40,10 +40,29 @@ struct DetailEditCard<Content: View>: View {
         self.content = content
     }
 
-    /// 水平・垂直パディングを個別指定する便利イニシャライザ
+    /// LocalizedStringKey型のラベルテキストを受け付けるイニシャライザ（後方互換性）
     init(
         labelIcon: String,
         labelText: LocalizedStringKey,
+        padding: EdgeInsets = EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16),
+        cornerRadius: CGFloat = 12,
+        backgroundColor: Color = Color(nsColor: .controlBackgroundColor),
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.labelIcon = labelIcon
+        // LocalizedStringKeyは内部的にStringに変換できないため、
+        // 環境から取得したローカライズ文字列を直接使用することを推奨
+        self.labelText = String(describing: labelText)
+        self.padding = padding
+        self.cornerRadius = cornerRadius
+        self.backgroundColor = backgroundColor
+        self.content = content
+    }
+
+    /// 水平・垂直パディングを個別指定する便利イニシャライザ
+    init(
+        labelIcon: String,
+        labelText: String,
         horizontalPadding: CGFloat = 16,
         verticalPadding: CGFloat = 16,
         cornerRadius: CGFloat = 12,
