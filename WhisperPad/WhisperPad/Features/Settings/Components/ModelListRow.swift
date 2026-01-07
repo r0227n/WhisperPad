@@ -116,7 +116,7 @@ struct ModelListRow: View {
         .help(appLocale.localized("model.row.delete.help"))
         .accessibilityLabel(
             String(
-                format: appLocale.localized("model.row.delete.label"),
+                format: appLocale.localized("model.row.delete.label %@"),
                 model.displayName
             )
         )

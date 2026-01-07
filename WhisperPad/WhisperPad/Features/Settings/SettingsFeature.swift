@@ -125,6 +125,8 @@ struct SettingsFeature {
         case outputBookmarkCreated(Data)
         /// 出力ディレクトリのブックマークが解決された
         case outputDirectoryResolved(URL)
+        /// モデルストレージURLのブックマークが解決された
+        case modelStorageURLResolved(URL)
 
         // MARK: - Persistence
 
@@ -323,9 +325,10 @@ struct SettingsFeature {
 
                 // カスタムストレージのブックマーク解決
                 if let bookmarkData = settings.transcription.storageBookmarkData {
-                    effects.append(.run { [modelClient, userDefaultsClient] _ in
+                    effects.append(.run { [modelClient, userDefaultsClient] send in
                         if let url = await userDefaultsClient.resolveBookmark(bookmarkData) {
                             await modelClient.setStorageLocation(url)
+                            await send(.modelStorageURLResolved(url))
                         }
                     })
                 }
@@ -347,6 +350,10 @@ struct SettingsFeature {
 
             case let .outputDirectoryResolved(url):
                 state.settings.output.outputDirectory = url
+                return .none
+
+            case let .modelStorageURLResolved(url):
+                state.modelSettings.modelStorageURL = url
                 return .none
 
             case .saveSettings:

@@ -81,7 +81,7 @@ struct ModelSettingsTab: View {
             }
         } message: {
             if let modelName = store.modelToDelete {
-                let format = appLocale.localized("model.delete.confirm.message")
+                let format = appLocale.localized("model.delete.confirm.message %@")
                 Text(String(format: format, modelName))
             }
         }
