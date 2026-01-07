@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import WhisperKit
 import os
+import WhisperKit
 
 // MARK: - Transcription
 
