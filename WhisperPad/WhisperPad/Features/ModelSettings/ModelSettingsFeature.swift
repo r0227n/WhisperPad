@@ -404,45 +404,7 @@ struct ModelSettingsFeature {
 
                 // 設定変更を親に通知してから非同期処理を開始
                 let transcription = state.transcription
-                return .run { [modelClient] send in
-                    // 設定変更を親に通知（これにより設定が永続化される）
-                    await send(.delegate(.transcriptionSettingsChanged(transcription)))
-
-                    // WhisperKitManager のストレージ場所を更新（既存インスタンスをアンロード）
-                    await modelClient.updateStorageLocation(url)
-
-                    // 直接データを取得してレスポンスを送信
-                    // 1. 利用可能モデル一覧
-                    do {
-                        let modelNames = try await modelClient.fetchAvailableModels()
-                        let recommendedModel = await modelClient.recommendedModel()
-                        var models: [WhisperModel] = []
-                        for name in modelNames {
-                            let isDownloaded = await modelClient.isModelDownloaded(name)
-                            models.append(WhisperModel.from(
-                                id: name,
-                                isDownloaded: isDownloaded,
-                                isRecommended: name == recommendedModel
-                            ))
-                        }
-                        models.sort { $0.id < $1.id }
-                        await send(.modelsResponse(.success(models)))
-                    } catch {
-                        await send(.modelsResponse(.failure(error)))
-                    }
-
-                    // 2. ダウンロード済みモデル一覧
-                    do {
-                        let downloadedModels = try await modelClient.fetchDownloadedModelsAsWhisperModels()
-                        await send(.downloadedModelsResponse(downloadedModels))
-                    } catch {
-                        await send(.downloadedModelsResponse([]))
-                    }
-
-                    // 3. ストレージ使用量
-                    let usage = await modelClient.getStorageUsage()
-                    await send(.storageUsageResponse(usage))
-                }
+                return storageLocationSelectedEffect(url: url, transcription: transcription)
 
             case .storageLocationSelected(.failure):
                 return .none
@@ -471,5 +433,55 @@ extension StoreOf<ModelSettingsFeature> {
                 self.send(.updateTranscriptionSettings(transcription))
             }
         )
+    }
+}
+
+// MARK: - Private Helpers
+
+private extension ModelSettingsFeature {
+    /// ストレージ場所選択後の非同期処理を実行
+    func storageLocationSelectedEffect(
+        url: URL,
+        transcription: TranscriptionSettings
+    ) -> Effect<Action> {
+        .run { [modelClient] send in
+            // 設定変更を親に通知（これにより設定が永続化される）
+            await send(.delegate(.transcriptionSettingsChanged(transcription)))
+
+            // WhisperKitManager のストレージ場所を更新（既存インスタンスをアンロード）
+            await modelClient.updateStorageLocation(url)
+
+            // 直接データを取得してレスポンスを送信
+            // 1. 利用可能モデル一覧
+            do {
+                let modelNames = try await modelClient.fetchAvailableModels()
+                let recommendedModel = await modelClient.recommendedModel()
+                var models: [WhisperModel] = []
+                for name in modelNames {
+                    let isDownloaded = await modelClient.isModelDownloaded(name)
+                    models.append(WhisperModel.from(
+                        id: name,
+                        isDownloaded: isDownloaded,
+                        isRecommended: name == recommendedModel
+                    ))
+                }
+                models.sort { $0.id < $1.id }
+                await send(.modelsResponse(.success(models)))
+            } catch {
+                await send(.modelsResponse(.failure(error)))
+            }
+
+            // 2. ダウンロード済みモデル一覧
+            do {
+                let downloadedModels = try await modelClient.fetchDownloadedModelsAsWhisperModels()
+                await send(.downloadedModelsResponse(downloadedModels))
+            } catch {
+                await send(.downloadedModelsResponse([]))
+            }
+
+            // 3. ストレージ使用量
+            let usage = await modelClient.getStorageUsage()
+            await send(.storageUsageResponse(usage))
+        }
     }
 }
