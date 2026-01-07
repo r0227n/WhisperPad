@@ -118,6 +118,23 @@ actor WhisperKitManager {
         logger.info("Storage location set to: \(url?.path ?? "default")")
     }
 
+    /// ストレージ場所を変更し、WhisperKit を再初期化
+    ///
+    /// 既存の WhisperKit インスタンスをアンロードし、新しいストレージ場所を設定します。
+    /// - Parameter url: 新しいストレージ URL（nil でデフォルトに戻す）
+    func updateStorageLocation(_ url: URL?) async {
+        logger.info("Updating storage location to: \(url?.path ?? "default")")
+
+        // 既存の WhisperKit をアンロード
+        if state == .ready {
+            await unload()
+        }
+
+        // 新しいストレージ場所を設定
+        customStorageURL = url
+        logger.info("Storage location updated to: \(url?.path ?? "default")")
+    }
+
     /// ストレージ使用量を取得
     func getStorageUsage() -> Int64 {
         let fileManager = FileManager.default

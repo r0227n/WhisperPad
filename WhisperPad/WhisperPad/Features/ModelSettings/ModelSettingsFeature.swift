@@ -176,12 +176,17 @@ struct ModelSettingsFeature {
                     state.availableLanguages = allLanguages
                 }
 
-                return .merge(
-                    .send(.fetchModels),
-                    .send(.fetchDownloadedModels),
-                    .send(.calculateStorageUsage),
-                    .send(.fetchModelStorageURL)
-                )
+                // ストレージ場所が既に設定されている場合はモデル一覧を取得
+                // 設定されていない場合は先にストレージ場所を取得
+                if state.modelStorageURL != nil {
+                    return .merge(
+                        .send(.fetchModels),
+                        .send(.fetchDownloadedModels),
+                        .send(.calculateStorageUsage)
+                    )
+                } else {
+                    return .send(.fetchModelStorageURL)
+                }
 
             // MARK: - Model Management
 
@@ -340,13 +345,26 @@ struct ModelSettingsFeature {
 
             case .fetchModelStorageURL:
                 return .run { [modelClient] send in
-                    let url = await modelClient.getModelStorageURL()
-                    await send(.modelStorageURLResponse(url))
+                    // まず保存されたブックマークを読み込む
+                    if let bookmarkedURL = await modelClient.loadStorageBookmark() {
+                        // ブックマークが有効な場合、そのURLを使用
+                        await modelClient.setStorageLocation(bookmarkedURL)
+                        await send(.modelStorageURLResponse(bookmarkedURL))
+                    } else {
+                        // ブックマークがない場合はデフォルトのパスを使用
+                        let url = await modelClient.getModelStorageURL()
+                        await send(.modelStorageURLResponse(url))
+                    }
                 }
 
             case let .modelStorageURLResponse(url):
                 state.modelStorageURL = url
-                return .none
+                // ストレージ場所が確定したら、モデル一覧を取得
+                return .merge(
+                    .send(.fetchModels),
+                    .send(.fetchDownloadedModels),
+                    .send(.calculateStorageUsage)
+                )
 
             case .selectStorageLocation:
                 return .run { send in
@@ -364,11 +382,66 @@ struct ModelSettingsFeature {
                 }
 
             case let .storageLocationSelected(.success(url)):
+                // モデル関連のstateを初期化
+                state.availableModels = []
+                state.downloadedModels = []
+                state.storageUsage = 0
+                state.isLoadingModels = true
                 state.modelStorageURL = url
-                return .merge(
-                    .send(.fetchDownloadedModels),
-                    .send(.calculateStorageUsage)
-                )
+
+                // ブックマークデータを同期的に作成して TranscriptionSettings に保存
+                do {
+                    let bookmarkData = try url.bookmarkData(
+                        options: .withSecurityScope,
+                        includingResourceValuesForKeys: nil,
+                        relativeTo: nil
+                    )
+                    state.transcription.storageBookmarkData = bookmarkData
+                } catch {
+                    // ブックマーク作成失敗はログのみ（処理は継続）
+                }
+
+                // 設定変更を親に通知してから非同期処理を開始
+                let transcription = state.transcription
+                return .run { [modelClient] send in
+                    // 設定変更を親に通知（これにより設定が永続化される）
+                    await send(.delegate(.transcriptionSettingsChanged(transcription)))
+
+                    // WhisperKitManager のストレージ場所を更新（既存インスタンスをアンロード）
+                    await modelClient.updateStorageLocation(url)
+
+                    // 直接データを取得してレスポンスを送信
+                    // 1. 利用可能モデル一覧
+                    do {
+                        let modelNames = try await modelClient.fetchAvailableModels()
+                        let recommendedModel = await modelClient.recommendedModel()
+                        var models: [WhisperModel] = []
+                        for name in modelNames {
+                            let isDownloaded = await modelClient.isModelDownloaded(name)
+                            models.append(WhisperModel.from(
+                                id: name,
+                                isDownloaded: isDownloaded,
+                                isRecommended: name == recommendedModel
+                            ))
+                        }
+                        models.sort { $0.id < $1.id }
+                        await send(.modelsResponse(.success(models)))
+                    } catch {
+                        await send(.modelsResponse(.failure(error)))
+                    }
+
+                    // 2. ダウンロード済みモデル一覧
+                    do {
+                        let downloadedModels = try await modelClient.fetchDownloadedModelsAsWhisperModels()
+                        await send(.downloadedModelsResponse(downloadedModels))
+                    } catch {
+                        await send(.downloadedModelsResponse([]))
+                    }
+
+                    // 3. ストレージ使用量
+                    let usage = await modelClient.getStorageUsage()
+                    await send(.storageUsageResponse(usage))
+                }
 
             case .storageLocationSelected(.failure):
                 return .none

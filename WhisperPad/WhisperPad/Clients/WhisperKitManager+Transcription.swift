@@ -5,6 +5,7 @@
 
 import Foundation
 import WhisperKit
+import os
 
 // MARK: - Transcription
 

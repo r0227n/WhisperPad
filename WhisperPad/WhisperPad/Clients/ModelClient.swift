@@ -84,6 +84,18 @@ struct ModelClient: Sendable {
     /// カスタムストレージ場所を設定
     /// - Parameter url: カスタム URL（nil でデフォルトに戻す）
     var setStorageLocation: @Sendable (URL?) async -> Void
+
+    /// ストレージ場所を変更し、WhisperKit を再初期化
+    /// - Parameter url: 新しいストレージ URL（nil でデフォルトに戻す）
+    var updateStorageLocation: @Sendable (URL?) async -> Void
+
+    /// Security-scoped bookmark を保存
+    /// - Parameter url: ブックマーク対象の URL
+    var saveStorageBookmark: @Sendable (URL) async throws -> Void
+
+    /// 保存された Security-scoped bookmark を読み込み
+    /// - Returns: アクセス可能な URL、または nil
+    var loadStorageBookmark: @Sendable () async -> URL?
 }
 
 // MARK: - ModelClientError
@@ -197,6 +209,16 @@ extension ModelClient: TestDependencyKey {
             },
             setStorageLocation: { url in
                 clientLogger.debug("[PREVIEW] setStorageLocation called: \(url?.path ?? "default")")
+            },
+            updateStorageLocation: { url in
+                clientLogger.debug("[PREVIEW] updateStorageLocation called: \(url?.path ?? "default")")
+            },
+            saveStorageBookmark: { url in
+                clientLogger.debug("[PREVIEW] saveStorageBookmark called: \(url.path)")
+            },
+            loadStorageBookmark: {
+                clientLogger.debug("[PREVIEW] loadStorageBookmark called")
+                return nil
             }
         )
     }
@@ -259,6 +281,16 @@ extension ModelClient: TestDependencyKey {
             },
             setStorageLocation: { url in
                 clientLogger.debug("[TEST] setStorageLocation called: \(url?.path ?? "default")")
+            },
+            updateStorageLocation: { url in
+                clientLogger.debug("[TEST] updateStorageLocation called: \(url?.path ?? "default")")
+            },
+            saveStorageBookmark: { url in
+                clientLogger.debug("[TEST] saveStorageBookmark called: \(url.path)")
+            },
+            loadStorageBookmark: {
+                clientLogger.debug("[TEST] loadStorageBookmark called")
+                return nil
             }
         )
     }
