@@ -399,6 +399,7 @@ struct ModelSettingsFeature {
                     state.transcription.storageBookmarkData = bookmarkData
                 } catch {
                     // ブックマーク作成失敗はログのみ（処理は継続）
+                    NSLog("Failed to create storage bookmark: \(error.localizedDescription)")
                 }
 
                 // 設定変更を親に通知してから非同期処理を開始
