@@ -33,6 +33,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// 設定画面のウィンドウコントローラー
     private var settingsWindowController: NSWindowController?
 
+    /// 設定ウィンドウクローズ通知のオブザーバー
+    private var settingsWindowObserver: NSObjectProtocol?
+
     /// TCA Store
     let store: StoreOf<AppReducer>
 
@@ -457,11 +460,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
 
         // ウィンドウが閉じられたらアクティベーションポリシーを戻す
-        NotificationCenter.default.addObserver(
+        settingsWindowObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
             object: window,
             queue: .main
         ) { [weak self] _ in
+            if let observer = self?.settingsWindowObserver {
+                NotificationCenter.default.removeObserver(observer)
+                self?.settingsWindowObserver = nil
+            }
             NSApp.setActivationPolicy(.accessory)
             self?.settingsWindowController = nil
         }
