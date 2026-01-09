@@ -23,7 +23,7 @@ struct PillTabSelector<Tab: Hashable>: View {
     let icon: (Tab) -> String
 
     /// アニメーション用の名前空間
-    @Namespace private var animation
+    @Namespace private var animationNamespace
 
     /// ホバー中のタブ
     @State private var hoveredTab: Tab?
@@ -77,7 +77,7 @@ struct PillTabSelector<Tab: Hashable>: View {
                             RoundedRectangle(cornerRadius: 7)
                                 .stroke(Color(nsColor: .controlAccentColor).opacity(0.3), lineWidth: 0.5)
                         )
-                        .matchedGeometryEffect(id: "pill", in: animation)
+                        .matchedGeometryEffect(id: "pill", in: animationNamespace)
                 } else if isHovered {
                     // ホバー時の背景
                     RoundedRectangle(cornerRadius: 7)
