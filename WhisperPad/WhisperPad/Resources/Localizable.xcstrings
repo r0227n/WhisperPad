@@ -2277,7 +2277,7 @@
       }
     },
     "icon.accessibility.label" : {
-      "comment" : "Icon status accessibility label",
+      "comment" : "Icon status accessibility label (deprecated, use icon.accessibility.label.%@ instead)",
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
@@ -2314,7 +2314,6 @@
     },
     "icon.accessibility.label.cancel" : {
       "comment" : "Accessibility label for cancel status icon",
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2332,7 +2331,6 @@
     },
     "icon.accessibility.label.completed" : {
       "comment" : "Accessibility label for completed status icon",
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2350,7 +2348,6 @@
     },
     "icon.accessibility.label.error" : {
       "comment" : "Accessibility label for error status icon",
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2368,7 +2365,6 @@
     },
     "icon.accessibility.label.idle" : {
       "comment" : "Accessibility label for idle status icon",
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2386,7 +2382,6 @@
     },
     "icon.accessibility.label.paused" : {
       "comment" : "Accessibility label for paused status icon",
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2404,7 +2399,6 @@
     },
     "icon.accessibility.label.recording" : {
       "comment" : "Accessibility label for recording status icon",
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2422,7 +2416,6 @@
     },
     "icon.accessibility.label.transcribing" : {
       "comment" : "Accessibility label for transcribing status icon",
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
