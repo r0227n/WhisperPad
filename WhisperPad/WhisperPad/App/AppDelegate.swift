@@ -431,8 +431,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         logger.info("Open settings requested")
 
         // 既存のウィンドウがあればそれを前面に
-        if let existingWindow = settingsWindowController?.window, existingWindow.isVisible {
+        if let existingWindow = settingsWindowController?.window {
             existingWindow.makeKeyAndOrderFront(nil)
+            NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
             return
         }
