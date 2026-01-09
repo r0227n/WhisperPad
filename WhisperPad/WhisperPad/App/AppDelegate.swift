@@ -7,6 +7,7 @@ import AppKit
 import ComposableArchitecture
 import Dependencies
 import os.log
+import SwiftUI
 import UserNotifications
 
 // MARK: - Notification.Name Extension
@@ -28,6 +29,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// ステータスアイテムのメニュー
     var statusMenu: NSMenu?
+
+    /// 設定画面のウィンドウコントローラー
+    private var settingsWindowController: NSWindowController?
 
     /// TCA Store
     let store: StoreOf<AppReducer>
@@ -426,10 +430,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func openSettings() {
         logger.info("Open settings requested")
 
-        // HiddenWindowView に通知を送信して Settings シーンを開く
-        // macOS 14+ では @Environment(\.openSettings) を使用する必要があるため、
-        // SwiftUI コンテキスト内から開く
-        NotificationCenter.default.post(name: .openSettingsRequest, object: nil)
+        // 既存のウィンドウがあればそれを前面に
+        if let existingWindow = settingsWindowController?.window, existingWindow.isVisible {
+            existingWindow.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        // 設定画面を NSHostingController で開く
+        let settingsView = SettingsView(
+            store: store.scope(state: \.settings, action: \.settings)
+        )
+        let hostingController = NSHostingController(rootView: settingsView)
+
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = localizedAppString(forKey: "menu.settings")
+        window.styleMask = [.titled, .closable]
+        window.setContentSize(NSSize(width: 650, height: 550))
+        window.center()
+
+        settingsWindowController = NSWindowController(window: window)
+
+        NSApp.setActivationPolicy(.regular)
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+
+        // ウィンドウが閉じられたらアクティベーションポリシーを戻す
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            NSApp.setActivationPolicy(.accessory)
+            self?.settingsWindowController = nil
+        }
     }
 
     /// アプリケーションを終了

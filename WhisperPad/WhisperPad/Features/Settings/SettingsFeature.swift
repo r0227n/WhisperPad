@@ -249,7 +249,8 @@ struct SettingsFeature {
                 return .merge(
                     .send(.loadSettings),
                     .send(.recordingSettings(.fetchInputDevices)),
-                    .send(.checkHotkeyConflict)
+                    .send(.checkHotkeyConflict),
+                    .send(.generalSettings(.syncLoginItemStatus))
                 )
 
             case .onDisappear:

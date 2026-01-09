@@ -8,7 +8,7 @@ import SwiftUI
 
 /// 設定画面のルートビュー
 ///
-/// タブ形式で一般設定、ホットキー設定、録音設定、モデル設定、出力設定を表示します。
+/// ピル型タブで一般設定、ホットキー設定、録音設定、モデル設定、出力設定を切り替えます。
 struct SettingsView: View {
     @Bindable var store: StoreOf<SettingsFeature>
 
@@ -17,32 +17,20 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        TabView(selection: $store.selectedTab.sending(\.selectTab)) {
-            GeneralSettingsTab(
-                store: store.scope(state: \.generalSettings, action: \.generalSettings)
+        VStack(spacing: 0) {
+            // ピル型タブセレクター
+            PillTabSelector(
+                selectedTab: $store.selectedTab.sending(\.selectTab),
+                locale: preferredLocale
             )
-            .settingsTabItem(.general, locale: preferredLocale)
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
+            .padding(.bottom, 12)
 
-            IconSettingsTab(
-                store: store.scope(state: \.iconSettings, action: \.iconSettings)
-            )
-            .settingsTabItem(.icon, locale: preferredLocale)
+            Divider()
 
-            HotkeySettingsTab(
-                store: store.scope(state: \.hotkeySettings, action: \.hotkeySettings)
-            )
-            .settingsTabItem(.hotkey, locale: preferredLocale)
-
-            RecordingSettingsTab(
-                store: store.scope(state: \.recordingSettings, action: \.recordingSettings),
-                locale: preferredLocale.locale
-            )
-            .settingsTabItem(.recording, locale: preferredLocale)
-
-            ModelSettingsTab(
-                store: store.scope(state: \.modelSettings, action: \.modelSettings)
-            )
-            .settingsTabItem(.model, locale: preferredLocale)
+            // タブコンテンツ
+            tabContent
         }
         .frame(width: 650, height: 550)
         .environment(\.locale, preferredLocale.locale)
@@ -51,27 +39,38 @@ struct SettingsView: View {
             store.send(.onAppear)
         }
     }
-}
 
-// MARK: - Tab Item View Modifier
+    // MARK: - Tab Content
 
-private extension View {
-    /// SettingsTab用のタブアイテムを設定するView modifier
-    ///
-    /// - Parameters:
-    ///   - tab: 設定するタブ
-    ///   - locale: ローカライズに使用するAppLocale
-    /// - Returns: タブアイテムが設定されたView
-    func settingsTabItem(_ tab: SettingsTab, locale: AppLocale) -> some View {
-        self
-            .tabItem {
-                Label {
-                    Text(tab.localizedTitle(for: locale))
-                } icon: {
-                    Image(systemName: tab.iconName)
-                }
-            }
-            .tag(tab)
+    @ViewBuilder
+    private var tabContent: some View {
+        switch store.selectedTab {
+        case .general:
+            GeneralSettingsTab(
+                store: store.scope(state: \.generalSettings, action: \.generalSettings)
+            )
+
+        case .icon:
+            IconSettingsTab(
+                store: store.scope(state: \.iconSettings, action: \.iconSettings)
+            )
+
+        case .hotkey:
+            HotkeySettingsTab(
+                store: store.scope(state: \.hotkeySettings, action: \.hotkeySettings)
+            )
+
+        case .recording:
+            RecordingSettingsTab(
+                store: store.scope(state: \.recordingSettings, action: \.recordingSettings),
+                locale: preferredLocale.locale
+            )
+
+        case .model:
+            ModelSettingsTab(
+                store: store.scope(state: \.modelSettings, action: \.modelSettings)
+            )
+        }
     }
 }
 
