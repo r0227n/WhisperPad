@@ -88,25 +88,34 @@ struct GeneralSettingsFeature {
                 let newValue = general.launchAtLogin
                 state.general = general
 
+                enum CancelID { case loginItemRegistration }
+
+                var effects: [Effect<Action>] = [
+                    .send(.delegate(.generalSettingsChanged(general)))
+                ]
+
                 // When launchAtLogin changes, update the Login Items registration
                 if oldValue != newValue {
-                    return .run { send in
-                        do {
-                            if newValue {
-                                try await loginItemClient.register()
-                            } else {
-                                try await loginItemClient.unregister()
+                    effects.append(
+                        .run { send in
+                            do {
+                                if newValue {
+                                    try await loginItemClient.register()
+                                } else {
+                                    try await loginItemClient.unregister()
+                                }
+                                await send(.loginItemRegistrationResult(.success(())))
+                            } catch {
+                                await send(.loginItemRegistrationResult(.failure(error)))
                             }
-                            await send(.loginItemRegistrationResult(.success(())))
-                        } catch {
-                            await send(.loginItemRegistrationResult(.failure(error)))
+                            // Sync actual state regardless of success/failure
+                            await send(.syncLoginItemStatus)
                         }
-                        // Notify of settings change
-                        await send(.delegate(.generalSettingsChanged(general)))
-                    }
+                        .cancellable(id: CancelID.loginItemRegistration, cancelInFlight: true)
+                    )
                 }
 
-                return .send(.delegate(.generalSettingsChanged(general)))
+                return .merge(effects)
 
             case .fetchLanguages:
                 let allLanguages = TranscriptionLanguage.allSupported
