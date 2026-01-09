@@ -88,7 +88,7 @@ struct GeneralSettingsFeature {
                 let newValue = general.launchAtLogin
                 state.general = general
 
-                // launchAtLoginが変更された場合、Login Itemsを更新
+                // When launchAtLogin changes, update the Login Items registration
                 if oldValue != newValue {
                     return .run { send in
                         do {
@@ -101,7 +101,7 @@ struct GeneralSettingsFeature {
                         } catch {
                             await send(.loginItemRegistrationResult(.failure(error)))
                         }
-                        // 設定変更を通知
+                        // Notify of settings change
                         await send(.delegate(.generalSettingsChanged(general)))
                     }
                 }
