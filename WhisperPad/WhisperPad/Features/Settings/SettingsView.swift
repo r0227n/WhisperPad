@@ -12,105 +12,66 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var store: StoreOf<SettingsFeature>
 
+    private var preferredLocale: AppLocale {
+        store.settings.general.preferredLocale
+    }
+
     var body: some View {
         TabView(selection: $store.selectedTab.sending(\.selectTab)) {
             GeneralSettingsTab(
                 store: store.scope(state: \.generalSettings, action: \.generalSettings)
             )
-            .tabItem {
-                Label {
-                    Text(
-                        String(
-                            localized: "settings.tab.general",
-                            bundle: store.settings.general.preferredLocale.bundle,
-                            locale: store.settings.general.preferredLocale.locale
-                        )
-                    )
-                } icon: {
-                    Image(systemName: SettingsTab.general.iconName)
-                }
-            }
-            .tag(SettingsTab.general)
+            .settingsTabItem(.general, locale: preferredLocale)
 
             IconSettingsTab(
                 store: store.scope(state: \.iconSettings, action: \.iconSettings)
             )
-            .tabItem {
-                Label {
-                    Text(
-                        String(
-                            localized: "settings.tab.icon",
-                            bundle: store.settings.general.preferredLocale.bundle,
-                            locale: store.settings.general.preferredLocale.locale
-                        )
-                    )
-                } icon: {
-                    Image(systemName: SettingsTab.icon.iconName)
-                }
-            }
-            .tag(SettingsTab.icon)
+            .settingsTabItem(.icon, locale: preferredLocale)
 
             HotkeySettingsTab(
                 store: store.scope(state: \.hotkeySettings, action: \.hotkeySettings)
             )
-            .tabItem {
-                Label {
-                    Text(
-                        String(
-                            localized: "settings.tab.hotkey",
-                            bundle: store.settings.general.preferredLocale.bundle,
-                            locale: store.settings.general.preferredLocale.locale
-                        )
-                    )
-                } icon: {
-                    Image(systemName: SettingsTab.hotkey.iconName)
-                }
-            }
-            .tag(SettingsTab.hotkey)
+            .settingsTabItem(.hotkey, locale: preferredLocale)
 
             RecordingSettingsTab(
                 store: store.scope(state: \.recordingSettings, action: \.recordingSettings),
-                locale: store.settings.general.preferredLocale.locale
+                locale: preferredLocale.locale
             )
-            .tabItem {
-                Label {
-                    Text(
-                        String(
-                            localized: "settings.tab.recording",
-                            bundle: store.settings.general.preferredLocale.bundle,
-                            locale: store.settings.general.preferredLocale.locale
-                        )
-                    )
-                } icon: {
-                    Image(systemName: SettingsTab.recording.iconName)
-                }
-            }
-            .tag(SettingsTab.recording)
+            .settingsTabItem(.recording, locale: preferredLocale)
 
             ModelSettingsTab(
                 store: store.scope(state: \.modelSettings, action: \.modelSettings)
             )
-            .tabItem {
-                Label {
-                    Text(
-                        String(
-                            localized: "settings.tab.model",
-                            bundle: store.settings.general.preferredLocale.bundle,
-                            locale: store.settings.general.preferredLocale.locale
-                        )
-                    )
-                } icon: {
-                    Image(systemName: SettingsTab.model.iconName)
-                }
-            }
-            .tag(SettingsTab.model)
+            .settingsTabItem(.model, locale: preferredLocale)
         }
         .frame(width: 650, height: 550)
-        .environment(\.locale, store.settings.general.preferredLocale.locale)
-        .environment(\.appLocale, store.settings.general.preferredLocale)
+        .environment(\.locale, preferredLocale.locale)
+        .environment(\.appLocale, preferredLocale)
         .onAppear {
             store.send(.onAppear)
         }
+    }
+}
+
+// MARK: - Tab Item View Modifier
+
+private extension View {
+    /// SettingsTab用のタブアイテムを設定するView modifier
+    ///
+    /// - Parameters:
+    ///   - tab: 設定するタブ
+    ///   - locale: ローカライズに使用するAppLocale
+    /// - Returns: タブアイテムが設定されたView
+    func settingsTabItem(_ tab: SettingsTab, locale: AppLocale) -> some View {
+        self
+            .tabItem {
+                Label {
+                    Text(tab.localizedTitle(for: locale))
+                } icon: {
+                    Image(systemName: tab.iconName)
+                }
+            }
+            .tag(tab)
     }
 }
 

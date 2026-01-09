@@ -384,13 +384,6 @@ private extension AppReducer.State {
     /// アプリ設定から言語コードを解決する
     /// - Returns: 言語コード文字列（例: "en", "ja"）
     func resolveLanguageCode() -> String {
-        let preferredLocale = settings.settings.general.preferredLocale
-        if let identifier = preferredLocale.identifier {
-            return identifier
-        } else {
-            // .system の場合、システムの優先言語を使用
-            let systemLanguage = Locale.preferredLanguages.first ?? "en"
-            return Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
-        }
+        settings.settings.general.preferredLocale.resolvedLanguageCode
     }
 }

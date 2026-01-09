@@ -215,9 +215,9 @@ struct RecordingFeature {
                         let recordingURL = try await audioRecorder.startRecording(identifier)
                         await send(.recordingStarted(recordingURL))
                     } catch {
-                        let recordingError =
-                            (error as? RecordingError)
-                                ?? .recordingFailed(error.localizedDescription)
+                        let recordingError = mapError(error) {
+                            RecordingError.recordingFailed($0)
+                        }
                         await send(.recordingFailed(recordingError))
                     }
                 }
@@ -259,8 +259,9 @@ struct RecordingFeature {
                                 await send(.recordingFailed(.noRecordingURL))
                             }
                         } catch {
-                            let recordingError = (error as? RecordingError)
-                                ?? .recordingFailed(error.localizedDescription)
+                            let recordingError = mapError(error) {
+                                RecordingError.recordingFailed($0)
+                            }
                             await send(.recordingFailed(recordingError))
                         }
                     }
@@ -301,8 +302,9 @@ struct RecordingFeature {
                         try await audioRecorder.resumeRecording()
                         await send(.recordingResumed)
                     } catch {
-                        let recordingError = (error as? RecordingError)
-                            ?? .recordingFailed(error.localizedDescription)
+                        let recordingError = mapError(error) {
+                            RecordingError.recordingFailed($0)
+                        }
                         await send(.resumeFailed(recordingError))
                     }
                 }

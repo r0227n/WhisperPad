@@ -57,6 +57,92 @@ struct HotKeySettings: Codable, Equatable, Sendable {
         try container.encode(cancelHotKey, forKey: .cancelHotKey)
         try container.encode(recordingPauseHotKey, forKey: .recordingPauseHotKey)
     }
+
+    // MARK: - Update Helper
+
+    /// 指定されたホットキータイプのキーコンボを更新
+    ///
+    /// - Parameters:
+    ///   - type: 更新するホットキータイプ
+    ///   - combo: 新しいキーコンボ設定
+    mutating func update(for type: HotkeyType, combo: KeyComboSettings) {
+        switch type {
+        case .recording:
+            recordingHotKey = combo
+        case .cancel:
+            cancelHotKey = combo
+        case .recordingPause:
+            recordingPauseHotKey = combo
+        }
+    }
+
+    /// 指定されたホットキータイプのキーコンボを取得
+    ///
+    /// - Parameter type: 取得するホットキータイプ
+    /// - Returns: キーコンボ設定
+    func keyCombo(for type: HotkeyType) -> KeyComboSettings {
+        switch type {
+        case .recording:
+            recordingHotKey
+        case .cancel:
+            cancelHotKey
+        case .recordingPause:
+            recordingPauseHotKey
+        }
+    }
+
+    // MARK: - Conflict Detection
+
+    /// ホットキー間の内部コンフリクトを検出
+    ///
+    /// 同じキーコンボが複数のホットキーに割り当てられている場合、
+    /// コンフリクトしているホットキータイプのペアを返します。
+    ///
+    /// - Returns: コンフリクトしているホットキータイプのペア配列
+    func findInternalConflicts() -> [(HotkeyType, HotkeyType)] {
+        let types = HotkeyType.allCases
+        var conflicts: [(HotkeyType, HotkeyType)] = []
+
+        for index in 0 ..< types.count {
+            for otherIndex in (index + 1) ..< types.count {
+                let type1 = types[index]
+                let type2 = types[otherIndex]
+                let combo1 = keyCombo(for: type1)
+                let combo2 = keyCombo(for: type2)
+
+                if combo1.carbonKeyCode == combo2.carbonKeyCode,
+                   combo1.carbonModifiers == combo2.carbonModifiers {
+                    conflicts.append((type1, type2))
+                }
+            }
+        }
+
+        return conflicts
+    }
+
+    /// 指定されたキーコンボが他のホットキーと重複しているかチェック
+    ///
+    /// - Parameters:
+    ///   - targetType: チェック対象のホットキータイプ
+    ///   - combo: チェックするキーコンボ
+    /// - Returns: 重複しているホットキータイプ（重複なしの場合は nil）
+    func findDuplicateHotkey(
+        for targetType: HotkeyType,
+        with combo: KeyComboSettings
+    ) -> HotkeyType? {
+        for type in HotkeyType.allCases where type != targetType {
+            let existingCombo = keyCombo(for: type)
+            // デフォルト設定との重複は許可
+            if existingCombo == type.defaultKeyCombo, combo == targetType.defaultKeyCombo {
+                continue
+            }
+            if existingCombo.carbonKeyCode == combo.carbonKeyCode,
+               existingCombo.carbonModifiers == combo.carbonModifiers {
+                return type
+            }
+        }
+        return nil
+    }
 }
 
 // MARK: - KeyComboSettings

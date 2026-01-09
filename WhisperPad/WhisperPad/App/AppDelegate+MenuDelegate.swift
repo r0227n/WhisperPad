@@ -23,10 +23,6 @@ extension AppDelegate: NSMenuDelegate {
     ///
     /// - Returns: 言語コード（"en" または "ja"）
     func resolveLanguageCode() -> String {
-        if let identifier = store.settings.settings.general.preferredLocale.identifier {
-            return identifier
-        }
-        let systemLanguage = Locale.preferredLanguages.first ?? "en"
-        return Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
+        store.settings.settings.general.preferredLocale.resolvedLanguageCode
     }
 }
