@@ -45,6 +45,19 @@ enum AppLocale: String, Codable, Equatable, Sendable, CaseIterable {
         }
     }
 
+    /// 解決済み言語コード
+    ///
+    /// システム設定の場合はシステムの優先言語を使用し、
+    /// それ以外の場合は指定された言語コードを返します。
+    var resolvedLanguageCode: String {
+        if let identifier {
+            return identifier
+        }
+        // .system の場合、システムの優先言語を使用
+        let systemLanguage = Locale.preferredLanguages.first ?? "en"
+        return Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
+    }
+
     /// デフォルト値
     static let `default` = AppLocale.system
 

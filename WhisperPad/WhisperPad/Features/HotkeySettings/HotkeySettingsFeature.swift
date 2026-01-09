@@ -156,34 +156,20 @@ struct HotkeySettingsFeature {
                 return .none
 
             case .checkHotkeyConflict:
-                let hotKey = state.hotKey
-                let combos: [(String, HotKeySettings.KeyComboSettings)] = [
-                    (HotkeyType.recording.displayName, hotKey.recordingHotKey),
-                    (HotkeyType.cancel.displayName, hotKey.cancelHotKey),
-                    (HotkeyType.recordingPause.displayName, hotKey.recordingPauseHotKey)
-                ]
-
-                var conflicts: [String] = []
-                for index in 0 ..< combos.count {
-                    for otherIndex in (index + 1) ..< combos.count {
-                        let (name1, combo1) = combos[index]
-                        let (name2, combo2) = combos[otherIndex]
-                        if combo1.carbonKeyCode == combo2.carbonKeyCode,
-                           combo1.carbonModifiers == combo2.carbonModifiers {
-                            conflicts.append(
-                                name1 + String(localized: "hotkey.conflict.and", comment: " and ") + name2
-                            )
-                        }
-                    }
-                }
+                let conflicts = state.hotKey.findInternalConflicts()
 
                 if conflicts.isEmpty {
                     state.hotkeyConflict = nil
                 } else {
+                    let conflictStrings = conflicts.map { type1, type2 in
+                        type1.displayName
+                            + String(localized: "hotkey.conflict.and", comment: " and ")
+                            + type2.displayName
+                    }
                     state.hotkeyConflict = String(
                         localized: "hotkey.conflict.prefix",
                         comment: "Conflict: "
-                    ) + conflicts.joined(separator: ", ")
+                    ) + conflictStrings.joined(separator: ", ")
                 }
                 return .none
 
@@ -203,7 +189,7 @@ struct HotkeySettingsFeature {
                 }
 
                 // 仮更新（検証のため）
-                updateHotkeySetting(&state.hotKey, type: type, combo: newCombo)
+                state.hotKey.update(for: type, combo: newCombo)
 
                 // Carbon APIでシステム競合を検証
                 return .run { [settings = state.hotKey] send in
@@ -288,24 +274,6 @@ struct HotkeySettingsFeature {
                 return .none
             }
         }
-    }
-}
-
-// MARK: - Helper Functions
-
-/// HotKeySettingsの特定のhotkeyタイプを更新するヘルパー関数
-private func updateHotkeySetting(
-    _ hotKey: inout HotKeySettings,
-    type: HotkeyType,
-    combo: HotKeySettings.KeyComboSettings
-) {
-    switch type {
-    case .recording:
-        hotKey.recordingHotKey = combo
-    case .cancel:
-        hotKey.cancelHotKey = combo
-    case .recordingPause:
-        hotKey.recordingPauseHotKey = combo
     }
 }
 

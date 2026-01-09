@@ -46,17 +46,34 @@ enum SettingsTab: String, CaseIterable, Sendable {
             "cpu"
         }
     }
-}
 
-// MARK: - Hotkey Type
+    /// ローカライズキー
+    var localizationKey: String {
+        switch self {
+        case .general:
+            "settings.tab.general"
+        case .icon:
+            "settings.tab.icon"
+        case .hotkey:
+            "settings.tab.hotkey"
+        case .recording:
+            "settings.tab.recording"
+        case .model:
+            "settings.tab.model"
+        }
+    }
 
-/// ショートカットタイプ（どのショートカットを編集中か）
-enum HotkeyType: String, CaseIterable, Sendable, Identifiable {
-    case recording
-    case cancel
-    case recordingPause
-
-    var id: String { rawValue }
+    /// 指定されたロケールでのローカライズされたタイトルを取得
+    ///
+    /// - Parameter locale: ローカライズに使用するAppLocale
+    /// - Returns: ローカライズされたタイトル文字列
+    func localizedTitle(for locale: AppLocale) -> String {
+        String(
+            localized: String.LocalizationValue(localizationKey),
+            bundle: locale.bundle,
+            locale: locale.locale
+        )
+    }
 }
 
 // MARK: - HotkeyType Metadata
@@ -121,18 +138,6 @@ extension HotkeyType {
             String(localized: "hotkey.description.recording_pause", comment: "Pause or resume recording")
         case .cancel:
             String(localized: "hotkey.description.cancel", comment: "Cancel ongoing recording")
-        }
-    }
-
-    /// デフォルトのキーコンボ
-    var defaultKeyCombo: HotKeySettings.KeyComboSettings {
-        switch self {
-        case .recording:
-            .recordingDefault
-        case .recordingPause:
-            .recordingPauseDefault
-        case .cancel:
-            .cancelDefault
         }
     }
 

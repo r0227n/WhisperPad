@@ -145,11 +145,6 @@ extension AppReducer {
     }
 
     func getLanguageCode(from preferredLocale: AppLocale) -> String {
-        if let identifier = preferredLocale.identifier {
-            return identifier
-        } else {
-            let systemLanguage = Locale.preferredLanguages.first ?? "en"
-            return Locale(identifier: systemLanguage).language.languageCode?.identifier ?? "en"
-        }
+        preferredLocale.resolvedLanguageCode
     }
 }

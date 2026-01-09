@@ -7,6 +7,7 @@ import AppKit
 import ComposableArchitecture
 import Dependencies
 import os.log
+import SwiftUI
 import UserNotifications
 
 // MARK: - Notification.Name Extension
@@ -28,6 +29,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// ステータスアイテムのメニュー
     var statusMenu: NSMenu?
+
+    /// 設定画面のウィンドウコントローラー
+    private var settingsWindowController: NSWindowController?
+
+    /// 設定ウィンドウクローズ通知のオブザーバー
+    private var settingsWindowObserver: NSObjectProtocol?
 
     /// TCA Store
     let store: StoreOf<AppReducer>
@@ -315,33 +322,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         button.image = image?.withSymbolConfiguration(config)
     }
 
-    // MARK: - Recording Time Display
-
-    /// 録音時間を「MM:SS」形式でフォーマット
-    private func formatDuration(_ duration: TimeInterval) -> String {
-        let minutes = Int(duration) / 60
-        let seconds = Int(duration) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
-    }
-
-    /// ステータスバーに録音時間を表示
-    private func setRecordingTimeDisplay(_ duration: TimeInterval) {
-        guard let button = statusItem?.button else { return }
-        // 等幅数字フォントで表示（数字幅が変わっても揃う）
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
-        ]
-        button.attributedTitle = NSAttributedString(
-            string: formatDuration(duration),
-            attributes: attributes
-        )
-    }
-
-    /// ステータスバーから録音時間表示をクリア
-    private func clearRecordingTimeDisplay() {
-        statusItem?.button?.title = ""
-    }
-
     // MARK: - Actions
 
     /// 録音を開始
@@ -426,10 +406,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func openSettings() {
         logger.info("Open settings requested")
 
-        // HiddenWindowView に通知を送信して Settings シーンを開く
-        // macOS 14+ では @Environment(\.openSettings) を使用する必要があるため、
-        // SwiftUI コンテキスト内から開く
-        NotificationCenter.default.post(name: .openSettingsRequest, object: nil)
+        // 既存のウィンドウがあればそれを前面に
+        if let existingWindow = settingsWindowController?.window {
+            existingWindow.makeKeyAndOrderFront(nil)
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        // 設定画面を NSHostingController で開く
+        let settingsView = SettingsView(
+            store: store.scope(state: \.settings, action: \.settings)
+        )
+        let hostingController = NSHostingController(rootView: settingsView)
+
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = localizedAppString(forKey: "menu.settings")
+        window.styleMask = [.titled, .closable]
+        window.setContentSize(NSSize(width: 650, height: 550))
+        window.center()
+
+        settingsWindowController = NSWindowController(window: window)
+
+        NSApp.setActivationPolicy(.regular)
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+
+        // ウィンドウが閉じられたらアクティベーションポリシーを戻す
+        settingsWindowObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            if let observer = self?.settingsWindowObserver {
+                NotificationCenter.default.removeObserver(observer)
+                self?.settingsWindowObserver = nil
+            }
+            NSApp.setActivationPolicy(.accessory)
+            self?.settingsWindowController = nil
+        }
     }
 
     /// アプリケーションを終了

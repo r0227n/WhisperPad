@@ -5,9 +5,15 @@
 
 import ComposableArchitecture
 import Foundation
+import OSLog
 import SwiftUI
 
 // MARK: - GeneralSettings Feature
+
+private let featureLogger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "com.whisperpad",
+    category: "GeneralSettingsFeature"
+)
 
 /// 一般設定機能の TCA Reducer
 ///
@@ -48,6 +54,15 @@ struct GeneralSettingsFeature {
         /// 言語一覧取得完了
         case languagesResponse([TranscriptionLanguage])
 
+        // MARK: - Login Items
+
+        /// Login Items状態を同期
+        case syncLoginItemStatus
+        /// Login Items状態を受信
+        case loginItemStatusReceived(Bool)
+        /// Login Items登録/解除結果
+        case loginItemRegistrationResult(Result<Void, Error>)
+
         // MARK: - Delegate
 
         /// 親 Reducer へのデリゲートアクション
@@ -59,14 +74,48 @@ struct GeneralSettingsFeature {
         }
     }
 
+    // MARK: - Dependencies
+
+    @Dependency(\.loginItemClient) var loginItemClient
+
     // MARK: - Reducer Body
 
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
             case let .updateGeneralSettings(general):
+                let oldValue = state.general.launchAtLogin
+                let newValue = general.launchAtLogin
                 state.general = general
-                return .send(.delegate(.generalSettingsChanged(general)))
+
+                enum CancelID { case loginItemRegistration }
+
+                var effects: [Effect<Action>] = [
+                    .send(.delegate(.generalSettingsChanged(general)))
+                ]
+
+                // When launchAtLogin changes, update the Login Items registration
+                if oldValue != newValue {
+                    effects.append(
+                        .run { send in
+                            do {
+                                if newValue {
+                                    try await loginItemClient.register()
+                                } else {
+                                    try await loginItemClient.unregister()
+                                }
+                                await send(.loginItemRegistrationResult(.success(())))
+                            } catch {
+                                await send(.loginItemRegistrationResult(.failure(error)))
+                            }
+                            // Sync actual state regardless of success/failure
+                            await send(.syncLoginItemStatus)
+                        }
+                        .cancellable(id: CancelID.loginItemRegistration, cancelInFlight: true)
+                    )
+                }
+
+                return .merge(effects)
 
             case .fetchLanguages:
                 let allLanguages = TranscriptionLanguage.allSupported
@@ -74,6 +123,31 @@ struct GeneralSettingsFeature {
 
             case let .languagesResponse(languages):
                 state.availableLanguages = languages
+                return .none
+
+            case .syncLoginItemStatus:
+                return .run { send in
+                    let isEnabled = await loginItemClient.status()
+                    await send(.loginItemStatusReceived(isEnabled))
+                }
+
+            case let .loginItemStatusReceived(isEnabled):
+                // Login Itemsの実際の状態とUserDefaultsの設定を同期
+                if state.general.launchAtLogin != isEnabled {
+                    var general = state.general
+                    general.launchAtLogin = isEnabled
+                    state.general = general
+                    return .send(.delegate(.generalSettingsChanged(general)))
+                }
+                return .none
+
+            case let .loginItemRegistrationResult(.failure(error)):
+                // エラーハンドリング: ログ出力のみ (ユーザーへの通知は不要)
+                // システム設定で手動変更可能なため、失敗は許容
+                featureLogger.error("Login item registration failed: \(error.localizedDescription)")
+                return .none
+
+            case .loginItemRegistrationResult(.success):
                 return .none
 
             case .delegate:

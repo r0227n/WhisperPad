@@ -81,9 +81,9 @@ struct TranscriptionFeature {
                         let result = try await transcriptionClient.transcribe(audioURL, language)
                         await send(.transcriptionResult(result))
                     } catch {
-                        let transcriptionError =
-                            (error as? TranscriptionError)
-                                ?? .transcriptionFailed(error.localizedDescription)
+                        let transcriptionError = mapError(error) {
+                            TranscriptionError.transcriptionFailed($0)
+                        }
                         await send(.transcriptionFailed(transcriptionError))
                     }
                 }
