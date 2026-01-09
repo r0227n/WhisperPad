@@ -119,12 +119,13 @@ extension PillTabSelector where Tab == SettingsTab {
 #Preview("Light Mode") {
     struct PreviewWrapper: View {
         @State private var selectedTab = SettingsTab.general
+        private let locale: AppLocale = .system
 
         var body: some View {
             VStack(spacing: 20) {
-                PillTabSelector(selectedTab: $selectedTab, locale: .system)
+                PillTabSelector(selectedTab: $selectedTab, locale: locale)
 
-                Text("Selected: \(selectedTab.displayName)")
+                Text("Selected: \(selectedTab.localizedTitle(for: locale))")
                     .foregroundStyle(.secondary)
             }
             .padding()
@@ -137,12 +138,13 @@ extension PillTabSelector where Tab == SettingsTab {
 #Preview("Dark Mode") {
     struct PreviewWrapper: View {
         @State private var selectedTab = SettingsTab.hotkey
+        private let locale: AppLocale = .system
 
         var body: some View {
             VStack(spacing: 20) {
-                PillTabSelector(selectedTab: $selectedTab, locale: .system)
+                PillTabSelector(selectedTab: $selectedTab, locale: locale)
 
-                Text("Selected: \(selectedTab.displayName)")
+                Text("Selected: \(selectedTab.localizedTitle(for: locale))")
                     .foregroundStyle(.secondary)
             }
             .padding()
@@ -156,12 +158,13 @@ extension PillTabSelector where Tab == SettingsTab {
 #Preview("Japanese") {
     struct PreviewWrapper: View {
         @State private var selectedTab = SettingsTab.recording
+        private let locale: AppLocale = .ja
 
         var body: some View {
             VStack(spacing: 20) {
-                PillTabSelector(selectedTab: $selectedTab, locale: .ja)
+                PillTabSelector(selectedTab: $selectedTab, locale: locale)
 
-                Text("Selected: \(selectedTab.displayName)")
+                Text("Selected: \(selectedTab.localizedTitle(for: locale))")
                     .foregroundStyle(.secondary)
             }
             .padding()
