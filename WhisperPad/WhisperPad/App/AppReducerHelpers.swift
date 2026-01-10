@@ -67,13 +67,25 @@ extension AppReducer {
         let outputSettings = state.settings.settings.output
         let generalSettings = state.settings.settings.general
 
-        return .run { [outputClient, userDefaultsClient, clock] send in
+        return .run { [outputClient, userDefaultsClient, summarizationClient, clock] send in
+            // 出力テキストを準備（要約が有効な場合は要約を適用）
+            var outputText = text
+
+            if generalSettings.appleSummarizationEnabled, summarizationClient.isAvailable() {
+                do {
+                    outputText = try await summarizationClient.summarize(text)
+                } catch {
+                    // 要約に失敗した場合は元のテキストを使用
+                    outputText = text
+                }
+            }
+
             if outputSettings.copyToClipboard {
-                _ = await outputClient.copyToClipboard(text)
+                _ = await outputClient.copyToClipboard(outputText)
             }
 
             await handleOutputAndNotification(
-                text: text,
+                text: outputText,
                 outputSettings: outputSettings,
                 generalSettings: generalSettings,
                 outputClient: outputClient,

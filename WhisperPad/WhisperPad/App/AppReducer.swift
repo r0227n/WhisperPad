@@ -149,6 +149,7 @@ struct AppReducer {
     @Dependency(\.userDefaultsClient) var userDefaultsClient
     @Dependency(\.transcriptionClient) var transcriptionClient
     @Dependency(\.modelClient) var modelClient
+    @Dependency(\.summarizationClient) var summarizationClient
 
     // MARK: - Reducer Body
 

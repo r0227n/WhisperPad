@@ -40,6 +40,9 @@ struct GeneralSettings: Equatable, Sendable {
     /// 録音キャンセル時に確認ダイアログを表示するかどうか
     var showCancelConfirmation: Bool = true
 
+    /// Apple Intelligence要約を有効にするかどうか (macOS 26+)
+    var appleSummarizationEnabled: Bool = false
+
     /// デフォルト設定
     static let `default` = GeneralSettings()
 }
@@ -58,6 +61,7 @@ extension GeneralSettings: Codable {
         case whisperKitIdleTimeoutEnabled
         case whisperKitIdleTimeoutMinutes
         case showCancelConfirmation
+        case appleSummarizationEnabled
     }
 
     init(from decoder: Decoder) throws {
@@ -84,5 +88,8 @@ extension GeneralSettings: Codable {
         showCancelConfirmation = try container.decodeIfPresent(
             Bool.self, forKey: .showCancelConfirmation
         ) ?? true
+        appleSummarizationEnabled = try container.decodeIfPresent(
+            Bool.self, forKey: .appleSummarizationEnabled
+        ) ?? false
     }
 }

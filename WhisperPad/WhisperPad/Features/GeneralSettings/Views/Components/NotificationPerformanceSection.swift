@@ -195,6 +195,51 @@ struct NotificationPerformanceSection: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(.leading, 32)
+
+                // MARK: - Apple Intelligence Settings (macOS 26+)
+
+                if #available(macOS 26, *) {
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        SettingRowWithIcon(
+                            icon: "sparkles",
+                            iconColor: .purple,
+                            title: "settings.general.apple_summarization",
+                            isOn: Binding(
+                                get: { store.general.appleSummarizationEnabled },
+                                set: { newValue in
+                                    var general = store.general
+                                    general.appleSummarizationEnabled = newValue
+                                    store.send(.updateGeneralSettings(general))
+                                }
+                            )
+                        )
+                        .help(
+                            String(
+                                localized: "settings.general.apple_summarization.help",
+                                comment: "Apple Intelligence summarization help"
+                            )
+                        )
+                        .accessibilityLabel(
+                            String(
+                                localized: "settings.general.apple_summarization",
+                                comment: "Apple Intelligence Summarization"
+                            )
+                        )
+                        .accessibilityHint(
+                            String(
+                                localized: "settings.general.apple_summarization.help",
+                                comment: "Apple Intelligence summarization help"
+                            )
+                        )
+                    }
+
+                    Text("settings.general.apple_intelligence.footer")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.leading, 32)
+                }
             }
         }
         .animation(.default, value: store.general.whisperKitIdleTimeoutEnabled)
