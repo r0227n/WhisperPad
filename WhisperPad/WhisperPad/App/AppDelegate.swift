@@ -370,15 +370,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func toggleRecording() {
         logger.info("Toggle recording hotkey triggered: ⌥␣")
 
-        // モデル読み込み中はホットキーを無視
+        // モデル状態に応じて適切なアクションを実行
         switch store.modelState {
-        case .loading, .downloading:
-            logger.info("Hotkey ignored: model is loading")
+        case .unloaded, .error:
+            // モデル未読み込み → モデル読み込みを開始
+            logger.info("Model not loaded, starting model load")
+            loadModel()
             return
-        case .unloaded, .error, .loaded:
-            break // 処理を継続
+
+        case .loading, .downloading:
+            // モデル読み込み中 → ダイアログを表示
+            logger.info("Model is loading, showing dialog")
+            let languageCode = store.settings.settings.general.preferredLocale.resolvedLanguageCode
+            Task {
+                await AppAlertHelper.showWhisperKitInitializingDialog(languageCode: languageCode)
+            }
+            return
+
+        case .loaded:
+            // モデル読み込み済み → 録音操作を実行
+            break
         }
 
+        // モデルが読み込み済みの場合、appStatusに応じて録音を制御
         switch store.appStatus {
         case .idle, .completed, .error:
             store.send(.startRecording)
