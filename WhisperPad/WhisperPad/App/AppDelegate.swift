@@ -25,7 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Properties
 
     /// メニューバーに表示されるステータスアイテム
-    private var statusItem: NSStatusItem?
+    var statusItem: NSStatusItem?
 
     /// ステータスアイテムのメニュー
     var statusMenu: NSMenu?
@@ -262,66 +262,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - State-based UI Updates
-
-    /// 現在の状態に応じてアイコンを更新
-    private func updateIconForCurrentState() {
-        // カスタムアイコン設定を取得
-        let iconSettings = store.settings.settings.general.menuBarIconSettings
-
-        switch store.appStatus {
-        case .idle:
-            stopAllAnimations()
-            let config = iconSettings.idle
-            setStatusIcon(symbolName: config.symbolName, color: config.color)
-            clearRecordingTimeDisplay()
-
-        case .recording:
-            stopGearAnimation()
-            let config = iconSettings.recording
-            startPulseAnimation(with: config)
-            setRecordingTimeDisplay(store.recording.currentDuration)
-
-        case .paused:
-            stopAllAnimations()
-            let config = iconSettings.paused
-            setStatusIcon(symbolName: config.symbolName, color: config.color)
-            setRecordingTimeDisplay(store.recording.currentDuration)
-
-        case .transcribing:
-            stopPulseAnimation()
-            let config = iconSettings.transcribing
-            startGearAnimation(with: config)
-            clearRecordingTimeDisplay()
-
-        case .completed:
-            stopAllAnimations()
-            let config = iconSettings.completed
-            setStatusIcon(symbolName: config.symbolName, color: config.color)
-            clearRecordingTimeDisplay()
-
-        case .error:
-            stopAllAnimations()
-            let config = iconSettings.error
-            setStatusIcon(symbolName: config.symbolName, color: config.color)
-            clearRecordingTimeDisplay()
-        }
-    }
-
-    /// ステータスアイコンを設定
-    /// - Parameters:
-    ///   - symbolName: SF Symbol 名
-    ///   - color: アイコンの色
-    func setStatusIcon(symbolName: String, color: NSColor) {
-        guard let button = statusItem?.button else { return }
-
-        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
-            .applying(NSImage.SymbolConfiguration(hierarchicalColor: color))
-
-        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "WhisperPad")
-        button.image = image?.withSymbolConfiguration(config)
-    }
-
     // MARK: - Actions
 
     /// 録音を開始
@@ -357,6 +297,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// 録音をトグル（開始/停止）
     func toggleRecording() {
         logger.info("Toggle recording hotkey triggered: ⌥␣")
+
+        // モデル状態に応じて適切なアクションを実行
+        switch store.modelState {
+        case .unloaded, .error:
+            // モデル未読み込み → モデル読み込みを開始
+            logger.info("Model not loaded, starting model load")
+            loadModel()
+            return
+
+        case .loading, .downloading:
+            // モデル読み込み中 → ダイアログを表示
+            logger.info("Model is loading, showing dialog")
+            let languageCode = store.settings.settings.general.preferredLocale.resolvedLanguageCode
+            Task {
+                await AppAlertHelper.showWhisperKitInitializingDialog(languageCode: languageCode)
+            }
+            return
+
+        case .loaded:
+            // モデル読み込み済み → 録音操作を実行
+            break
+        }
+
+        // モデルが読み込み済みの場合、appStatusに応じて録音を制御
         switch store.appStatus {
         case .idle, .completed, .error:
             store.send(.startRecording)
