@@ -5766,6 +5766,60 @@
         }
       }
     },
+    "settings.general.apple_summarization" : {
+      "comment" : "Apple Intelligence summarization toggle label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence Summarization"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence要約"
+          }
+        }
+      }
+    },
+    "settings.general.apple_summarization.help" : {
+      "comment" : "Apple Intelligence summarization help text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatically summarize transcription results using Apple Intelligence"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligenceを使用して文字起こし結果を自動的に要約します"
+          }
+        }
+      }
+    },
+    "settings.general.apple_intelligence.footer" : {
+      "comment" : "Apple Intelligence section footer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requires macOS 26 or later and Apple Intelligence enabled on your device."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 26以降とApple Intelligenceの有効化が必要です。"
+          }
+        }
+      }
+    },
     "settings.tab.general" : {
       "comment" : "General tab",
       "extractionState" : "manual",
