@@ -2539,6 +2539,24 @@
         }
       }
     },
+    "icon.description.loading" : {
+      "comment" : "Icon description: loading",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Displayed while the Whisper model is being loaded into memory. This occurs when you press the 'Start Model Loading' button."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisperモデルをメモリに読み込んでいる間に表示されます。「モデル読み込み開始」ボタンを押したときに発生します。"
+          }
+        }
+      }
+    },
     "icon.description.paused" : {
       "comment" : "Icon description: paused",
       "extractionState" : "manual",
@@ -2823,6 +2841,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "待機中"
+          }
+        }
+      }
+    },
+    "icon.status.loading" : {
+      "comment" : "Icon status: Model Loading",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model Loading"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデル読み込み中"
           }
         }
       }

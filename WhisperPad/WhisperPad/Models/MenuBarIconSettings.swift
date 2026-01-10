@@ -74,6 +74,9 @@ struct MenuBarIconSettings: Codable, Equatable, Sendable {
     /// キャンセル時のアイコン設定
     var cancel: StatusIconConfig
 
+    /// モデル読み込み中のアイコン設定
+    var loading: StatusIconConfig
+
     /// デフォルト設定
     static let `default` = MenuBarIconSettings(
         idle: StatusIconConfig(symbolName: "mic", color: .systemGray),
@@ -82,7 +85,8 @@ struct MenuBarIconSettings: Codable, Equatable, Sendable {
         transcribing: StatusIconConfig(symbolName: "gear", color: .systemBlue),
         completed: StatusIconConfig(symbolName: "checkmark.circle", color: .systemGreen),
         error: StatusIconConfig(symbolName: "exclamationmark.triangle", color: .systemYellow),
-        cancel: StatusIconConfig(symbolName: "xmark.circle", color: .systemGray)
+        cancel: StatusIconConfig(symbolName: "xmark.circle", color: .systemGray),
+        loading: StatusIconConfig(symbolName: "arrow.triangle.2.circlepath", color: .systemBlue)
     )
 }
 
@@ -99,6 +103,7 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
     case completed
     case error
     case cancel
+    case loading
 
     var id: String { rawValue }
 
@@ -117,6 +122,7 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
         case .completed: "checkmark.circle"
         case .error: "exclamationmark.triangle"
         case .cancel: "xmark.circle"
+        case .loading: "arrow.triangle.2.circlepath"
         }
     }
 
@@ -135,6 +141,7 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
         case .completed: "icon.status.completed"
         case .error: "icon.status.error"
         case .cancel: "icon.status.cancel"
+        case .loading: "icon.status.loading"
         }
     }
 
@@ -148,6 +155,7 @@ enum IconConfigStatus: String, CaseIterable, Sendable, Identifiable {
         case .completed: "icon.description.completed"
         case .error: "icon.description.error"
         case .cancel: "icon.description.cancel"
+        case .loading: "icon.description.loading"
         }
     }
 }
@@ -167,6 +175,7 @@ extension MenuBarIconSettings {
         case .completed: completed
         case .error: error
         case .cancel: cancel
+        case .loading: loading
         }
     }
 
@@ -183,6 +192,7 @@ extension MenuBarIconSettings {
         case .completed: completed = config
         case .error: error = config
         case .cancel: cancel = config
+        case .loading: loading = config
         }
     }
 }

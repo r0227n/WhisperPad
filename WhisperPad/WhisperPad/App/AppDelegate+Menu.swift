@@ -172,8 +172,8 @@ extension AppDelegate {
                 action: nil,
                 symbol: "arrow.triangle.2.circlepath",
                 isEnabled: false,
-                keyEquivalent: "",
-                keyEquivalentModifierMask: []
+                keyEquivalent: toggleKey.keyEquivalentCharacter,
+                keyEquivalentModifierMask: toggleKey.keyEquivalentModifierMask
             )
         case .loaded:
             configureMenuItem(

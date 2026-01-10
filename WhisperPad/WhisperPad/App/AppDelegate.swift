@@ -25,7 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Properties
 
     /// メニューバーに表示されるステータスアイテム
-    private var statusItem: NSStatusItem?
+    var statusItem: NSStatusItem?
 
     /// ステータスアイテムのメニュー
     var statusMenu: NSMenu?
@@ -269,6 +269,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // カスタムアイコン設定を取得
         let iconSettings = store.settings.settings.general.menuBarIconSettings
 
+        // モデル状態を優先してチェック（モデル読み込み中は他の状態より優先）
+        switch store.modelState {
+        case .loading, .downloading:
+            stopAllAnimations()
+            let config = iconSettings.loading
+            setStatusIcon(symbolName: config.symbolName, color: config.color)
+            clearRecordingTimeDisplay()
+            return
+        case .unloaded, .loaded, .error:
+            break // appStatusに基づくアイコン更新を継続
+        }
+
         switch store.appStatus {
         case .idle:
             stopAllAnimations()
@@ -357,6 +369,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// 録音をトグル（開始/停止）
     func toggleRecording() {
         logger.info("Toggle recording hotkey triggered: ⌥␣")
+
+        // モデル読み込み中はホットキーを無視
+        switch store.modelState {
+        case .loading, .downloading:
+            logger.info("Hotkey ignored: model is loading")
+            return
+        case .unloaded, .error, .loaded:
+            break // 処理を継続
+        }
+
         switch store.appStatus {
         case .idle, .completed, .error:
             store.send(.startRecording)
