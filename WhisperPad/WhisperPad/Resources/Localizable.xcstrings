@@ -2647,6 +2647,24 @@
         }
       }
     },
+    "icon.description.unloaded" : {
+      "comment" : "Icon description: unloaded",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WhisperKit model is not loaded. Icon displays when model needs initialization."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WhisperKitモデルが読み込まれていません。モデルの初期化が必要な状態で表示されます。"
+          }
+        }
+      }
+    },
     "icon.icon" : {
       "comment" : "Icon label",
       "extractionState" : "manual",
@@ -2949,6 +2967,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "文字起こし中"
+          }
+        }
+      }
+    },
+    "icon.status.unloaded" : {
+      "comment" : "Icon status: Uninitialized",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uninitialized"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未初期化"
           }
         }
       }

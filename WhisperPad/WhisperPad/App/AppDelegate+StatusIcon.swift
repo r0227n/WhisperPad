@@ -4,6 +4,7 @@
 //
 
 import AppKit
+import ComposableArchitecture
 
 // MARK: - State-based UI Updates
 
@@ -15,13 +16,22 @@ extension AppDelegate {
 
         // モデル状態を優先してチェック（モデル読み込み中は他の状態より優先）
         switch store.modelState {
+        case .unloaded:
+            // 未初期化状態を明示
+            stopAllAnimations()
+            let config = iconSettings.unloaded
+            setStatusIcon(symbolName: config.symbolName, color: config.color)
+            clearRecordingTimeDisplay()
+            return
+
         case .loading, .downloading:
             stopAllAnimations()
             let config = iconSettings.loading
             setStatusIcon(symbolName: config.symbolName, color: config.color)
             clearRecordingTimeDisplay()
             return
-        case .unloaded, .loaded, .error:
+
+        case .loaded, .error:
             break // appStatusに基づくアイコン更新を継続
         }
 
