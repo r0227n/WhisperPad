@@ -30,6 +30,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F70A48F82EFEFCC800CBD639 /* WhisperPad */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F70A48FA2EFEFCC800CBD640 /* Exceptions for "WhisperPad" */,
+			);
 			path = WhisperPad;
 			sourceTree = "<group>";
 		};
@@ -39,6 +42,16 @@
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F70A48FA2EFEFCC800CBD640 /* Exceptions for "WhisperPad" */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F70A48F52EFEFCC800CBD639 /* WhisperPad */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		F70A48F32EFEFCC800CBD639 /* Frameworks */ = {
@@ -204,7 +217,6 @@
 /* Begin PBXShellScriptBuildPhase section */
 		F70A490B2EFEFD0100CBD639 /* SwiftLint */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -216,10 +228,11 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/swiftlint.timestamp",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export PATH=\"/opt/homebrew/bin:$PATH\"\nif which mise > /dev/null; then\n  mise exec -- swiftlint\nelse\n  echo \"warning: mise not installed, download from https://mise.jdx.dev\"\nfi\n";
+			shellScript = "export PATH=\"/opt/homebrew/bin:$PATH\"\nif which mise > /dev/null; then\n  mise exec -- swiftlint\n  touch \"${DERIVED_FILE_DIR}/swiftlint.timestamp\"\nelse\n  echo \"warning: mise not installed, download from https://mise.jdx.dev\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
